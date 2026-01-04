@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-bg: #0f172a;
+  --color-card-bg: #1e293b;
+  --color-neon-red: #ef4444;
+  --color-neon-blue: #3b82f6;
+}
+
+@layer base {
+  body {
+    @apply bg-primary-bg text-slate-100 antialiased;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* 티커 속도를 20s로 수정하여 더 빠르게 움직이게 함 */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  animation: marquee 20s linear infinite; 
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+}
