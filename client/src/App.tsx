@@ -3,6 +3,13 @@ import {
   Search, Bell, User, MessageCircle, TrendingUp, 
   Home, PieChart, Newspaper, Zap, Send 
 } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+// 환경 변수에서 정보를 가져옵니다.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('홈');
