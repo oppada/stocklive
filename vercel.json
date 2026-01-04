@@ -1,0 +1,26 @@
+{
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "build": {
+        "command": "npm run build",
+        "outputDirectory": "dist"
+      }
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/market"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/client/dist/index.html"
+    }
+  ]
+}
