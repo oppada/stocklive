@@ -6,11 +6,7 @@
     },
     {
       "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "build": {
-        "command": "npm run build",
-        "outputDirectory": "dist"
-      }
+      "use": "@vercel/static-build"
     }
   ],
   "rewrites": [
