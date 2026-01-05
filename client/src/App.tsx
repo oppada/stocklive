@@ -95,31 +95,42 @@ const App = () => {
             </div>
           </section>
         );
-      case '톡':
-        return (
-          <div className="flex flex-col h-[calc(100vh-180px)] bg-slate-950 -m-4 md:hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 text-[14px]">
-              {messages.map((m, idx) => (
-                <div key={idx} className="leading-relaxed break-all">
-                  <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>
-                    {m.user}:
-                  </span>
-                  <span className="text-slate-200">{m.text}</span>
-                  <span className="text-[10px] text-slate-700 ml-2">{m.time}</span>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-            <form onSubmit={handleSendMessage} className="p-4 bg-slate-900 border-t border-slate-800 flex gap-2">
-              <input 
-                type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
-                placeholder="메시지 입력..." 
-                className="flex-1 bg-slate-950 rounded-xl px-4 py-2 text-sm outline-none border border-slate-800 text-white"
-              />
-              <button type="submit" className="bg-blue-600 p-2 rounded-xl text-white"><Send className="w-4 h-4" /></button>
-            </form>
+    
+case '톡':
+  return (
+    <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-950 -m-4 md:hidden relative">
+      {/* 채팅 메시지 영역: 하단 입력창 높이만큼 패딩 추가 */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-2 text-[14px] pb-20">
+        {messages.map((m, idx) => (
+          <div key={idx} className="leading-relaxed break-all">
+            <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>
+              {m.user}:
+            </span>
+            <span className="text-slate-200">{m.text}</span>
+            <span className="text-[10px] text-slate-700 ml-2">{m.time}</span>
           </div>
-        );
+        ))}
+        <div ref={chatEndRef} />
+      </div>
+
+      {/* 입력창: 하단 네비바 높이(16/64px)만큼 위로 올림 (bottom-16 추가) */}
+      <form 
+        onSubmit={handleSendMessage} 
+        className="fixed bottom-16 left-0 right-0 p-4 bg-slate-900 border-t border-slate-800 flex gap-2 z-40"
+      >
+        <input 
+          type="text" 
+          value={inputText} 
+          onChange={(e) => setInputText(e.target.value)}
+          placeholder="메시지 입력..." 
+          className="flex-1 bg-slate-950 rounded-xl px-4 py-2 text-sm outline-none border border-slate-800 text-white"
+        />
+        <button type="submit" className="bg-blue-600 p-2 rounded-xl text-white">
+          <Send className="w-4 h-4" />
+        </button>
+      </form>
+    </div>
+  );
       default:
         return null;
     }
