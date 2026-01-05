@@ -1,33 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Bell, User, MessageCircle, TrendingUp, 
   Home, PieChart, Newspaper, Zap, Send 
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
-// 환경 변수에서 정보를 가져옵니다.
+// 환경 변수 설정
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const App = () => {
   const [activeTab, setActiveTab] = useState('홈');
-  const [messages, setMessages] = useState([
-    { id: 1, user: '운영자', text: '반갑습니다! 실시간 정보를 공유하세요.', time: '오후 3:00' }
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  // 1. 실시간 데이터 동기화 로직
+  useEffect(() => {
+    // 기존 데이터 가져오기
+    const fetchMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .order('id', { ascending: true });
+      if (data) setMessages(data);
+    };
+    fetchMessages();
+
+    // 실시간 구독 (INSERT 감지)
+    const channel = supabase
+      .channel('realtime-messages')
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'messages' }, 
+        (payload) => {
+          setMessages((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // 2. 메시지 전송 (DB 저장)
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+
     const newMessage = {
-      id: Date.now(),
-      user: '나',
+      user: '익명',
       text: inputText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    setMessages([...messages, newMessage]);
+
+    const { error } = await supabase.from('messages').insert([newMessage]);
+    if (error) console.error('전송 에러:', error);
+    
     setInputText('');
   };
 
@@ -54,7 +83,7 @@ const App = () => {
         );
       case '톡':
         return (
-          <div className="flex flex-col h-full bg-slate-950 -m-4 md:hidden">
+          <div className="flex flex-col h-[calc(100vh-180px)] bg-slate-950 -m-4 md:hidden">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((m) => (
                 <div key={m.id} className={`flex flex-col ${m.user === '나' ? 'items-end' : 'items-start'}`}>
@@ -84,15 +113,13 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-primary-bg text-slate-100 font-sans">
-      {/* 1. 상단 헤더 (PC 메뉴 복구) */}
       <header className="h-14 md:h-16 border-b border-slate-800 flex items-center justify-between px-4 md:px-6 shrink-0 bg-primary-bg z-30">
         <div className="flex items-center gap-4">
           <h1 className="text-lg md:text-xl font-black tracking-tighter text-white cursor-pointer" onClick={() => setActiveTab('홈')}>STOCKLIVE</h1>
           <nav className="hidden md:flex items-center gap-6 text-sm font-bold text-slate-400">
-            <button onClick={() => setActiveTab('홈')} className={`${activeTab === '홈' ? 'text-white' : 'hover:text-white'}`}>홈</button>
-            <button onClick={() => setActiveTab('추천')} className={`${activeTab === '추천' ? 'text-white' : 'hover:text-white'}`}>추천</button>
-            <button onClick={() => setActiveTab('테마')} className={`${activeTab === '테마' ? 'text-white' : 'hover:text-white'}`}>테마</button>
-            <button onClick={() => setActiveTab('뉴스')} className={`${activeTab === '뉴스' ? 'text-white' : 'hover:text-white'}`}>뉴스</button>
+            {['홈', '추천', '테마', '뉴스'].map((item) => (
+              <button key={item} onClick={() => setActiveTab(item)} className={`${activeTab === item ? 'text-white' : 'hover:text-white'}`}>{item}</button>
+            ))}
           </nav>
         </div>
         <div className="flex items-center gap-3">
@@ -101,21 +128,18 @@ const App = () => {
         </div>
       </header>
 
-      {/* 2. 실시간 티커 (속도는 CSS에서 조절됨) */}
       <div className="h-9 md:h-10 bg-slate-900/50 border-b border-slate-800 flex items-center overflow-hidden shrink-0">
         <div className="animate-marquee whitespace-nowrap flex text-[12px] md:text-sm text-slate-300">
           {[1, 2, 3].map((_, i) => (
             <div key={i} className="flex items-center gap-8 pr-8">
               <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" /> 삼성전자 <span className="text-neon-red">72,500 (+1.2%)</span></span>
               <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" /> SK하이닉스 <span className="text-neon-red">182,000 (+3.5%)</span></span>
-              <span className="flex items-center gap-1.5"><Zap className="w-3 h-3 text-yellow-400 fill-yellow-400" /> 현대차 <span className="text-neon-blue">252,000 (-0.8%)</span></span>
             </div>
           ))}
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* PC용 사이드바 채팅 */}
         <aside className="hidden md:flex w-[320px] border-r border-slate-800 flex-col shrink-0 bg-primary-bg">
           <div className="p-4 border-b border-slate-800 font-bold flex items-center gap-2"><MessageCircle className="w-5 h-5 text-neon-blue" /> 실시간 톡</div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -142,7 +166,6 @@ const App = () => {
         </main>
       </div>
 
-      {/* 4. 하단 네비바 (톡 강조 및 색상 수정) */}
       <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-900/95 border-t border-slate-800 flex items-center justify-around z-50">
         {[
           { name: '홈', icon: <Home className="w-5 h-5" /> },

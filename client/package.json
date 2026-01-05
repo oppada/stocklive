@@ -17,6 +17,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "axios": "^1.13.2",
