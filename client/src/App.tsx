@@ -5,9 +5,13 @@ import {
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
+// 1. 환경 변수 설정
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
+const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
@@ -20,14 +24,52 @@ const App = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [myNickname] = useState(generateNickname());
+  const [kisToken, setKisToken] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // 2. 한국투자증권 Access Token 발급 함수 (404 방지용 정밀 호출)
+  const fetchKisToken = async () => {
+    try {
+      console.log("KIS 토큰 발급 시도 중...");
+      // KIS_BASE_URL 변수 대신 직접 '/uapi' 경로를 사용합니다.
+      const response = await fetch('/uapi/oauth2/tokenP', {
+        method: 'POST',
+        headers: { 
+          "Content-Type": "application/json" 
+        },
+        body: JSON.stringify({
+          grant_type: "client_credentials",
+          appkey: KIS_APP_KEY,
+          appsecret: KIS_APP_SECRET
+        })
+      });
+
+      if (!response.ok) {
+        // 404 에러 시 원인 파악을 위한 텍스트 출력
+        const errorData = await response.text();
+        console.error(`요청 실패 (${response.status}):`, errorData);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.access_token) {
+        setKisToken(data.access_token);
+        console.log("✅ KIS 토큰 발급 성공!");
+      }
+    } catch (error) {
+      console.error("❌ KIS 연동 에러:", error);
+    }
+  };
+
   useEffect(() => {
+    fetchKisToken();
+
     const channel = supabase
       .channel('realtime-messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, 
         (payload) => setMessages((prev) => [...prev, payload.new])
       ).subscribe();
+      
     return () => { supabase.removeChannel(channel); };
   }, []);
 
@@ -95,42 +137,29 @@ const App = () => {
             </div>
           </section>
         );
-    
-case '톡':
-  return (
-    <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-950 -m-4 md:hidden relative">
-      {/* 채팅 메시지 영역: 하단 입력창 높이만큼 패딩 추가 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2 text-[14px] pb-20">
-        {messages.map((m, idx) => (
-          <div key={idx} className="leading-relaxed break-all">
-            <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>
-              {m.user}:
-            </span>
-            <span className="text-slate-200">{m.text}</span>
-            <span className="text-[10px] text-slate-700 ml-2">{m.time}</span>
+      case '톡':
+        return (
+          <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-950 -m-4 md:hidden relative">
+            <div className="flex-1 overflow-y-auto p-4 space-y-2 text-[14px] pb-20">
+              {messages.map((m, idx) => (
+                <div key={idx} className="leading-relaxed break-all">
+                  <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>{m.user}:</span>
+                  <span className="text-slate-200">{m.text}</span>
+                  <span className="text-[10px] text-slate-700 ml-2">{m.time}</span>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+            <form onSubmit={handleSendMessage} className="fixed bottom-16 left-0 right-0 p-4 bg-slate-900 border-t border-slate-800 flex gap-2 z-40">
+              <input 
+                type="text" value={inputText} onChange={(e) => setInputText(e.target.value)}
+                placeholder="메시지 입력..." 
+                className="flex-1 bg-slate-950 rounded-xl px-4 py-2 text-sm outline-none border border-slate-800 text-white"
+              />
+              <button type="submit" className="bg-blue-600 p-2 rounded-xl text-white"><Send className="w-4 h-4" /></button>
+            </form>
           </div>
-        ))}
-        <div ref={chatEndRef} />
-      </div>
-
-      {/* 입력창: 하단 네비바 높이(16/64px)만큼 위로 올림 (bottom-16 추가) */}
-      <form 
-        onSubmit={handleSendMessage} 
-        className="fixed bottom-16 left-0 right-0 p-4 bg-slate-900 border-t border-slate-800 flex gap-2 z-40"
-      >
-        <input 
-          type="text" 
-          value={inputText} 
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="메시지 입력..." 
-          className="flex-1 bg-slate-950 rounded-xl px-4 py-2 text-sm outline-none border border-slate-800 text-white"
-        />
-        <button type="submit" className="bg-blue-600 p-2 rounded-xl text-white">
-          <Send className="w-4 h-4" />
-        </button>
-      </form>
-    </div>
-  );
+        );
       default:
         return null;
     }
@@ -138,17 +167,12 @@ case '톡':
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
-      {/* 1. 상단 헤더: 로고와 메뉴바 유지 */}
       <header className="h-14 md:h-16 border-b border-white/5 flex items-center justify-between px-4 md:px-8 bg-[#0a0c10] z-30 shrink-0">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-black tracking-tighter text-white cursor-pointer" onClick={() => setActiveTab('홈')}>
-            STOCK<span className="text-blue-500 italic">LIVE</span>
-          </h1>
+          <h1 className="text-xl font-black tracking-tighter text-white cursor-pointer" onClick={() => setActiveTab('홈')}>STOCK<span className="text-blue-500 italic">LIVE</span></h1>
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-400">
             {['홈', '추천', '뉴스', '탐색'].map((item) => (
-              <button key={item} onClick={() => setActiveTab(item)} className={`${activeTab === item ? 'text-white border-b-2 border-blue-500 py-1' : 'hover:text-white'}`}>
-                {item}
-              </button>
+              <button key={item} onClick={() => setActiveTab(item)} className={`${activeTab === item ? 'text-white border-b-2 border-blue-500 py-1' : 'hover:text-white'}`}>{item}</button>
             ))}
           </nav>
         </div>
@@ -158,32 +182,31 @@ case '톡':
         </div>
       </header>
 
-      {/* 2. 티커(전광판) 영역 복구 */}
+      {/* 티커 영역 */}
       <div className="h-9 md:h-10 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0">
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[1, 2, 3, 4, 5].map((_, i) => (
             <div key={i} className="flex items-center gap-8 pr-8">
-              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> 삼성전자 <span className="text-rose-500">72,500▲</span></span>
-              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> SK하이닉스 <span className="text-rose-500">182,000▲</span></span>
-              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> 현대차 <span className="text-rose-500">250,000▲</span></span>
+              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> 삼성전자 <span className="text-rose-500">조회중...</span></span>
+              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> SK하이닉스 <span className="text-rose-500">조회중...</span></span>
+              <span className="flex items-center gap-1.5 text-slate-300"><Zap className="w-3 h-3 text-yellow-400" /> 현대차 <span className="text-rose-500">조회중...</span></span>
             </div>
           ))}
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* 3. 데스크탑 사이드바 채팅: 아이디와 채팅 한 줄 노출 */}
         <aside className="hidden md:flex w-[340px] border-r border-white/5 flex-col bg-[#0a0c10] shrink-0">
           <div className="p-4 border-b border-white/5 font-bold text-sm flex items-center justify-between">
             <span className="flex items-center gap-2 text-white"><MessageCircle className="w-4 h-4 text-blue-500" /> 실시간 톡</span>
-            <span className="text-[10px] text-slate-600 font-normal">Realtime ON</span>
+            <span className={`text-[10px] font-normal px-2 py-0.5 rounded-full ${kisToken ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
+              {kisToken ? "📡 API 연결됨" : "📡 API 연결중..."}
+            </span>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((m, idx) => (
               <div key={idx} className="text-[13px] leading-relaxed break-all">
-                <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>
-                  {m.user}:
-                </span>
+                <span className={`font-bold mr-2 ${m.user === myNickname ? 'text-blue-400' : 'text-slate-400'}`}>{m.user}:</span>
                 <span className="text-slate-300">{m.text}</span>
                 <span className="text-[10px] text-slate-800 ml-2 whitespace-nowrap">{m.time}</span>
               </div>
@@ -202,13 +225,11 @@ case '톡':
           </form>
         </aside>
 
-        {/* 4. 메인 콘텐츠 영역 */}
         <main className="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10 bg-black">
           <div className="max-w-3xl mx-auto h-full">{renderContent()}</div>
         </main>
       </div>
 
-      {/* 5. 모바일 하단 네비게이션 */}
       <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0a0c10] border-t border-white/5 flex items-center justify-around z-50 px-2">
         {[
           { name: '홈', icon: <Home className="w-5 h-5" /> },
@@ -222,9 +243,7 @@ case '톡':
             className={`flex flex-col items-center gap-1 min-w-[60px] ${activeTab === item.name && !item.special ? 'text-blue-500' : 'text-slate-500'}`}
           >
             {item.special ? (
-              <div className={`-top-3 relative p-3.5 rounded-2xl shadow-lg transition-all ${activeTab === '톡' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                {item.icon}
-              </div>
+              <div className={`-top-3 relative p-3.5 rounded-2xl shadow-lg transition-all ${activeTab === '톡' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}>{item.icon}</div>
             ) : item.icon}
             <span className="text-[10px] font-medium">{item.name}</span>
           </button>
