@@ -37,7 +37,7 @@ const App = () => {
 
   const fetchKisToken = async () => {
     try {
-      const response = await fetch('/uapi/oauth2/tokenP', {
+      const response = await fetch('/api/uapi/oauth2/tokenP', {
         method: 'POST',
         headers: { "Content-Type": "application/json; charset=UTF-8" },
         body: JSON.stringify({
@@ -57,7 +57,7 @@ const App = () => {
 
   const fetchStockPrice = async (token: string, stockCode: string) => {
     try {
-      const response = await fetch(`/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
+      const response = await fetch(`/api/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
         headers: {
           "authorization": `Bearer ${token}`,
           "appkey": KIS_APP_KEY,
