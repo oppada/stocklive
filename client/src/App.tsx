@@ -13,6 +13,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
+
+
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
@@ -112,11 +114,25 @@ const App = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
+<<<<<<< HEAD
     const textToSend = inputText;
     setInputText(''); 
     try {
       await supabase.from('messages').insert([{ user: myNickname, text: textToSend, time: new Date() }]);
     } catch (e) { console.error("전송 실패", e); }
+=======
+
+    try {
+      const { error } = await supabase.from('messages').insert([{ user: myNickname, text: inputText, time: new Date() }]);
+      if (error) {
+        throw error;
+      }
+      setInputText('');
+    } catch (error) {
+      console.error("❌ 메시지 전송 오류:", error);
+      alert("메시지를 보낼 수 없습니다. 문제가 지속되면 관리자에게 문의하세요.");
+    }
+>>>>>>> aa456f0394d5af997eef0d30166732e4a2abe931
   };
 
   // 콘텐츠 렌더링 (탐색 탭 하단 태그 복구)
