@@ -134,8 +134,17 @@ const App = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-    await supabase.from('messages').insert([{ user: myNickname, text: inputText }]);
-    setInputText('');
+
+    try {
+      const { error } = await supabase.from('messages').insert([{ user: myNickname, text: inputText, time: new Date() }]);
+      if (error) {
+        throw error;
+      }
+      setInputText('');
+    } catch (error) {
+      console.error("❌ 메시지 전송 오류:", error);
+      alert("메시지를 보낼 수 없습니다. 문제가 지속되면 관리자에게 문의하세요.");
+    }
   };
 
   const renderContent = () => {
