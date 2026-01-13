@@ -32,6 +32,12 @@ export default async function handler(request, response) {
 
     const data = await apiResponse.json();
 
+    // Log the KIS API response for debugging
+    console.error('KIS API Response Status:', apiResponse.status);
+    console.error('KIS API Response Status Text:', apiResponse.statusText);
+    console.error('KIS API Response Data:', data);
+
+
     // Forward the status and response from the KIS API
     response.status(apiResponse.status).json(data);
 
