@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, Bell, User, MessageCircle, TrendingUp, 
+  Bell, User, MessageCircle, TrendingUp, 
   Home, PieChart, Newspaper, Zap, Send, ArrowUpRight
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
