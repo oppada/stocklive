@@ -1,7 +1,9 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "regions": ["icn1"]
+  "regions": ["icn1"],
+  "rewrites": [
+    {
+      "source": "/uapi/:path*",
+      "destination": "https://openapi.koreainvestment.com:9443/uapi/:path*"
     }
-  }
+  ]
 }
