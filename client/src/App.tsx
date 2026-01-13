@@ -10,8 +10,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
-const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
+
 
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
