@@ -40,14 +40,9 @@ const App = () => {
   // 2. 한국투자증권 Access Token 발급 함수
   const fetchKisToken = async () => {
     try {
-      const response = await fetch('/uapi/oauth2/tokenP', {
+      const response = await fetch('/api/get-token', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          grant_type: "client_credentials",
-          appkey: KIS_APP_KEY,
-          appsecret: KIS_APP_SECRET
-        })
       });
 
       const data = await response.json();
@@ -68,15 +63,11 @@ const App = () => {
   // 3. 주가 조회 함수
   const fetchStockPrice = async (token: string, stockCode: string) => {
     try {
-      const response = await fetch(`/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
+      const response = await fetch(`/api/get-price?stockCode=${stockCode}`, {
         method: 'GET',
         headers: {
           "Content-Type": "application/json",
           "authorization": `Bearer ${token}`,
-          "appkey": KIS_APP_KEY,
-          "appsecret": KIS_APP_SECRET,
-          "tr_id": "FHKST01010100",
-          "custtype": "P"
         }
       });
       
