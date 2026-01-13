@@ -30,16 +30,41 @@ export default async function handler(request, response) {
       }),
     });
 
-    const data = await apiResponse.json();
+        // Log the raw response status *before* trying to parse it.
 
-    // Log the KIS API response for debugging
-    console.error('KIS API Response Status:', apiResponse.status);
-    console.error('KIS API Response Status Text:', apiResponse.statusText);
-    console.error('KIS API Response Data:', data);
+        console.log(`KIS API Raw Response Status: ${apiResponse.status}`);
 
+    
 
-    // Forward the status and response from the KIS API
-    response.status(apiResponse.status).json(data);
+        if (!apiResponse.ok) {
+
+          // If the response is not OK, try to read it as text to avoid JSON errors.
+
+          const errorText = await apiResponse.text();
+
+          console.error('KIS API Error Response Body:', errorText);
+
+          throw new Error(`KIS API responded with status ${apiResponse.status}: ${errorText}`);
+
+        }
+
+    
+
+        const data = await apiResponse.json();
+
+    
+
+        // Log the KIS API response for debugging
+
+        console.log('KIS API Response Status:', apiResponse.status);
+
+        console.log('KIS API Response Data:', data);
+
+        
+
+        // Forward the status and response from the KIS API
+
+        response.status(apiResponse.status).json(data);
 
   } catch (error) {
     console.error('KIS Token API Error:', error);
