@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/uapi/:path*",
+      "destination": "https://openapi.koreainvestment.com:9443/uapi/:path*"
+    }
+  ]
+}
