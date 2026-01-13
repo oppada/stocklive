@@ -1,12 +1,8 @@
-import type { VercelRequest, VercelResponse } from 'vercel'
-
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
+export default async function handler(req: any, res: any) {
   try {
     const { path = [] } = req.query
     const queryString = req.url?.split('?')[1]
+
     const apiPath = Array.isArray(path) ? path.join('/') : path
 
     const url =
@@ -26,9 +22,8 @@ export default async function handler(
     })
 
     const text = await response.text()
-
     res.status(response.status).send(text)
-  } catch (e: any) {
+  } catch (e) {
     console.error('❌ KIS Proxy Error', e)
     res.status(500).json({ error: 'KIS Proxy Failed' })
   }
