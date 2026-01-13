@@ -13,15 +13,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
-
-
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
   return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * animals.length)]}`;
 };
 
-// 티커 종목
 const tickerStocks = [
   { name: '삼성전자', code: '005930' },
   { name: 'SK하이닉스', code: '000660' },
@@ -38,7 +35,6 @@ const App = () => {
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // 2. KIS 토큰 발급 (인코딩 보강)
   const fetchKisToken = async () => {
     try {
       const response = await fetch('/uapi/oauth2/tokenP', {
@@ -59,7 +55,6 @@ const App = () => {
     } catch (e) { console.error("KIS 토큰 에러", e); }
   };
 
-  // 3. 주가 조회 함수
   const fetchStockPrice = async (token: string, stockCode: string) => {
     try {
       const response = await fetch(`/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
@@ -114,28 +109,13 @@ const App = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-<<<<<<< HEAD
     const textToSend = inputText;
     setInputText(''); 
     try {
       await supabase.from('messages').insert([{ user: myNickname, text: textToSend, time: new Date() }]);
     } catch (e) { console.error("전송 실패", e); }
-=======
-
-    try {
-      const { error } = await supabase.from('messages').insert([{ user: myNickname, text: inputText, time: new Date() }]);
-      if (error) {
-        throw error;
-      }
-      setInputText('');
-    } catch (error) {
-      console.error("❌ 메시지 전송 오류:", error);
-      alert("메시지를 보낼 수 없습니다. 문제가 지속되면 관리자에게 문의하세요.");
-    }
->>>>>>> aa456f0394d5af997eef0d30166732e4a2abe931
   };
 
-  // 콘텐츠 렌더링 (탐색 탭 하단 태그 복구)
   const renderContent = () => {
     switch (activeTab) {
       case '홈':
@@ -159,8 +139,8 @@ const App = () => {
         return (
           <section className="space-y-6">
             <h2 className="text-xl font-bold flex items-center gap-2 text-white"><PieChart className="text-blue-500 w-5 h-5" /> 전략 종목</h2>
-            <div className="space-y-4">
-              <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-3xl flex justify-between items-center text-white">
+            <div className="space-y-4 text-white">
+              <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-3xl flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-black">삼성전자 <span className="text-rose-500 text-sm ml-2">+1.2%</span></h3>
                   <p className="text-slate-400 text-sm">HBM 공급 가시화에 따른 외인 매수세</p>
@@ -192,7 +172,7 @@ const App = () => {
               <input type="text" placeholder="종목명 또는 코드 입력" className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-12 py-4 text-white outline-none focus:ring-2 focus:ring-blue-500" />
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
             </div>
-            {/* 복구된 인기 검색어 섹션 */}
+            {/* 인기 검색어 복구 완료 */}
             <div className="space-y-4 pt-4">
               <h3 className="text-sm font-bold text-slate-400">인기 검색어</h3>
               <div className="flex flex-wrap gap-2">
