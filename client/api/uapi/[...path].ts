@@ -1,62 +1,47 @@
-<<<<<<< HEAD
-import type { VercelRequest, VercelResponse } from 'vercel';
+// api/uapi/[...path].ts
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export const config = {
+  runtime: 'edge', // Vercel Edge Runtime을 사용하여 별도의 타입 설치 없이 실행
+};
+
+export default async function handler(req: Request) {
   try {
-    const { path = [] } = req.query;
-    const apiPath = Array.isArray(path) ? path.join('/') : path;
-    const queryString = req.url?.split('?')[1];
+    const url = new URL(req.url);
+    // /api/uapi/ 뒤의 경로를 추출
+    const path = url.pathname.replace('/api/uapi/', '');
+    const searchParams = url.search;
 
-    const url = `https://openapi.koreainvestment.com:9443/uapi/${apiPath}${queryString ? `?${queryString}` : ''}`;
-=======
-export default async function handler(req: any, res: any) {
-  try {
-    const { path = [] } = req.query
-    const queryString = req.url?.split('?')[1]
+    // 한국투자증권 API 서버 주소
+    const targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${path}${searchParams}`;
 
-    const apiPath = Array.isArray(path) ? path.join('/') : path
+    // 브라우저에서 보낸 헤더 복사
+    const headers = new Headers();
+    headers.set('Content-Type', 'application/json; charset=UTF-8');
+    headers.set('appkey', req.headers.get('appkey') || '');
+    headers.set('appsecret', req.headers.get('appsecret') || '');
+    headers.set('authorization', req.headers.get('authorization') || '');
+    headers.set('tr_id', req.headers.get('tr_id') || '');
+    headers.set('custtype', 'P');
 
-    const url =
-      `https://openapi.koreainvestment.com:9443/uapi/${apiPath}` +
-      (queryString ? `?${queryString}` : '')
->>>>>>> aa456f0394d5af997eef0d30166732e4a2abe931
-
-    const response = await fetch(url, {
+    const response = await fetch(targetUrl, {
       method: req.method,
-      headers: {
-<<<<<<< HEAD
-        'Content-Type': 'application/json',
-        'appkey': req.headers['appkey'] as string || '',
-        'appsecret': req.headers['appsecret'] as string || '',
-        'authorization': req.headers['authorization'] as string || '',
-        'tr_id': req.headers['tr_id'] as string || '',
-        'custtype': 'P',
-        'host': 'openapi.koreainvestment.com',
-      },
-      body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined,
+      headers: headers,
+      body: req.method !== 'GET' ? await req.text() : undefined,
     });
 
     const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (e: any) {
-    res.status(500).json({ error: 'Proxy Error', message: e.message });
-  }
-}
-=======
-        ...req.headers,
-        host: 'openapi.koreainvestment.com',
-      },
-      body:
-        req.method === 'GET' || req.method === 'HEAD'
-          ? undefined
-          : JSON.stringify(req.body),
-    })
 
-    const text = await response.text()
-    res.status(response.status).send(text)
-  } catch (e) {
-    console.error('❌ KIS Proxy Error', e)
-    res.status(500).json({ error: 'KIS Proxy Failed' })
+    return new Response(JSON.stringify(data), {
+      status: response.status,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: 'Proxy Error', message: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
->>>>>>> aa456f0394d5af997eef0d30166732e4a2abe931
