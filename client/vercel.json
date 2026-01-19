@@ -1,7 +1,10 @@
 {
   "functions": {
     "api/uapi/[...path].ts": {
-      "runtime": "edge"
+      "runtime": "@vercel/edge"
     }
-  }
+  },
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
