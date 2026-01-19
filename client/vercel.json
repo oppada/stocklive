@@ -3,10 +3,6 @@
     {
       "src": "/api/uapi/(.*)",
       "dest": "/api/uapi/[...path]"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
     }
   ]
 }
