@@ -1,10 +1,23 @@
 {
-  "functions": {
-    "api/uapi/[...path].ts": {
-      "runtime": "@vercel/edge"
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "api/uapi/[...path].ts",
+      "use": "@vercel/edge"
     }
-  },
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist"
+  ],
+  "routes": [
+    {
+      "src": "/api/uapi/(.*)",
+      "dest": "/api/uapi/[...path]"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
