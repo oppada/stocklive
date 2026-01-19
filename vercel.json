@@ -1,15 +1,24 @@
 {
-  "rewrites": [
+  "builds": [
     {
-      "source": "/api/uapi/(.*)",
-      "destination": "/client/api/uapi/[...path]"
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "client/api/uapi/[...path].ts",
+      "use": "@vercel/node",
+      "config": { "runtime": "edge" }
     }
   ],
-  "functions": {
-    "client/api/uapi/[...path].ts": {
-      "runtime": "edge"
+  "routes": [
+    {
+      "src": "/api/uapi/(.*)",
+      "dest": "/client/api/uapi/[...path]"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/dist/$1"
     }
-  },
-  "buildCommand": "npm run build --prefix client",
-  "outputDirectory": "client/dist"
+  ]
 }
