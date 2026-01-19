@@ -5,6 +5,22 @@ export const config = {
 };
 
 export default async function handler(req: Request) {
+  // Read APPKEY and APPSECRET from environment variables
+  const APPKEY = process.env.VITE_KIS_APP_KEY;
+  const APPSECRET = process.env.VITE_KIS_APP_SECRET;
+
+  if (!APPKEY || !APPSECRET) {
+    console.error('Environment variables VITE_KIS_APP_KEY or VITE_KIS_APP_SECRET are not set.');
+    return new Response(JSON.stringify({ 
+      error: 'Configuration Error', 
+      message: 'Server-side VITE_KIS_APP_KEY or VITE_KIS_APP_SECRET environment variables are not set.',
+      details: 'Please ensure VITE_KIS_APP_KEY and VITE_KIS_APP_SECRET are configured in your Vercel project environment variables.'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
   try {
     const url = new URL(req.url);
     // /api/uapi/ 뒤의 경로를 추출
@@ -20,32 +36,18 @@ export default async function handler(req: Request) {
       // Special handling for KIS token issuance
       requestMethod = 'POST'; // Token issuance is typically POST
 
-      // For token issuance, KIS API expects appkey and appsecret in the body
-      // We assume the client sends appkey and appsecret as headers,
-      // and we convert them to the body for the KIS API.
-      const clientAppKey = req.headers.get('appkey');
-      const clientAppSecret = req.headers.get('appsecret');
-
-      if (!clientAppKey || !clientAppSecret) {
-        return new Response(JSON.stringify({ 
-          error: 'Proxy Error', 
-          message: 'appkey or appsecret missing for token issuance',
-        }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
-      }
-
+      // Use APPKEY and APPSECRET from environment variables
       requestBody = JSON.stringify({
         'grant_type': 'client_credentials',
-        'appkey': clientAppKey,
-        'appsecret': clientAppSecret
+        'appkey': APPKEY,
+        'appsecret': APPSECRET
       });
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
       // No other headers like tr_id, custtype, authorization for token issuance
       // So, for tokenP, we only send Content-Type in headers.
     } else {
       // General handling for other KIS API calls
+      // Pass client-provided appkey/appsecret (if any) and other headers
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
       requestHeaders.set('appkey', req.headers.get('appkey') || '');
       requestHeaders.set('appsecret', req.headers.get('appsecret') || '');
