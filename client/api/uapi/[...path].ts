@@ -11,32 +11,65 @@ export default async function handler(req: Request) {
     const path = url.pathname.replace('/api/uapi/', '');
     const searchParams = url.search;
 
-    // 한국투자증권 API 서버 주소
-    const targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${path}${searchParams}`;
+    let targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${path}${searchParams}`;
+    let requestHeaders = new Headers();
+    let requestBody: string | undefined;
+    let requestMethod = req.method;
 
-    // 브라우저에서 보낸 헤더 복사
-    const headers = new Headers();
-    headers.set('Content-Type', 'application/json; charset=UTF-8');
-    headers.set('appkey', req.headers.get('appkey') || '');
-    headers.set('appsecret', req.headers.get('appsecret') || '');
-    headers.set('authorization', req.headers.get('authorization') || '');
-    headers.set('tr_id', req.headers.get('tr_id') || '');
-    headers.set('custtype', 'P');
+    if (path === 'oauth2/tokenP') {
+      // Special handling for KIS token issuance
+      requestMethod = 'POST'; // Token issuance is typically POST
+
+      // For token issuance, KIS API expects appkey and appsecret in the body
+      // We assume the client sends appkey and appsecret as headers,
+      // and we convert them to the body for the KIS API.
+      const clientAppKey = req.headers.get('appkey');
+      const clientAppSecret = req.headers.get('appsecret');
+
+      if (!clientAppKey || !clientAppSecret) {
+        return new Response(JSON.stringify({ 
+          error: 'Proxy Error', 
+          message: 'appkey or appsecret missing for token issuance',
+        }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
+      requestBody = JSON.stringify({
+        'grant_type': 'client_credentials',
+        'appkey': clientAppKey,
+        'appsecret': clientAppSecret
+      });
+      requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
+      // No other headers like tr_id, custtype, authorization for token issuance
+      // So, for tokenP, we only send Content-Type in headers.
+    } else {
+      // General handling for other KIS API calls
+      requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
+      requestHeaders.set('appkey', req.headers.get('appkey') || '');
+      requestHeaders.set('appsecret', req.headers.get('appsecret') || '');
+      requestHeaders.set('authorization', req.headers.get('authorization') || '');
+      requestHeaders.set('tr_id', req.headers.get('tr_id') || '');
+      requestHeaders.set('custtype', 'P');
+      requestBody = req.method !== 'GET' ? await req.text() : undefined;
+    }
 
     const response = await fetch(targetUrl, {
-      method: req.method,
-      headers: headers,
-      body: req.method !== 'GET' ? await req.text() : undefined,
+      method: requestMethod,
+      headers: requestHeaders,
+      body: requestBody,
     });
 
     // Check if the response from KIS API was successful
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`KIS API responded with status ${response.status}: ${errorText}`);
-      return new Response(JSON.stringify({ 
-        error: 'KIS API Error', 
+      console.error(`KIS API responded with status ${response.status} for ${targetUrl}: ${errorText}`);
+      return new Response(JSON.stringify({
+        error: 'KIS API Error',
         message: `KIS API responded with status ${response.status}`,
-        details: errorText
+        details: errorText,
+        targetUrl: targetUrl
       }), {
         status: response.status,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -48,12 +81,13 @@ export default async function handler(req: Request) {
       data = await response.json();
     } catch (jsonError: any) {
       const rawResponseText = await response.text();
-      console.error(`Failed to parse KIS API response as JSON. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
-      return new Response(JSON.stringify({ 
-        error: 'Proxy Error', 
+      console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
+      return new Response(JSON.stringify({
+        error: 'Proxy Error',
         message: 'Failed to parse KIS API response as JSON',
         details: rawResponseText,
-        originalError: jsonError.message
+        originalError: jsonError.message,
+        targetUrl: targetUrl
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
