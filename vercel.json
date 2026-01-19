@@ -1,0 +1,15 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/uapi/(.*)",
+      "destination": "/client/api/uapi/[...path]"
+    }
+  ],
+  "functions": {
+    "client/api/uapi/[...path].ts": {
+      "runtime": "edge"
+    }
+  },
+  "buildCommand": "npm run build --prefix client",
+  "outputDirectory": "client/dist"
+}
