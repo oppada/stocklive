@@ -34,8 +34,16 @@ const App = () => {
   const [kisToken, setKisToken] = useState<string | null>(null);
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const tokenRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchKisToken = async () => {
+    console.log('Fetching KIS token...');
+    // Clear any existing timer to avoid multiple scheduled fetches
+    if (tokenRefreshTimerRef.current) {
+      clearTimeout(tokenRefreshTimerRef.current);
+      tokenRefreshTimerRef.current = null;
+    }
+
     try {
       const response = await fetch('/api/uapi/oauth2/tokenP', {
         method: 'POST',
@@ -47,10 +55,25 @@ const App = () => {
         })
       });
       const data = await response.json();
+      console.log('KIS token response:', data);
       if (data.access_token) {
+        // Schedule refresh a few minutes before actual expiration (e.g., 5 minutes = 300 seconds)
+        const refreshBuffer = 300; // seconds
         const expires_at = new Date().getTime() + (data.expires_in - 120) * 1000;
+        const refresh_in_ms = (data.expires_in - refreshBuffer) * 1000;
+
+        console.log('New KIS token expires at:', new Date(expires_at));
         localStorage.setItem('kis-token', JSON.stringify({ token: data.access_token, expires_at }));
         setKisToken(data.access_token);
+
+        // Schedule next token fetch
+        tokenRefreshTimerRef.current = setTimeout(() => {
+          console.log(`Scheduled KIS token refresh (due to expire in ${refreshBuffer}s)...`);
+          fetchKisToken();
+        }, refresh_in_ms);
+
+      } else {
+          console.error('Failed to get access_token from KIS response:', data);
       }
     } catch (e) { console.error("KIS 토큰 에러", e); }
   };
@@ -62,11 +85,20 @@ const App = () => {
           "authorization": `Bearer ${token}`,
           "appkey": KIS_APP_KEY,
           "appsecret": KIS_APP_SECRET,
+
           "tr_id": "FHKST01010100",
           "custtype": "P"
         }
       });
-      const data = await response.json();
+      console.log(`Stock price fetch for ${stockCode} - Response Status: ${response.status}`);
+      const responseText = await response.text();
+      console.log(`Stock price fetch for ${stockCode} - Raw Response:`, responseText);
+
+      // Check if the response is valid JSON before parsing
+      if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
+          throw new Error(`Invalid response for ${stockCode}: Status ${response.status}, Body: ${responseText}`);
+      }
+      const data = JSON.parse(responseText);
       if (data.output) {
         const prdy_vrss = Number(data.output.prdy_vrss);
         setStockPrices(prev => ({
@@ -85,15 +117,30 @@ const App = () => {
     const stored = localStorage.getItem('kis-token');
     if (stored) {
       const { token, expires_at } = JSON.parse(stored);
-      if (new Date().getTime() < expires_at) setKisToken(token);
-      else fetchKisToken();
-    } else fetchKisToken();
+      console.log('Found stored KIS token. Expires at:', new Date(expires_at));
+      if (new Date().getTime() < expires_at) {
+        console.log('Using stored KIS token.');
+        setKisToken(token);
+      } else {
+        console.log('Stored KIS token has expired. Fetching a new one.');
+        fetchKisToken();
+      }
+    } else {
+      console.log('No stored KIS token found. Fetching a new one.');
+      fetchKisToken();
+    }
 
     const channel = supabase.channel('realtime-messages').on('postgres_changes', 
       { event: 'INSERT', schema: 'public', table: 'messages' }, 
       (payload) => setMessages(prev => [...prev, payload.new])
     ).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+      if (tokenRefreshTimerRef.current) {
+        clearTimeout(tokenRefreshTimerRef.current);
+        tokenRefreshTimerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
