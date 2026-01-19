@@ -1,8 +1,7 @@
 {
-  "rewrites": [
-    {
-      "source": "/uapi/:path*",
-      "destination": "/api/uapi/:path*"
+  "functions": {
+    "api/uapi/[...path].ts": {
+      "runtime": "edge"
     }
-  ]
+  }
 }
