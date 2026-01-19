@@ -29,7 +29,36 @@ export default async function handler(req: Request) {
       body: req.method !== 'GET' ? await req.text() : undefined,
     });
 
-    const data = await response.json();
+    // Check if the response from KIS API was successful
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`KIS API responded with status ${response.status}: ${errorText}`);
+      return new Response(JSON.stringify({ 
+        error: 'KIS API Error', 
+        message: `KIS API responded with status ${response.status}`,
+        details: errorText
+      }), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (jsonError: any) {
+      const rawResponseText = await response.text();
+      console.error(`Failed to parse KIS API response as JSON. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
+      return new Response(JSON.stringify({ 
+        error: 'Proxy Error', 
+        message: 'Failed to parse KIS API response as JSON',
+        details: rawResponseText,
+        originalError: jsonError.message
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
 
     return new Response(JSON.stringify(data), {
       status: response.status,
@@ -39,9 +68,14 @@ export default async function handler(req: Request) {
       },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: 'Proxy Error', message: error.message }), {
+    console.error(`Unhandled Proxy Error: ${error.message}`);
+    return new Response(JSON.stringify({ 
+      error: 'Proxy Error', 
+      message: 'An unexpected error occurred in the proxy function',
+      details: error.message
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 }
