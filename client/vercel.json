@@ -4,12 +4,13 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
-    },
-    {
-      "src": "api/uapi/[...path].ts",
-      "use": "@vercel/edge"
     }
   ],
+  "functions": {
+    "api/uapi/[...path].ts": {
+      "runtime": "@vercel/edge"
+    }
+  },
   "routes": [
     {
       "src": "/api/uapi/(.*)",
