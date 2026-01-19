@@ -23,16 +23,25 @@ export default async function handler(req: Request) {
 
   try {
     const url = new URL(req.url);
-    // /api/uapi/ 뒤의 경로를 추출
-    const path = url.pathname.replace('/api/uapi/', '');
+    // /api/uapi/ 뒤의 경로를 추출 (for client side)
+    const clientPath = url.pathname.replace('/api/uapi/', '');
     const searchParams = url.search;
 
-    let targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${path}${searchParams}`;
+    let targetUrl;
+    // Determine the correct target URL based on the clientPath
+    if (clientPath === 'oauth2/tokenP') {
+      // For token issuance, remove the '/uapi' prefix from the target URL
+      targetUrl = `https://openapi.koreainvestment.com:9443/${clientPath}${searchParams}`;
+    } else {
+      // For other KIS API calls, keep the '/uapi' prefix
+      targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${clientPath}${searchParams}`;
+    }
+
     let requestHeaders = new Headers();
     let requestBody: string | undefined;
     let requestMethod = req.method;
 
-    if (path === 'oauth2/tokenP') {
+    if (clientPath === 'oauth2/tokenP') {
       // Special handling for KIS token issuance
       requestMethod = 'POST'; // Token issuance is typically POST
 
