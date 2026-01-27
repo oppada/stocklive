@@ -24,9 +24,12 @@ export default async function handler(req: Request) {
 
   try {
     const url = new URL(req.url);
+    console.log('req.url:', req.url); // New log
     // /api/uapi/ 뒤의 경로를 추출 (for client side)
     const clientPath = url.pathname.replace('/api/uapi/', '');
+    console.log('clientPath:', clientPath); // New log
     const searchParams = url.search;
+    console.log('searchParams:', searchParams); // New log
 
     let targetUrl;
     // Determine the correct target URL based on the clientPath
