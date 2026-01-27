@@ -25,8 +25,13 @@ export default async function handler(req: Request) {
   try {
     console.log('Raw req.url:', req.url); // Added for debugging
     let url;
+    let clientPath: string; // Declare clientPath here
+    let searchParams: string; // Declare searchParams here
     try {
       url = new URL(req.url);
+      // /api/uapi/ 뒤의 경로를 추출 (for client side)
+      clientPath = url.pathname.replace('/api/uapi/', '');
+      searchParams = url.search;
     } catch (urlError: any) {
       console.error(`Error parsing req.url: ${urlError.message}, Raw req.url: ${req.url}`);
       return new Response(JSON.stringify({ 
