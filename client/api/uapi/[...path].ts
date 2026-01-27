@@ -7,6 +7,9 @@ export default async function handler(req: Request) {
   const APPKEY = process.env.VITE_KIS_APP_KEY;
   const APPSECRET = process.env.VITE_KIS_APP_SECRET;
 
+  console.log('APPKEY length:', APPKEY ? APPKEY.length : 'undefined');
+  console.log('APPSECRET length:', APPSECRET ? APPSECRET.length : 'undefined');
+  
   if (!APPKEY || !APPSECRET) {
     console.error('Environment variables VITE_KIS_APP_KEY or VITE_KIS_APP_SECRET are not set.');
     return new Response(JSON.stringify({ 
@@ -38,6 +41,8 @@ export default async function handler(req: Request) {
     let requestHeaders = new Headers();
     let requestBody: string | undefined;
     let requestMethod = req.method;
+
+    console.log('Fetching to targetUrl:', targetUrl);
 
     if (clientPath === 'oauth2/tokenP') {
       // --- KV CACHING LOGIC START ---
