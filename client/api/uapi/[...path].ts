@@ -2,10 +2,6 @@
 
 import { kv } from '@vercel/kv';
 
-export const config = {
-  runtime: 'edge', // Vercel Edge Runtime을 사용하여 별도의 타입 설치 없이 실행
-};
-
 export default async function handler(req: Request) {
   // Read APPKEY and APPSECRET from environment variables
   const APPKEY = process.env.VITE_KIS_APP_KEY;
