@@ -39,45 +39,24 @@ const App = () => {
   const tokenRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchKisToken = async () => {
-    console.log('Fetching KIS token...');
-    // Clear any existing timer to avoid multiple scheduled fetches
-    if (tokenRefreshTimerRef.current) {
-      clearTimeout(tokenRefreshTimerRef.current);
-      tokenRefreshTimerRef.current = null;
-    }
-
+    console.log('Requesting KIS token from serverless function...');
+    // The serverless function will handle caching and actual KIS API call
     try {
-      const response = await fetch(`${API_BASE_URL}/oauth2/tokenP`, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json; charset=UTF-8" },
-        body: JSON.stringify({
-          grant_type: "client_credentials",
-          appkey: KIS_APP_KEY,
-          appsecret: KIS_APP_SECRET
-        })
+      const response = await fetch(`${API_BASE_URL}/oauth2/tokenP`, { // Calls our serverless function
+        method: 'POST', // Serverless function expects POST
+        headers: { "Content-Type": "application/json; charset=UTF-8" }
+        // No need to send appkey/appsecret from client, serverless function knows them
       });
       const data = await response.json();
-      console.log('KIS token response:', data);
       if (data.access_token) {
-        // Schedule refresh a few minutes before actual expiration (e.g., 5 minutes = 300 seconds)
-        const refreshBuffer = 300; // seconds
-        const expires_at = new Date().getTime() + (data.expires_in - 120) * 1000;
-        const refresh_in_ms = (data.expires_in - refreshBuffer) * 1000;
-
-        console.log('New KIS token expires at:', new Date(expires_at));
-        localStorage.setItem('kis-token', JSON.stringify({ token: data.access_token, expires_at }));
         setKisToken(data.access_token);
-
-        // Schedule next token fetch
-        tokenRefreshTimerRef.current = setTimeout(() => {
-          console.log(`Scheduled KIS token refresh (due to expire in ${refreshBuffer}s)...`);
-          fetchKisToken();
-        }, refresh_in_ms);
-
+        console.log('Received KIS token from serverless function.');
+        // Client-side local storage and refresh timer are now unnecessary,
+        // as the serverless function will manage the token's lifecycle.
       } else {
-          console.error('Failed to get access_token from KIS response:', data);
+        console.error('Failed to get access_token from serverless function response:', data);
       }
-    } catch (e) { console.error("KIS 토큰 에러", e); }
+    } catch (e) { console.error("서버리스 토큰 요청 에러", e); }
   };
 
   const fetchStockPrice = async (token: string, stockCode: string) => {
@@ -116,21 +95,7 @@ const App = () => {
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem('kis-token');
-    if (stored) {
-      const { token, expires_at } = JSON.parse(stored);
-      console.log('Found stored KIS token. Expires at:', new Date(expires_at));
-      if (new Date().getTime() < expires_at) {
-        console.log('Using stored KIS token.');
-        setKisToken(token);
-      } else {
-        console.log('Stored KIS token has expired. Fetching a new one.');
-        fetchKisToken();
-      }
-    } else {
-      console.log('No stored KIS token found. Fetching a new one.');
-      fetchKisToken();
-    }
+    fetchKisToken(); // Simply call the serverless function to get token
 
     const channel = supabase.channel('realtime-messages').on('postgres_changes', 
       { event: 'INSERT', schema: 'public', table: 'messages' }, 
@@ -138,6 +103,7 @@ const App = () => {
     ).subscribe();
     return () => {
       supabase.removeChannel(channel);
+      // tokenRefreshTimerRef is no longer used, so clear it for good measure.
       if (tokenRefreshTimerRef.current) {
         clearTimeout(tokenRefreshTimerRef.current);
         tokenRefreshTimerRef.current = null;

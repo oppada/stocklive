@@ -1,5 +1,8 @@
 // api/uapi/[...path].ts
 
+let cachedKisToken: string | null = null;
+let cachedKisTokenExpiresAt: number = 0;
+
 export const config = {
   runtime: 'edge', // Vercel Edge Runtime을 사용하여 별도의 타입 설치 없이 실행
 };
@@ -42,6 +45,18 @@ export default async function handler(req: Request) {
     let requestMethod = req.method;
 
     if (clientPath === 'oauth2/tokenP') {
+      // --- NEW CACHING LOGIC START ---
+      const currentTime = Date.now();
+      if (cachedKisToken && cachedKisTokenExpiresAt > currentTime) {
+        console.log('Returning cached KIS token from serverless function.');
+        return new Response(JSON.stringify({ access_token: cachedKisToken }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+      console.log('Fetching new KIS token (or cached token expired) from KIS API via serverless function.');
+      // --- NEW CACHING LOGIC END ---
+
       // Special handling for KIS token issuance
       requestMethod = 'POST'; // Token issuance is typically POST
 
@@ -90,6 +105,15 @@ export default async function handler(req: Request) {
     let data;
     try {
       data = await response.json();
+      // --- NEW CACHING UPDATE LOGIC START ---
+      if (data.access_token && data.expires_in) {
+        cachedKisToken = data.access_token;
+        // KIS expires_in is in seconds, Date.now() is in milliseconds
+        // Set expiry a bit before actual expiry to be safe (e.g., 2 minutes before)
+        cachedKisTokenExpiresAt = Date.now() + (data.expires_in - 120) * 1000;
+        console.log('New KIS token cached in serverless function. Expires at:', new Date(cachedKisTokenExpiresAt));
+      }
+      // --- NEW CACHING UPDATE LOGIC END ---
     } catch (jsonError: any) {
       const rawResponseText = await response.text();
       console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
