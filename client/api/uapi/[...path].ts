@@ -30,7 +30,8 @@ export default async function handler(req: Request) {
     try {
     console.log('typeof req.headers:', typeof req.headers);
     console.log('req.headers:', req.headers);
-      url = new URL(req.url, (req.headers.get('x-forwarded-proto') || 'http') + '://' + (req.headers.get('host') || 'localhost'));
+    const headers = req.headers as Record<string, string>; // Type assertion to treat headers as a plain object
+    url = new URL(req.url, (headers['x-forwarded-proto'] || 'http') + '://' + (headers['host'] || 'localhost'));
       // /api/uapi/ 뒤의 경로를 추출 (for client side)
       clientPath = url.pathname.replace('/api/uapi/', '');
       searchParams = url.search;
