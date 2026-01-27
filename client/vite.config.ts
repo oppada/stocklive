@@ -7,12 +7,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/uapi': {
-        target: 'https://openapi.koreainvestment.com:9443',
+        target: 'https://stocklive-chi.vercel.app/',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api\/uapi/, '/uapi'),
-        headers: {
-          'Host': 'openapi.koreainvestment.com'
+
         }
       }
     }
