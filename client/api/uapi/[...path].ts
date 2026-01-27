@@ -28,6 +28,8 @@ export default async function handler(req: Request) {
     let clientPath: string; // Declare clientPath here
     let searchParams: string; // Declare searchParams here
     try {
+    console.log('typeof req.headers:', typeof req.headers);
+    console.log('req.headers:', req.headers);
       url = new URL(req.url, (req.headers.get('x-forwarded-proto') || 'http') + '://' + (req.headers.get('host') || 'localhost'));
       // /api/uapi/ 뒤의 경로를 추출 (for client side)
       clientPath = url.pathname.replace('/api/uapi/', '');
