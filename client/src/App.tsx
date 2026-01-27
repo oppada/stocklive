@@ -13,6 +13,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
+const API_BASE_URL = '/api/uapi';
+
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
@@ -45,7 +47,7 @@ const App = () => {
     }
 
     try {
-      const response = await fetch('/api/uapi/oauth2/tokenP', {
+      const response = await fetch(`${API_BASE_URL}/oauth2/tokenP`, {
         method: 'POST',
         headers: { "Content-Type": "application/json; charset=UTF-8" },
         body: JSON.stringify({
@@ -80,7 +82,7 @@ const App = () => {
 
   const fetchStockPrice = async (token: string, stockCode: string) => {
     try {
-      const response = await fetch(`/api/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
+      const response = await fetch(`${API_BASE_URL}/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
         headers: {
           "authorization": `Bearer ${token}`,
           "appkey": KIS_APP_KEY,
