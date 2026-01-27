@@ -12,7 +12,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
-
+const themeData = [
+  { "name": "AI 반도체", "codes": ["047810", "000660", "399220"] },
+  { "name": "이차전지", "codes": ["086520", "373220", "066970"] },
+  { "name": "로봇", "codes": ["272210", "454910", "054040"] },
+  { "name": "우주항공", "codes": ["012450", "047810", "451760"] }
+];
 
 const tickerStocks = [
   { name: '삼성전자', code: '005930' },
@@ -37,12 +42,30 @@ const App = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const fetchKisToken = async () => {
+    try {
+      // ✅ 경로에 /api 추가
+      const response = await fetch('/api/uapi/oauth2/tokenP', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json; charset=UTF-8" },
+        body: JSON.stringify({
+          grant_type: "client_credentials",
+          appkey: KIS_APP_KEY,
+          appsecret: KIS_APP_SECRET
+        })
+      });
+      const data = await response.json();
+      if (data.access_token) {
+        const expires_at = new Date().getTime() + (data.expires_in - 120) * 1000;
+        localStorage.setItem('kis-token', JSON.stringify({ token: data.access_token, expires_at }));
+        setKisToken(data.access_token);
       }
-    } catch (e) { console.error("서버리스 토큰 요청 에러", e); }
+    } catch (e) { console.error("KIS 토큰 에러", e); }
   };
 
   const fetchStockPrice = async (token: string, stockCode: string) => {
     try {
+      // ✅ 경로에 /api 추가
+      const response = await fetch(`/api/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
         headers: {
           "authorization": `Bearer ${token}`,
           "appkey": KIS_APP_KEY,
@@ -69,11 +92,23 @@ const App = () => {
   };
 
   useEffect(() => {
+    const stored = localStorage.getItem('kis-token');
+    if (stored) {
+      const { token, expires_at } = JSON.parse(stored);
+      if (new Date().getTime() < expires_at) {
+        setKisToken(token);
+      } else {
+        fetchKisToken();
+      }
+    } else {
+      fetchKisToken();
+    }
 
     const channel = supabase.channel('realtime-messages').on('postgres_changes', 
       { event: 'INSERT', schema: 'public', table: 'messages' }, 
       (payload) => setMessages(prev => [...prev, payload.new])
     ).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   useEffect(() => {
