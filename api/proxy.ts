@@ -2,12 +2,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // 1. URL 추출 및 대상 주소 설정
+  // 1. URL 추출 및 대상 주소 설정 (Vercel 환경 대응)
   const url = req.url || '';
   const path = url.replace('/api/uapi', '/uapi');
   const targetUrl = `https://openapi.koreainvestment.com:9443${path}`;
 
-  // 2. 헤더 처리 (중요: .get() 대신 객체 접근 방식을 사용해야 함)
+  // 2. 헤더 처리: req.headers.get() 대신 객체 접근 방식을 사용함
   const headers: Record<string, string> = {
     'Content-Type': 'application/json; charset=UTF-8',
     'authorization': (req.headers['authorization'] as string) || '',
@@ -23,9 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: headers,
     };
 
-    // GET 이외의 요청(POST 등)일 때만 body를 포함시킴
+    // GET 이외의 요청(POST 등)일 때만 바디를 포함시킴
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      // req.body가 이미 객체라면 stringify하고, 문자열이라면 그대로 사용
+      // Vercel은 바디를 이미 파싱해두므로 다시 문자열화하여 전달
       fetchOptions.body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     }
 
@@ -38,7 +38,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Proxy Server Error:', error.message);
     return res.status(500).json({ 
       error: 'Proxy Error', 
-      message: error.message 
+      message: error.message,
+      targetUrl: targetUrl
     });
   }
 }
