@@ -113,7 +113,9 @@ export default async function handler(req: Request) {
     }
 
     let data;
-
+    try {
+      data = await response.json();
+    } catch (jsonError: any) {
       const rawResponseText = await response.text();
       console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
       return new Response(JSON.stringify({
