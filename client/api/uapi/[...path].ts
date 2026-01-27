@@ -23,13 +23,24 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const url = new URL(req.url);
-    console.log('req.url:', req.url); // New log
-    // /api/uapi/ 뒤의 경로를 추출 (for client side)
-    const clientPath = url.pathname.replace('/api/uapi/', '');
-    console.log('clientPath:', clientPath); // New log
+    console.log('Raw req.url:', req.url); // Added for debugging
+    let url;
+    try {
+      url = new URL(req.url);
+    } catch (urlError: any) {
+      console.error(`Error parsing req.url: ${urlError.message}, Raw req.url: ${req.url}`);
+      return new Response(JSON.stringify({ 
+        error: 'URL Parsing Error', 
+        message: 'Could not parse the request URL.',
+        details: urlError.message,
+        rawUrl: req.url
+      }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
+
     const searchParams = url.search;
-    console.log('searchParams:', searchParams); // New log
 
     let targetUrl;
     // Determine the correct target URL based on the clientPath
@@ -44,8 +55,6 @@ export default async function handler(req: Request) {
     let requestHeaders = new Headers();
     let requestBody: string | undefined;
     let requestMethod = req.method;
-
-    console.log('Fetching to targetUrl:', targetUrl);
 
     if (clientPath === 'oauth2/tokenP') {
       // --- KV CACHING LOGIC START ---
