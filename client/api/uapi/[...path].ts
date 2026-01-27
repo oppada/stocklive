@@ -45,7 +45,7 @@ export default async function handler(req: Request) {
       });
     }
 
-    const searchParams = url.search;
+    searchParams = url.search;
 
     let targetUrl;
     // Determine the correct target URL based on the clientPath
