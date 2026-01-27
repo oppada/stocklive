@@ -1,6 +1,6 @@
 // api/uapi/[...path].ts
 
-import { kv } from '@vercel/kv';
+
 
 export default async function handler(req: Request) {
   // Read APPKEY and APPSECRET from environment variables
@@ -65,19 +65,7 @@ export default async function handler(req: Request) {
     let requestMethod = req.method;
 
     if (clientPath === 'oauth2/tokenP') {
-      // --- KV CACHING LOGIC START ---
-      const kvTokenData = await kv.get<{ token: string; expiresAt: number }>('kis_token');
-      const currentTime = Date.now();
 
-      if (kvTokenData && kvTokenData.expiresAt > currentTime) {
-        console.log('Returning cached KIS token from KV store.');
-        return new Response(JSON.stringify({ access_token: kvTokenData.token }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
-      }
-      console.log('Fetching new KIS token (or cached token expired) from KIS API via serverless function.');
-      // --- KV CACHING LOGIC END ---
 
       // Special handling for KIS token issuance
       requestMethod = 'POST'; // Token issuance is typically POST
@@ -125,16 +113,7 @@ export default async function handler(req: Request) {
     }
 
     let data;
-    try {
-      data = await response.json();
-      // --- NEW CACHING UPDATE LOGIC START ---
-      if (data.access_token && data.expires_in) {
-        const expiresAt = Date.now() + (data.expires_in - 120) * 1000;
-        await kv.set('kis_token', { token: data.access_token, expiresAt }, { ex: data.expires_in - 120 });
-        console.log('New KIS token cached in KV store. Expires at:', new Date(expiresAt));
-      }
-      // --- NEW CACHING UPDATE LOGIC END ---
-    } catch (jsonError: any) {
+
       const rawResponseText = await response.text();
       console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
       return new Response(JSON.stringify({
