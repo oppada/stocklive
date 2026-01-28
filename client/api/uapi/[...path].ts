@@ -1,74 +1,57 @@
 // api/uapi/[...path].ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Redis } from '@upstash/redis';
 
-// import { Redis } from '@upstash/redis';
-// const redis = Redis.fromEnv();
+// Initialize the Redis client from environment variables
+const redis = Redis.fromEnv();
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Read APPKEY and APPSECRET from environment variables
+  // Read environment variables
   const APPKEY = process.env.VITE_KIS_APP_KEY;
   const APPSECRET = process.env.VITE_KIS_APP_SECRET;
   const KIS_BASE_URL = process.env.VITE_KIS_BASE_URL;
 
-  console.log('APPKEY length:', APPKEY ? APPKEY.length : 'undefined');
-  console.log('APPSECRET length:', APPSECRET ? APPSECRET.length : 'undefined');
-  console.log('KIS_BASE_URL:', KIS_BASE_URL);
-  
+  // Validate environment variables
   if (!APPKEY || !APPSECRET || !KIS_BASE_URL) {
-    console.error('Environment variables VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, or VITE_KIS_BASE_URL are not set.');
+    console.error('Server-side environment variables are not completely set.');
     return res.status(500).json({ 
       error: 'Configuration Error', 
-      message: 'Server-side environment variables are not completely set.',
-      details: 'Please ensure VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, and VITE_KIS_BASE_URL are configured in your Vercel project environment variables.'
+      message: 'One or more required environment variables are not set on the server.'
     });
   }
 
   try {
-    const headers = req.headers;
-    console.log('Raw req.url:', req.url); // Example: /api/uapi/oauth2/tokenP
-    
-    let url: URL;
-    let clientPath: string;
-    let searchParams: string;
-
-    try {
-      console.log('typeof req.headers:', typeof headers);
-      console.log('req.headers:', headers);
-      const host = headers['host'] || 'localhost';
-      const protocol = headers['x-forwarded-proto'] || 'http';
-      // req.url is only the path and query string, so we need to construct the full URL
-      url = new URL(req.url!, `${protocol}://${host}`);
-      clientPath = url.pathname.replace('/api/uapi/', '');
-      searchParams = url.search;
-    } catch (urlError: any) {
-      console.error(`Error parsing req.url: ${urlError.message}, Raw req.url: ${req.url}`);
-      return res.status(500).json({ 
-        error: 'URL Parsing Error', 
-        message: 'Could not parse the request URL.',
-        details: urlError.message,
-        rawUrl: req.url
-      });
+    // Safely parse the request URL
+    if (!req.url) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Request URL is missing.' });
     }
+    const host = req.headers['host'] || 'localhost';
+    const protocol = req.headers['x-forwarded-proto'] || 'http';
+    const url = new URL(req.url, `${protocol}://${host}`);
+    const clientPath = url.pathname.replace('/api/uapi/', '');
+    const searchParams = url.search;
 
     let targetUrl;
-    // Determine the correct target URL based on the clientPath
     if (clientPath === 'oauth2/tokenP') {
       targetUrl = `${KIS_BASE_URL}/${clientPath}${searchParams}`;
     } else {
       targetUrl = `${KIS_BASE_URL}/uapi/${clientPath}${searchParams}`;
     }
 
-    let requestHeaders = new Headers();
+    const requestHeaders = new Headers();
     let requestBody: string | undefined;
-    let requestMethod = req.method;
+    let requestMethod = req.method || 'GET';
 
+    // Handle token issuance path
     if (clientPath === 'oauth2/tokenP') {
-      // DEBUGGING STEP: Return a dummy response immediately
-      console.log('DEBUG: Bypassing external calls and returning dummy token.');
-      return res.status(200).json({ access_token: "dummy-token-for-debugging" });
+      // 1. Check for a cached token in Upstash Redis
+      const cachedToken = await redis.get<string>('kis-token');
+      if (cachedToken) {
+        console.log('Returning cached KIS token from Upstash Redis.');
+        return res.status(200).json({ access_token: cachedToken });
+      }
 
-      /*
-      // Original logic to be restored later
+      // 2. If no cache, fetch a new token from KIS API
       console.log('Fetching new KIS token (cache empty or expired) from KIS API.');
       requestMethod = 'POST';
       requestBody = JSON.stringify({
@@ -77,28 +60,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'appsecret': APPSECRET
       });
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
-      */
+    
     } else {
-      // General handling for other KIS API calls
+      // Handle all other API proxy paths
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
-      // VercelRequest['headers'] doesn't have .get, access with brackets
-      requestHeaders.set('appkey', (headers['appkey'] as string) || '');
-      requestHeaders.set('appsecret', (headers['appsecret'] as string) || '');
-      requestHeaders.set('authorization', (headers['authorization'] as string) || '');
-      requestHeaders.set('tr_id', (headers['tr_id'] as string) || '');
+      
+      // Safely forward headers from the client request
+      const headersToForward = ['appkey', 'appsecret', 'authorization', 'tr_id'];
+      for (const header of headersToForward) {
+        const value = req.headers[header];
+        if (typeof value === 'string') {
+          requestHeaders.set(header, value);
+        }
+      }
       requestHeaders.set('custtype', 'P');
-      if (req.method !== 'GET' && req.body) {
+
+      if (requestMethod !== 'GET' && req.body) {
         requestBody = JSON.stringify(req.body);
       }
     }
 
-    // This part is unreachable for 'oauth2/tokenP' path during this debug step
+    // Make the proxied request to the KIS API
     const response = await fetch(targetUrl, {
       method: requestMethod,
       headers: requestHeaders,
       body: requestBody,
     });
 
+    // Handle unsuccessful KIS API responses
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`KIS API responded with status ${response.status} for ${targetUrl}: ${errorText}`);
@@ -110,30 +99,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    let data;
-    try {
-      data = await response.json();
-      //
-      // Caching logic will be re-inserted here later
-      //
-    } catch (jsonError: any) {
-      const rawResponseText = await response.text();
-      console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
-      return res.status(500).json({
-        error: 'Proxy Error',
-        message: 'Failed to parse KIS API response as JSON',
-        details: rawResponseText,
-        originalError: jsonError.message,
-        targetUrl: targetUrl
-      });
+    const data = await response.json();
+
+    // 3. If a new token was fetched, cache it in Redis
+    if (clientPath === 'oauth2/tokenP' && data.access_token && data.expires_in) {
+      const expiresInSeconds = data.expires_in - 120; // Cache for slightly less time
+      await redis.set('kis-token', data.access_token, { ex: expiresInSeconds });
+      console.log(`New KIS token cached in Upstash Redis. Expires in: ${expiresInSeconds} seconds.`);
     }
 
-    return res.status(response.status).json(data);
+    // Return the final data to the client
+    return res.status(200).json(data);
+
   } catch (error: any) {
-    console.error(`Unhandled Proxy Error: ${error.message}`);
+    console.error(`Unhandled Proxy Error: ${error.stack}`);
     return res.status(500).json({ 
       error: 'Proxy Error', 
-      message: 'An unexpected error occurred in the proxy function',
+      message: 'An unexpected error occurred in the proxy function.',
       details: error.message
     });
   }
