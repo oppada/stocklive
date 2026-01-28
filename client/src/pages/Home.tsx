@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { Search, Bell, Menu, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Stock {
@@ -84,7 +84,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-1.5 rounded-xl text-[14px] font-bold transition-all whitespace-nowrap
+              className={`px-2 py-1 sm:px-4 sm:py-1.5 rounded-xl text-xs sm:text-[14px] font-bold transition-all whitespace-nowrap
                 ${activeTab === tab ? 'text-white bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
             >
               {tab}

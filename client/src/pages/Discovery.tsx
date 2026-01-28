@@ -1,5 +1,4 @@
-import React from 'react';
-import { Search, Zap, Globe, BarChart3, Coins, Trophy } from 'lucide-react';
+import { Search, Zap, Globe, BarChart3, Trophy } from 'lucide-react';
 
 const CATEGORIES = [
   { icon: <Zap size={18}/>, name: '급상승', color: 'from-red-500 to-orange-500' },

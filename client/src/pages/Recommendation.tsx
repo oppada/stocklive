@@ -1,5 +1,4 @@
-import React from 'react';
-import { Flame, ChevronRight, Star } from 'lucide-react';
+import { Flame, ChevronRight } from 'lucide-react';
 
 const RECOMMEND_DATA = [
   { rank: '01', name: '삼성전자', reason: '외국인이 5일 연속 집중 매수 중', price: 78200, change: 1.2, tags: ['우량주', '반도체'] },

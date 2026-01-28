@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { 
-  Search, Bell, User, MessageCircle, TrendingUp, 
-  Home as HomeIcon, PieChart, Newspaper, Zap, Send, ArrowUpRight, ChevronLeft
-} from 'lucide-react'; // Renamed Home to HomeIcon to avoid conflict with imported Home component
+  Search, Bell, User, MessageCircle, Home as HomeIcon, PieChart, Newspaper, Zap
+} from 'lucide-react'; 
 
 // Page component imports
 import HomePage from './pages/Home'; // Renamed to HomePage to avoid conflict
@@ -13,7 +12,7 @@ import News from './pages/News';
 import Discovery from './pages/Discovery';
 import StockDetail from './pages/StockDetail';
 
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient'; // Import supabase from the new client
 
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;

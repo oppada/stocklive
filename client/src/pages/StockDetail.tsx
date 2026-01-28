@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, MessageSquare, Newspaper, BarChart3, Info, Table } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 
 const StockDetail = () => {
   const { symbol } = useParams(); // URL에서 종목 코드 추출
