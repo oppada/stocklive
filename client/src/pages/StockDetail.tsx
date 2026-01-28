@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 
 const StockDetail = () => {
