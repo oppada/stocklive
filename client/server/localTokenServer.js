@@ -1,11 +1,12 @@
-// server/localTokenServer.js
+// server/localTokenServer.js 수정본
 import fetch from 'node-fetch';
 import http from 'http';
 import url from 'url';
-import dotenv from 'dotenv'; // Import dotenv
+import dotenv from 'dotenv';
+import path from 'path'; // path 모듈 추가
 
-// Load environment variables directly into this process
-dotenv.config({ path: 'C:\\Users\\user\\stocklive\\client\\.env.local' });
+// [수정] 회사 경로 하드코딩 제거 -> 현재 실행 경로(process.cwd()) 기준으로 변경
+dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 
 let cachedToken = null;
 let tokenExpiry = 0; // Timestamp when the token expires
