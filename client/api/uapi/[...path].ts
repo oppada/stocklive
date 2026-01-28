@@ -26,7 +26,7 @@ export default async function handler(req: Request) {
   }
 
   try {
-    const headers = req.headers as Record<string, string>;
+    const headers = req.headers as unknown as Record<string, string>;
     console.log('Raw req.url:', req.url); // Added for debugging
     let url;
     let clientPath: string; // Declare clientPath here
