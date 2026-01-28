@@ -1,5 +1,7 @@
 // api/uapi/[...path].ts
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req: Request) {
   // Read APPKEY and APPSECRET from environment variables
@@ -68,10 +70,10 @@ export default async function handler(req: Request) {
     let requestMethod = req.method;
 
     if (clientPath === 'oauth2/tokenP') {
-      // Check cache first for KIS token from Vercel KV
-      const cachedToken = await kv.get<string>('kis-token');
+      // Check cache first for KIS token from Upstash Redis
+      const cachedToken = await redis.get<string>('kis-token');
       if (cachedToken) {
-        console.log('Returning cached KIS token from Vercel KV.');
+        console.log('Returning cached KIS token from Upstash Redis.');
         return new Response(JSON.stringify({ access_token: cachedToken }), {
           status: 200,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -127,12 +129,12 @@ export default async function handler(req: Request) {
     let data;
     try {
       data = await response.json();
-      // Update Vercel KV cache
+      // Update Upstash Redis cache
       if (data.access_token && data.expires_in) {
         // KIS 'expires_in' is in seconds, cache for slightly less to avoid using an expired token
         const expiresInSeconds = data.expires_in - 60; // Cache for (expires_in - 60) seconds
-        await kv.set('kis-token', data.access_token, { ex: expiresInSeconds });
-        console.log(`New KIS token cached in Vercel KV. Expires in: ${expiresInSeconds} seconds.`);
+        await redis.set('kis-token', data.access_token, { ex: expiresInSeconds });
+        console.log(`New KIS token cached in Upstash Redis. Expires in: ${expiresInSeconds} seconds.`);
       }
     } catch (jsonError: any) {
       const rawResponseText = await response.text();
