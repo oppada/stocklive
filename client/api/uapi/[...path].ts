@@ -7,16 +7,18 @@ export default async function handler(req: Request) {
   // Read APPKEY and APPSECRET from environment variables
   const APPKEY = process.env.VITE_KIS_APP_KEY;
   const APPSECRET = process.env.VITE_KIS_APP_SECRET;
+  const KIS_BASE_URL = process.env.VITE_KIS_BASE_URL;
 
   console.log('APPKEY length:', APPKEY ? APPKEY.length : 'undefined');
   console.log('APPSECRET length:', APPSECRET ? APPSECRET.length : 'undefined');
+  console.log('KIS_BASE_URL:', KIS_BASE_URL);
   
-  if (!APPKEY || !APPSECRET) {
-    console.error('Environment variables VITE_KIS_APP_KEY or VITE_KIS_APP_SECRET are not set.');
+  if (!APPKEY || !APPSECRET || !KIS_BASE_URL) {
+    console.error('Environment variables VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, or VITE_KIS_BASE_URL are not set.');
     return new Response(JSON.stringify({ 
       error: 'Configuration Error', 
-      message: 'Server-side VITE_KIS_APP_KEY or VITE_KIS_APP_SECRET environment variables are not set.',
-      details: 'Please ensure VITE_KIS_APP_KEY and VITE_KIS_APP_SECRET are configured in your Vercel project environment variables.'
+      message: 'Server-side environment variables are not completely set.',
+      details: 'Please ensure VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, and VITE_KIS_BASE_URL are configured in your Vercel project environment variables.'
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -24,16 +26,17 @@ export default async function handler(req: Request) {
   }
 
   try {
+    const headers = req.headers as Record<string, string>;
     console.log('Raw req.url:', req.url); // Added for debugging
     let url;
     let clientPath: string; // Declare clientPath here
     let searchParams: string; // Declare searchParams here
     try {
-    console.log('typeof req.headers:', typeof req.headers);
-    console.log('req.headers:', req.headers);
-    const xForwardedProto = req.headers.get('x-forwarded-proto') || 'http';
-    const host = req.headers.get('host') || 'localhost';
-    url = new URL(req.url, `${xForwardedProto}://${host}`);
+      console.log('typeof req.headers:', typeof headers);
+      console.log('req.headers:', headers);
+      const xForwardedProto = headers['x-forwarded-proto'] || 'http';
+      const host = headers['host'] || 'localhost';
+      url = new URL(req.url, `${xForwardedProto}://${host}`);
       // /api/uapi/ 뒤의 경로를 추출 (for client side)
       clientPath = url.pathname.replace('/api/uapi/', '');
       searchParams = url.search;
@@ -56,10 +59,10 @@ export default async function handler(req: Request) {
     // Determine the correct target URL based on the clientPath
     if (clientPath === 'oauth2/tokenP') {
       // For token issuance, remove the '/uapi' prefix from the target URL
-      targetUrl = `https://openapi.koreainvestment.com:9443/${clientPath}${searchParams}`;
+      targetUrl = `${KIS_BASE_URL}/${clientPath}${searchParams}`;
     } else {
       // For other KIS API calls, keep the '/uapi' prefix
-      targetUrl = `https://openapi.koreainvestment.com:9443/uapi/${clientPath}${searchParams}`;
+      targetUrl = `${KIS_BASE_URL}/uapi/${clientPath}${searchParams}`;
     }
 
     let requestHeaders = new Headers();
@@ -94,10 +97,10 @@ export default async function handler(req: Request) {
       // General handling for other KIS API calls
       // Pass client-provided appkey/appsecret (if any) and other headers
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
-      requestHeaders.set('appkey', req.headers.get('appkey') || '');
-      requestHeaders.set('appsecret', req.headers.get('appsecret') || '');
-      requestHeaders.set('authorization', req.headers.get('authorization') || '');
-      requestHeaders.set('tr_id', req.headers.get('tr_id') || '');
+      requestHeaders.set('appkey', headers['appkey'] || '');
+      requestHeaders.set('appsecret', headers['appsecret'] || '');
+      requestHeaders.set('authorization', headers['authorization'] || '');
+      requestHeaders.set('tr_id', headers['tr_id'] || '');
       requestHeaders.set('custtype', 'P');
       requestBody = req.method !== 'GET' ? await req.text() : undefined;
     }
