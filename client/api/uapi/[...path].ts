@@ -70,6 +70,14 @@ export default async function handler(req: Request) {
     let requestMethod = req.method;
 
     if (clientPath === 'oauth2/tokenP') {
+      // DEBUGGING STEP: Bypass Redis and return a dummy response
+      console.log('DEBUG: Bypassing Redis and returning dummy token.');
+      return new Response(JSON.stringify({ access_token: "dummy-token-for-debugging" }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+
+      /* // Original code commented out for debugging
       // Check cache first for KIS token from Upstash Redis
       const cachedToken = await redis.get<string>('kis-token');
       if (cachedToken) {
@@ -79,6 +87,7 @@ export default async function handler(req: Request) {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         });
       }
+      */
       console.log('Fetching new KIS token (cache empty or expired) from KIS API.');
 
       // Special handling for KIS token issuance
