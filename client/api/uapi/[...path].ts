@@ -1,9 +1,10 @@
 // api/uapi/[...path].ts
-import { Redis } from '@upstash/redis';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const redis = Redis.fromEnv();
+// import { Redis } from '@upstash/redis';
+// const redis = Redis.fromEnv();
 
-export default async function handler(req: Request) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Read APPKEY and APPSECRET from environment variables
   const APPKEY = process.env.VITE_KIS_APP_KEY;
   const APPSECRET = process.env.VITE_KIS_APP_SECRET;
@@ -15,53 +16,45 @@ export default async function handler(req: Request) {
   
   if (!APPKEY || !APPSECRET || !KIS_BASE_URL) {
     console.error('Environment variables VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, or VITE_KIS_BASE_URL are not set.');
-    return new Response(JSON.stringify({ 
+    return res.status(500).json({ 
       error: 'Configuration Error', 
       message: 'Server-side environment variables are not completely set.',
       details: 'Please ensure VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, and VITE_KIS_BASE_URL are configured in your Vercel project environment variables.'
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 
   try {
-    const headers = req.headers as unknown as Record<string, string>;
-    console.log('Raw req.url:', req.url); // Added for debugging
-    let url;
-    let clientPath: string; // Declare clientPath here
-    let searchParams: string; // Declare searchParams here
+    const headers = req.headers;
+    console.log('Raw req.url:', req.url); // Example: /api/uapi/oauth2/tokenP
+    
+    let url: URL;
+    let clientPath: string;
+    let searchParams: string;
+
     try {
       console.log('typeof req.headers:', typeof headers);
       console.log('req.headers:', headers);
-      const xForwardedProto = headers['x-forwarded-proto'] || 'http';
       const host = headers['host'] || 'localhost';
-      url = new URL(req.url, `${xForwardedProto}://${host}`);
-      // /api/uapi/ 뒤의 경로를 추출 (for client side)
+      const protocol = headers['x-forwarded-proto'] || 'http';
+      // req.url is only the path and query string, so we need to construct the full URL
+      url = new URL(req.url!, `${protocol}://${host}`);
       clientPath = url.pathname.replace('/api/uapi/', '');
       searchParams = url.search;
     } catch (urlError: any) {
       console.error(`Error parsing req.url: ${urlError.message}, Raw req.url: ${req.url}`);
-      return new Response(JSON.stringify({ 
+      return res.status(500).json({ 
         error: 'URL Parsing Error', 
         message: 'Could not parse the request URL.',
         details: urlError.message,
         rawUrl: req.url
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
     }
-
-    searchParams = url.search;
 
     let targetUrl;
     // Determine the correct target URL based on the clientPath
     if (clientPath === 'oauth2/tokenP') {
-      // For token issuance, remove the '/uapi' prefix from the target URL
       targetUrl = `${KIS_BASE_URL}/${clientPath}${searchParams}`;
     } else {
-      // For other KIS API calls, keep the '/uapi' prefix
       targetUrl = `${KIS_BASE_URL}/uapi/${clientPath}${searchParams}`;
     }
 
@@ -70,112 +63,78 @@ export default async function handler(req: Request) {
     let requestMethod = req.method;
 
     if (clientPath === 'oauth2/tokenP') {
-      // DEBUGGING STEP: Bypass Redis and return a dummy response
-      console.log('DEBUG: Bypassing Redis and returning dummy token.');
-      return new Response(JSON.stringify({ access_token: "dummy-token-for-debugging" }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-      });
+      // DEBUGGING STEP: Return a dummy response immediately
+      console.log('DEBUG: Bypassing external calls and returning dummy token.');
+      return res.status(200).json({ access_token: "dummy-token-for-debugging" });
 
-      /* // Original code commented out for debugging
-      // Check cache first for KIS token from Upstash Redis
-      const cachedToken = await redis.get<string>('kis-token');
-      if (cachedToken) {
-        console.log('Returning cached KIS token from Upstash Redis.');
-        return new Response(JSON.stringify({ access_token: cachedToken }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-        });
-      }
-      */
+      /*
+      // Original logic to be restored later
       console.log('Fetching new KIS token (cache empty or expired) from KIS API.');
-
-      // Special handling for KIS token issuance
-      requestMethod = 'POST'; // Token issuance is typically POST
-
-      // Use APPKEY and APPSECRET from environment variables
+      requestMethod = 'POST';
       requestBody = JSON.stringify({
         'grant_type': 'client_credentials',
         'appkey': APPKEY,
         'appsecret': APPSECRET
       });
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
-      // No other headers like tr_id, custtype, authorization for token issuance
-      // So, for tokenP, we only send Content-Type in headers.
+      */
     } else {
       // General handling for other KIS API calls
-      // Pass client-provided appkey/appsecret (if any) and other headers
       requestHeaders.set('Content-Type', 'application/json; charset=UTF-8');
-      requestHeaders.set('appkey', headers['appkey'] || '');
-      requestHeaders.set('appsecret', headers['appsecret'] || '');
-      requestHeaders.set('authorization', headers['authorization'] || '');
-      requestHeaders.set('tr_id', headers['tr_id'] || '');
+      // VercelRequest['headers'] doesn't have .get, access with brackets
+      requestHeaders.set('appkey', (headers['appkey'] as string) || '');
+      requestHeaders.set('appsecret', (headers['appsecret'] as string) || '');
+      requestHeaders.set('authorization', (headers['authorization'] as string) || '');
+      requestHeaders.set('tr_id', (headers['tr_id'] as string) || '');
       requestHeaders.set('custtype', 'P');
-      requestBody = req.method !== 'GET' ? await req.text() : undefined;
+      if (req.method !== 'GET' && req.body) {
+        requestBody = JSON.stringify(req.body);
+      }
     }
 
+    // This part is unreachable for 'oauth2/tokenP' path during this debug step
     const response = await fetch(targetUrl, {
       method: requestMethod,
       headers: requestHeaders,
       body: requestBody,
     });
 
-    // Check if the response from KIS API was successful
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`KIS API responded with status ${response.status} for ${targetUrl}: ${errorText}`);
-      return new Response(JSON.stringify({
+      return res.status(response.status).json({
         error: 'KIS API Error',
         message: `KIS API responded with status ${response.status}`,
         details: errorText,
         targetUrl: targetUrl
-      }), {
-        status: response.status,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
     }
 
     let data;
     try {
       data = await response.json();
-      // Update Upstash Redis cache
-      if (data.access_token && data.expires_in) {
-        // KIS 'expires_in' is in seconds, cache for slightly less to avoid using an expired token
-        const expiresInSeconds = data.expires_in - 60; // Cache for (expires_in - 60) seconds
-        await redis.set('kis-token', data.access_token, { ex: expiresInSeconds });
-        console.log(`New KIS token cached in Upstash Redis. Expires in: ${expiresInSeconds} seconds.`);
-      }
+      //
+      // Caching logic will be re-inserted here later
+      //
     } catch (jsonError: any) {
       const rawResponseText = await response.text();
       console.error(`Failed to parse KIS API response as JSON for ${targetUrl}. Raw response: ${rawResponseText}. Error: ${jsonError.message}`);
-      return new Response(JSON.stringify({
+      return res.status(500).json({
         error: 'Proxy Error',
         message: 'Failed to parse KIS API response as JSON',
         details: rawResponseText,
         originalError: jsonError.message,
         targetUrl: targetUrl
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
       });
     }
 
-    return new Response(JSON.stringify(data), {
-      status: response.status,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    });
+    return res.status(response.status).json(data);
   } catch (error: any) {
     console.error(`Unhandled Proxy Error: ${error.message}`);
-    return new Response(JSON.stringify({ 
+    return res.status(500).json({ 
       error: 'Proxy Error', 
       message: 'An unexpected error occurred in the proxy function',
       details: error.message
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }
 }
