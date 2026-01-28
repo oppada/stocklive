@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+
 import { 
   Search, Bell, User, MessageCircle, TrendingUp, 
-  Home, PieChart, Newspaper, Zap, Send, ArrowUpRight
-} from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+  Home as HomeIcon, PieChart, Newspaper, Zap, Send, ArrowUpRight, ChevronLeft
+} from 'lucide-react'; // Renamed Home to HomeIcon to avoid conflict with imported Home component
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Page component imports
+import HomePage from './pages/Home'; // Renamed to HomePage to avoid conflict
+import Recommendation from './pages/Recommendation';
+import News from './pages/News';
+import Discovery from './pages/Discovery';
+import StockDetail from './pages/StockDetail';
+
+import { supabase } from './supabaseClient';
 
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
@@ -29,11 +35,13 @@ const tickerStocks = [
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
-  return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * animals.length)]}`;
+  return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * adjs.length)]}`;
 };
 
 const App = () => {
-  const [activeTab, setActiveTab] = useState('홈');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isChatRoute = location.pathname === '/chat'; // Define isChatRoute
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
   const [myNickname] = useState(generateNickname());
@@ -134,112 +142,25 @@ const App = () => {
     } catch (e) { console.error("전송 실패", e); }
   };
 
-  const renderHome = () => {
-    const calculatedThemes = themeData.map(theme => {
-      let sum = 0;
-      let count = 0;
-      theme.codes.forEach(code => {
-        const price = stockPrices[code];
-        if (price) {
-          sum += parseFloat(price.change);
-          count++;
-        }
-      });
-      return { name: theme.name, avg: count > 0 ? sum / count : 0 };
-    }).sort((a, b) => b.avg - a.avg);
-
-    return (
-      <section className="space-y-6">
-        <div className="flex justify-between items-end px-1">
-          <h2 className="text-xl font-black text-white flex items-center gap-2">
-            <TrendingUp className="text-rose-500 w-5 h-5" /> 지금 뜨는 테마
-          </h2>
-          <span className="text-[10px] text-slate-500">실시간 등락 평균순</span>
-        </div>
-        <div className="grid grid-cols-1 gap-3">
-          {calculatedThemes.map((theme, i) => (
-            <div key={theme.name} className="bg-[#111418] border border-white/5 p-5 rounded-3xl flex justify-between items-center transition-all hover:bg-[#1a1f26]">
-              <div className="flex items-center gap-4">
-                <span className={`text-lg font-black ${i < 3 ? 'text-rose-500' : 'text-slate-700'}`}>{i + 1}</span>
-                <h3 className="font-bold text-white">{theme.name}</h3>
-              </div>
-              <span className={`text-lg font-black ${theme.avg >= 0 ? 'text-rose-500' : 'text-blue-500'}`}>
-                {theme.avg >= 0 ? '+' : ''}{theme.avg.toFixed(2)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case '홈': return renderHome();
-      case '추천':
-        return (
-          <section className="space-y-6 text-white">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white"><PieChart className="text-blue-500 w-5 h-5" /> 전략 종목</h2>
-            <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-3xl flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-black">삼성전자 <span className="text-rose-500 text-sm ml-2">+1.2%</span></h3>
-                <p className="text-slate-400 text-sm">HBM3 공급 본격화 기대감</p>
-              </div>
-              <button className="bg-white text-black p-2 rounded-xl"><ArrowUpRight className="w-5 h-5" /></button>
-            </div>
-          </section>
-        );
-      case '뉴스':
-        return (
-          <section className="space-y-6 text-white">
-            <h2 className="text-xl font-bold flex items-center gap-2"><Newspaper className="text-emerald-500 w-5 h-5" /> 실시간 뉴스</h2>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border-b border-white/5 pb-4">
-                  <h3 className="text-slate-200">[특징주] 반도체 장비주, 엔비디아 강세에 동반 오름세</h3>
-                  <p className="text-xs text-slate-500 mt-1">10분 전</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        );
-      case '탐색':
-        return (
-          <section className="space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-white"><Search className="text-blue-500 w-5 h-5" /> 종목 탐색</h2>
-            <div className="relative">
-              <input type="text" placeholder="종목명 또는 코드 입력" className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-12 py-4 text-white outline-none" />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5" />
-            </div>
-          </section>
-        );
-      case '톡':
-        return (
-          <div className="flex flex-col h-[calc(100vh-140px)] bg-slate-950 -m-4 md:hidden">
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-20">
-              {messages.map((m, i) => (
-                <div key={i} className="text-sm"><span className="font-bold text-blue-400">{m.user}:</span> <span className="text-slate-200">{m.text}</span></div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-            <form onSubmit={handleSendMessage} className="fixed bottom-16 left-0 right-0 p-4 bg-slate-900 flex gap-2">
-              <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="flex-1 bg-slate-950 rounded-xl px-4 py-2 text-white text-sm outline-none" placeholder="메세지 입력..." />
-              <button className="bg-blue-600 p-2 rounded-xl text-white"><Send className="w-4 h-4" /></button>
-            </form>
-          </div>
-        );
-      default: return null;
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
       <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => setActiveTab('홈')}>STOCK<span className="text-blue-500 italic">LIVE</span></h1>
+          <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">LIVE</span></h1>
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-400">
-            {['홈', '추천', '뉴스', '탐색'].map((item) => (
-              <button key={item} onClick={() => setActiveTab(item)} className={`${activeTab === item ? 'text-white border-b-2 border-blue-500 py-1' : 'hover:text-white'}`}>{item}</button>
+            {[
+              { name: '홈', path: '/' },
+              { name: '추천', path: '/recommendation' },
+              { name: '뉴스', path: '/news' },
+              { name: '탐색', path: '/discovery' }
+            ].map((item) => (
+              <Link 
+                key={item.name} 
+                to={item.path} 
+                className={`flex flex-col items-center gap-1 ${location.pathname === item.path ? 'text-blue-500 border-b-2 border-blue-500 py-1' : 'text-slate-400 hover:text-white'}`}
+              >
+                {item.name}
+              </Link>
             ))}
           </nav>
         </div>
@@ -253,7 +174,7 @@ const App = () => {
               {tickerStocks.map((s) => (
                 <span key={s.code} className="flex items-center gap-1.5 text-slate-300">
                   <Zap className={`w-3 h-3 ${stockPrices[s.code]?.status === 'up' ? 'text-rose-500' : 'text-blue-500'}`} />
-                  {s.name} <span className={stockPrices[s.code]?.status === 'up' ? 'text-rose-500' : 'text-blue-500'}>
+                  {s.name} <span className={stockPrices[s.code] ? (stockPrices[s.code].status === 'up' ? 'text-rose-500' : 'text-blue-500') : ''}>
                     {stockPrices[s.code] ? `${stockPrices[s.code].price} (${stockPrices[s.code].change}%)` : '조회 중...'}
                   </span>
                 </span>
@@ -264,36 +185,71 @@ const App = () => {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden md:flex w-[340px] border-r border-white/5 flex-col bg-[#0a0c10]">
-          <div className="p-4 border-b border-white/5 font-bold text-sm">실시간 톡</div>
+                  <aside className={`border-r border-white/5 flex-col bg-[#0a0c10] shrink-0 ${isChatRoute ? 'hidden' : 'hidden md:flex w-[340px]'}`}>          <div className="p-4 border-b border-white/5 font-bold text-sm">실시간 톡</div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((m, i) => (
               <div key={i} className="text-[13px]"><span className="font-bold text-slate-400">{m.user}:</span> <span className="text-slate-200">{m.text}</span></div>
             ))}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5">
-            <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full bg-slate-900 rounded-xl px-4 py-3 text-xs text-white outline-none" placeholder="채팅 입력..." />
-          </form>
-        </aside>
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5">
+              <div className="flex items-center gap-2">
+                <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full bg-slate-900 rounded-xl px-4 py-3 text-xs text-white outline-none flex-1" placeholder="채팅 입력..." />
+                <button type="submit" className="px-4 py-3 bg-blue-600 rounded-xl text-xs font-bold hover:bg-blue-500 transition-colors">
+                  전송
+                </button>
+              </div>
+            </form>        </aside>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-10 pb-24 bg-black">
-          <div className="max-w-3xl mx-auto h-full">{renderContent()}</div>
+        <main className="flex-1 overflow-y-auto p-0 bg-black"> {/* Changed padding to p-0 */}
+          <div className="h-full"> {/* Removed max-w-3xl mx-auto */}
+            <Routes>
+              <Route path="/" element={<HomePage stockPrices={stockPrices} />} />
+              <Route path="/recommendation" element={<Recommendation />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/discovery" element={<Discovery />} />
+              <Route path="/stock/:symbol" element={<StockDetail />} />
+              {/* Add a route for chat on mobile if needed, or handle it within existing structure */}
+              <Route path="/chat" element={
+                <div className="flex flex-col h-full bg-[#0a0c10] text-slate-100 font-sans pb-16">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {messages.map((m, i) => (
+                      <div key={i} className="text-[13px]"><span className="font-bold text-slate-400">{m.user}:</span> <span className="text-slate-200">{m.text}</span></div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full bg-slate-900 rounded-xl px-4 py-3 text-xs text-white outline-none flex-1" placeholder="채팅 입력..." />
+                      <button type="submit" className="px-4 py-3 bg-blue-600 rounded-xl text-xs font-bold hover:bg-blue-500 transition-colors">
+                        전송
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              } />
+              <Route path="*" element={<div>404 Not Found</div>} />
+            </Routes>
+          </div>
         </main>
       </div>
 
       <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0a0c10] border-t border-white/5 flex items-center justify-around z-50">
         {[
-          { name: '홈', icon: <Home className="w-5 h-5" /> }, 
-          { name: '추천', icon: <PieChart className="w-5 h-5" /> }, 
-          { name: '톡', icon: <MessageCircle className="w-5 h-5" /> }, 
-          { name: '탐색', icon: <Search className="w-5 h-5" /> },
-          { name: '뉴스', icon: <Newspaper className="w-5 h-5" /> }
+          { name: '홈', path: '/', icon: <HomeIcon className="w-5 h-5" /> }, 
+          { name: '추천', path: '/recommendation', icon: <PieChart className="w-5 h-5" /> }, 
+          { name: '톡', path: '/chat', icon: <MessageCircle className="w-5 h-5" /> }, // '/chat' route for mobile
+          { name: '탐색', path: '/discovery', icon: <Search className="w-5 h-5" /> },
+          { name: '뉴스', path: '/news', icon: <Newspaper className="w-5 h-5" /> }
         ].map((item) => (
-          <button key={item.name} onClick={() => setActiveTab(item.name)} className={`flex flex-col items-center gap-1 ${activeTab === item.name ? 'text-blue-500' : 'text-slate-500'}`}>
+          <Link 
+            key={item.name} 
+            to={item.path} 
+            className={`flex flex-col items-center gap-1 ${location.pathname === item.path ? 'text-blue-500' : 'text-slate-500'}`}
+          >
             {item.icon}
             <span className="text-[10px]">{item.name}</span>
-          </button>
+          </Link>
         ))}
       </footer>
     </div>
