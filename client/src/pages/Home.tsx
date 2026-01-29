@@ -99,6 +99,27 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
     return `${Math.round(valueInEok).toLocaleString()}억`;
   };
 
+  const formatTradeVolumeInMillions = (volume: string): string => {
+    const numericVolume = parseFloat(volume.replace('주', '').replace(/,/g, ''));
+
+    if (isNaN(numericVolume)) {
+      return volume; // Return original if parsing fails
+    }
+
+    if (numericVolume >= 1000000) {
+      const millions = numericVolume / 1000000;
+      // Format to one decimal place if needed, otherwise no decimals.
+      // E.g., 1.0 million should be "1백만", 1.5 million should be "1.5백만"
+      if (millions % 1 === 0) {
+        return `${millions.toFixed(0)}백만`; // No decimal if whole number
+      } else {
+        return `${millions.toFixed(1)}백만`; // One decimal place
+      }
+    } else {
+      return volume; // Return original for values less than 1 million
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen w-full bg-[#0E1013] text-white overflow-hidden">
       
@@ -156,7 +177,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
 
 
             {/* 컬럼 헤더 및 리스트 (기존 스타일 유지) */}
-            <div className="grid grid-cols-[1.5rem_1.2fr_1fr_1fr_1fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 sm:px-6 pb-4 border-b border-white/5 mb-4 tracking-[0.15em]">
+            <div className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 sm:px-6 pb-4 border-b border-white/5 mb-4 tracking-[0.15em]">
               <div>순위</div>
               <div className="pl-4">종목명</div>
               <div className="text-right">현재가</div>
@@ -174,7 +195,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
                 const isUp = changeRate > 0;
 
                 return (
-                  <div key={idx} className="grid grid-cols-[1.5rem_1.2fr_1fr_1fr_1fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-1 rounded-[24px] hover:bg-white/[0.04] transition-all group">
+                  <div key={idx} className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-1 rounded-[24px] hover:bg-white/[0.04] transition-all group">
                     <div className="text-[14px] font-bold text-slate-400">{idx + 1}</div> {/* 순위 */}
                     <Link to={`/stock/${stock.code}`} className="font-bold text-xs sm:text-[16px] text-slate-100 group-hover:text-blue-400 transition-colors whitespace-nowrap overflow-hidden text-ellipsis md:pl-4">
                       {stock.name} {/* 종목명 */}
@@ -183,7 +204,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
                     <div className={`text-right text-[11px] sm:text-[13px] ${isUp ? 'text-rose-500' : 'text-blue-500'}`}>
                       {isUp ? '▲' : '▼'} {Math.abs(stock.amount).toLocaleString()} ({changeRate}%) {/* 등락률 */}
                     </div>
-                    <div className="text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{stock.tradeVolume}</div> {/* 거래량 */}
+                    <div className="text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{formatTradeVolumeInMillions(stock.tradeVolume)}</div> {/* 거래량 */}
                     <div className="hidden md:block text-right text-[10px] sm:text-[12px] text-slate-500 font-medium pr-6">{formatTradeValueInEok(stock.tradeValue)}</div> {/* 거래대금 */}
                     <div className="hidden md:block h-8 w-full px-6 min-h-[32px]"> {/* 차트 */}
                       <ResponsiveContainer width="100%" height={32} debounce={100}>
