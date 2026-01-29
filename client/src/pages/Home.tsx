@@ -75,6 +75,30 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
     displayStocks = mockCategoryData[activeTab] || [];
   }
 
+  const formatTradeValueInEok = (tradeValue: string): string => {
+    const numberPart = parseFloat(tradeValue);
+    let valueInEok = 0;
+
+    if (tradeValue.includes('조')) {
+      valueInEok = numberPart * 10000;
+    } else if (tradeValue.includes('억')) {
+      valueInEok = numberPart;
+    } else {
+      const rawValue = parseFloat(tradeValue);
+      if (!isNaN(rawValue)) {
+        valueInEok = rawValue / 100000000;
+      } else {
+        return tradeValue;
+      }
+    }
+
+    if (isNaN(valueInEok)) {
+      return tradeValue;
+    }
+
+    return `${Math.round(valueInEok).toLocaleString()}억`;
+  };
+
   return (
     <div className="flex flex-col h-screen w-full bg-[#0E1013] text-white overflow-hidden">
       
@@ -127,18 +151,18 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
         </aside>
 
         {/* [오른쪽] 메인 콘텐츠 리스트 */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-12 pb-32 no-scrollbar">
+        <main className="flex-1 overflow-y-auto px-2 py-6 md:p-12 pb-32 no-scrollbar">
           <div className="max-w-6xl mx-auto">
 
 
             {/* 컬럼 헤더 및 리스트 (기존 스타일 유지) */}
-            <div className="grid grid-cols-[1.5rem_1fr_repeat(4,1fr)] md:grid-cols-[3rem_2fr_repeat(4,1fr)_100px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 sm:px-6 pb-4 border-b border-white/5 mb-4 tracking-[0.15em]">
+            <div className="grid grid-cols-[1.5rem_1.2fr_1fr_1fr_1fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 sm:px-6 pb-4 border-b border-white/5 mb-4 tracking-[0.15em]">
               <div>순위</div>
-              <div>종목명</div>
+              <div className="pl-4">종목명</div>
               <div className="text-right">현재가</div>
               <div className="text-right">등락률</div>
               <div className="text-right">거래량</div>
-              <div className="hidden md:block text-right">거래대금</div>
+              <div className="hidden md:block text-right pr-6">거래대금</div>
               <div className="hidden md:block text-center">차트</div>
             </div>
 
@@ -150,9 +174,9 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
                 const isUp = changeRate > 0;
 
                 return (
-                  <div key={idx} className="grid grid-cols-[1.5rem_1fr_repeat(4,1fr)] md:grid-cols-[3rem_2fr_repeat(4,1fr)_100px] items-center px-4 sm:px-6 py-5 rounded-[24px] hover:bg-white/[0.04] transition-all group">
+                  <div key={idx} className="grid grid-cols-[1.5rem_1.2fr_1fr_1fr_1fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-1 rounded-[24px] hover:bg-white/[0.04] transition-all group">
                     <div className="text-[14px] font-bold text-slate-400">{idx + 1}</div> {/* 순위 */}
-                    <Link to={`/stock/${stock.code}`} className="font-bold text-sm sm:text-[16px] text-slate-100 group-hover:text-blue-400 transition-colors">
+                    <Link to={`/stock/${stock.code}`} className="font-bold text-xs sm:text-[16px] text-slate-100 group-hover:text-blue-400 transition-colors whitespace-nowrap overflow-hidden text-ellipsis md:pl-4">
                       {stock.name} {/* 종목명 */}
                     </Link>
                     <div className="text-right text-xs sm:text-base font-semibold text-slate-200">{price.toLocaleString()}</div> {/* 현재가 */}
@@ -160,7 +184,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
                       {isUp ? '▲' : '▼'} {Math.abs(stock.amount).toLocaleString()} ({changeRate}%) {/* 등락률 */}
                     </div>
                     <div className="text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{stock.tradeVolume}</div> {/* 거래량 */}
-                    <div className="hidden md:block text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{stock.tradeValue}</div> {/* 거래대금 */}
+                    <div className="hidden md:block text-right text-[10px] sm:text-[12px] text-slate-500 font-medium pr-6">{formatTradeValueInEok(stock.tradeValue)}</div> {/* 거래대금 */}
                     <div className="hidden md:block h-8 w-full px-6 min-h-[32px]"> {/* 차트 */}
                       <ResponsiveContainer width="100%" height={32} debounce={100}>
                         <LineChart data={stock.chart}>
