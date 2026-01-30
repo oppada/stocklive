@@ -17,11 +17,15 @@ import { supabase } from './supabaseClient'; // Import supabase from the new cli
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
+import tossThemesData from '../toss_real_150_themes.json';
+
+// Process tossThemesData to extract all unique stock codes for fetching
+const allUniqueThemeStockCodes = Array.from(new Set(
+  tossThemesData.themes.flatMap(theme => theme.stocks.map(stock => stock.code))
+));
+
 const themeData = [
-  { "name": "AI 반도체", "codes": ["047810", "000660", "399220"] },
-  { "name": "이차전지", "codes": ["086520", "373220", "066970"] },
-  { "name": "로봇", "codes": ["272210", "454910", "054040"] },
-  { "name": "우주항공", "codes": ["012450", "047810", "451760"] }
+  { name: "All_Themes_Stocks", codes: allUniqueThemeStockCodes }
 ];
 
 const tickerStocks = [
@@ -36,6 +40,8 @@ const generateNickname = () => {
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
   return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * adjs.length)]}`;
 };
+
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const App = () => {
   const navigate = useNavigate();
@@ -89,9 +95,11 @@ const App = () => {
         setStockPrices(prev => ({
           ...prev,
           [stockCode]: { 
-            price: Number(data.output.stck_prpr).toLocaleString(), 
+            price: Number(data.output.stck_prpr),
             change: data.output.prdy_ctrt,
-            status: prdy_vrss > 0 ? 'up' : (prdy_vrss < 0 ? 'down' : 'flat')
+            status: prdy_vrss > 0 ? 'up' : (prdy_vrss < 0 ? 'down' : 'flat'),
+            tradeVolume: data.output.stck_vol, // Add tradeVolume
+            tradeValue: data.output.acml_tr_pbmn, // Add tradeValue
           }
         }));
       }
@@ -120,9 +128,16 @@ const App = () => {
 
   useEffect(() => {
     if (!kisToken) return;
-    const loadAllPrices = () => {
-      tickerStocks.forEach(s => fetchStockPrice(kisToken, s.code));
-      themeData.forEach(t => t.codes.forEach(code => fetchStockPrice(kisToken, code)));
+    const loadAllPrices = async () => {
+      for (const s of tickerStocks) {
+        await fetchStockPrice(kisToken, s.code);
+        await delay(100); // Small delay to prevent rate limiting
+      }
+      // themeData is now a single object {name: "...", codes: ["..."]}
+      for (const code of themeData[0].codes) { // Access the codes array directly
+        await fetchStockPrice(kisToken, code);
+        await delay(100); // Small delay to prevent rate limiting
+      }
     };
     loadAllPrices();
     const timer = setInterval(loadAllPrices, 60000);

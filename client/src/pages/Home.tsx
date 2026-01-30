@@ -1,122 +1,137 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import tossThemesData from '../../toss_real_150_themes.json';
 
-interface Stock {
+interface StockData {
+  price: number;
+  change: string; // Percentage string, e.g., "1.23"
+  status: 'up' | 'down' | 'flat';
+  tradeVolume: string;
+  tradeValue: string;
+}
+
+interface ThemeStock {
   name: string;
   code: string;
-  price: number;
-  change: number;
-  amount: number;
-  tradeVolume: string; // Add tradeVolume
-  tradeValue: string;  // Rename volume to tradeValue
-  chart: { v: number }[];
 }
 
 interface Theme {
   id: string;
   name: string;
   description: string;
-  stocks: Stock[];
+  stocks: ThemeStock[]; // Use ThemeStock for stocks in theme
+  averageChange?: number;
 }
 
-const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
+const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> }) => {
   const [activeTab, setActiveTab] = useState('테마');
-  const [selectedThemeId, setSelectedThemeId] = useState('1');
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null); // Default to the first theme's ID
 
+  const allThemes: Theme[] = tossThemesData.themes.map((theme, index) => ({
+    id: String(index + 1),
+    name: theme.theme_name,
+    description: theme.theme_name,
+    stocks: theme.stocks.map(stock => ({ name: stock.name, code: stock.code }))
+  }));
 
+  // Calculate average change for each theme
+  const allThemesWithAvgChange: Theme[] = allThemes.map(theme => {
+    const changes = theme.stocks
+      .map(stock => parseFloat(stockPrices[stock.code]?.change || '0'))
+      .filter(change => !isNaN(change));
 
-  const mockThemes: Theme[] = [
-    {
-      id: '1',
-      name: 'AI 관련주',
-      description: '인공지능 기술 관련 종목',
-      stocks: [
-        { name: '한글과컴퓨터', code: '030520', price: 25000, change: 5.2, amount: 1200, tradeVolume: '123,456주', tradeValue: '1.2조', chart: [{v:10},{v:15},{v:20},{v:18},{v:25}] },
-        { name: '셀바스AI', code: '108320', price: 18000, change: -1.3, amount: -250, tradeVolume: '78,901주', tradeValue: '5000억', chart: [{v:20},{v:18},{v:16},{v:17},{v:15}] },
-      ]
-    },
-    {
-      id: '2',
-      name: '반도체',
-      description: '반도체 제조 및 장비 관련 종목',
-      stocks: [
-        { name: '삼성전자', code: '005930', price: 78000, change: 1.1, amount: 800, tradeVolume: '456,789주', tradeValue: '2.5조', chart: [{v:75},{v:76},{v:78},{v:77},{v:79}] },
-      ]
+    const averageChange = changes.length > 0
+      ? (changes.reduce((sum, current) => sum + current, 0) / changes.length)
+      : 0;
+
+    return { ...theme, averageChange: parseFloat(averageChange.toFixed(2)) };
+  });
+
+  // Set initial selectedThemeId to the first theme's ID if not already set
+  useEffect(() => {
+    if (allThemesWithAvgChange.length > 0 && selectedThemeId === null) {
+      setSelectedThemeId(allThemesWithAvgChange[0].id);
     }
-  ];
+  }, [allThemesWithAvgChange, selectedThemeId]);
 
-  const currentTheme = mockThemes.find(t => t.id === selectedThemeId); // Inserted here
+  const currentTheme = allThemesWithAvgChange.find(t => t.id === selectedThemeId);
 
-  const mockCategoryData: Record<string, Stock[]> = {
+
+  // Combine ThemeStock with StockData for display
+  const displayStocksWithData = currentTheme?.stocks.map(stock => {
+    const liveData = stockPrices[stock.code];
+    return {
+      name: stock.name,
+      code: stock.code,
+      price: liveData?.price || 0, // Default to 0
+      change: liveData?.change || '0', // Default to '0'
+      status: liveData?.status || 'flat', // Default to 'flat'
+      tradeVolume: liveData?.tradeVolume || '0', // Default to '0'
+      tradeValue: liveData?.tradeValue || '0', // Default to '0'
+      chart: [{v:10},{v:15},{v:20},{v:18},{v:25}] // Mock chart data or handle dynamically
+    };
+  }) || [];
+
+
+  const mockCategoryData: Record<string, any[]> = { // Updated interface to any[] to avoid strict type checking on other categories for now
     '급상승': [
-      { name: 'NAVER', code: '035420', price: 200000, change: 10.5, amount: 20000, tradeVolume: '100,000주', tradeValue: '5.0조', chart: [{v:10},{v:15},{v:20},{v:18},{v:25}] },
-      { name: '카카오', code: '035720', price: 50000, change: 8.2, amount: 5000, tradeVolume: '200,000주', tradeValue: '2.0조', chart: [{v:25},{v:20},{v:18},{v:20},{v:22}] },
+      { name: 'NAVER', code: '035420', price: 200000, change: '10.5', status: 'up', tradeVolume: '100,000', tradeValue: '5.0조', chart: [{v:10},{v:15},{v:20},{v:18},{v:25}] },
+      { name: '카카오', code: '035720', price: 50000, change: '8.2', status: 'up', tradeVolume: '200,000', tradeValue: '2.0조', chart: [{v:25},{v:20},{v:18},{v:20},{v:22}] },
     ],
     '급하락': [
-      { name: 'LG화학', code: '051910', price: 400000, change: -7.1, amount: -15000, tradeVolume: '50,000주', tradeValue: '3.5조', chart: [{v:20},{v:25},{v:18},{v:15},{v:10}] },
-      { name: 'SK이노베이션', code: '096770', price: 150000, change: -5.3, amount: -8000, tradeVolume: '80,000주', tradeValue: '1.8조', chart: [{v:15},{v:17},{v:16},{v:18},{v:12}] },
+      { name: 'LG화학', code: '051910', price: 400000, change: '7.1', status: 'down', tradeVolume: '50,000', tradeValue: '3.5조', chart: [{v:20},{v:25},{v:18},{v:15},{v:10}] },
+      { name: 'SK이노베이션', code: '096770', price: 150000, change: '5.3', status: 'down', tradeVolume: '80,000', tradeValue: '1.8조', chart: [{v:15},{v:17},{v:16},{v:18},{v:12}] },
     ],
     '거래량': [
-      { name: '삼성전자우', code: '005935', price: 65000, change: 1.2, amount: 300, tradeVolume: '1,500,000주', tradeValue: '10.0조', chart: [{v:18},{v:20},{v:22},{v:20},{v:24}] },
-      { name: '현대차2우B', code: '005387', price: 120000, change: 0.8, amount: 100, tradeVolume: '1,000,000주', tradeValue: '8.0조', chart: [{v:22},{v:20},{v:24},{v:23},{v:25}] },
+      { name: '삼성전자우', code: '005935', price: 65000, change: '1.2', status: 'up', tradeVolume: '1,500,000', tradeValue: '10.0조', chart: [{v:18},{v:20},{v:22},{v:20},{v:24}] },
+      { name: '현대차2우B', code: '005387', price: 120000, change: '0.8', status: 'up', tradeVolume: '1,000,000', tradeValue: '8.0조', chart: [{v:22},{v:20},{v:24},{v:23},{v:25}] },
     ],
     '거래대금': [
-      { name: '셀트리온', code: '068270', price: 180000, change: 3.5, amount: 2000, tradeVolume: '70,000주', tradeValue: '7.0조', chart: [{v:12},{v:15},{v:17},{v:16},{v:19}] },
-      { name: 'POSCO홀딩스', code: '005490', price: 450000, change: 2.1, amount: 5000, tradeVolume: '60,000주', tradeValue: '6.5조', chart: [{v:10},{v:12},{v:14},{v:13},{v:16}] },
+      { name: '셀트리온', code: '068270', price: 180000, change: '3.5', status: 'up', tradeVolume: '70,000', tradeValue: '7.0조', chart: [{v:12},{v:15},{v:17},{v:16},{v:19}] },
+      { name: 'POSCO홀딩스', code: '005490', price: 450000, change: '2.1', status: 'up', tradeVolume: '60,000', tradeValue: '6.5조', chart: [{v:10},{v:12},{v:14},{v:13},{v:16}] },
     ],
   };
 
-  let displayStocks: Stock[] = [];
+  let displayStocks: any[] = [];
   if (activeTab === '테마') {
-    displayStocks = currentTheme?.stocks || [];
+    displayStocks = displayStocksWithData;
   } else {
     displayStocks = mockCategoryData[activeTab] || [];
   }
 
-  const formatTradeValueInEok = (tradeValue: string): string => {
-    const numberPart = parseFloat(tradeValue);
-    let valueInEok = 0;
+  const formatTradeValueInEok = (tradeValue: string | number): string => {
+    const numericValue = typeof tradeValue === 'string' ? parseFloat(tradeValue) : tradeValue;
 
-    if (tradeValue.includes('조')) {
-      valueInEok = numberPart * 10000;
-    } else if (tradeValue.includes('억')) {
-      valueInEok = numberPart;
+    if (isNaN(numericValue) || numericValue === 0) {
+      return '0';
+    }
+
+    if (numericValue >= 1000000000000) { // 1조 이상
+      return `${(numericValue / 1000000000000).toFixed(1)}조`;
+    } else if (numericValue >= 100000000) { // 1억 이상
+      return `${(numericValue / 100000000).toFixed(0)}억`;
+    } else if (numericValue >= 10000) { // 1만 이상
+      return `${(numericValue / 10000).toFixed(0)}만`;
     } else {
-      const rawValue = parseFloat(tradeValue);
-      if (!isNaN(rawValue)) {
-        valueInEok = rawValue / 100000000;
-      } else {
-        return tradeValue;
-      }
+      return numericValue.toLocaleString();
     }
-
-    if (isNaN(valueInEok)) {
-      return tradeValue;
-    }
-
-    return `${Math.round(valueInEok).toLocaleString()}억`;
   };
 
-  const formatTradeVolumeInMillions = (volume: string): string => {
-    const numericVolume = parseFloat(volume.replace('주', '').replace(/,/g, ''));
+  const formatTradeVolume = (volume: string | number): string => {
+    const numericVolume = typeof volume === 'string' ? parseFloat(volume) : volume;
 
-    if (isNaN(numericVolume)) {
-      return volume; // Return original if parsing fails
+    if (isNaN(numericVolume) || numericVolume === 0) {
+      return '0주';
     }
 
-    if (numericVolume >= 1000000) {
-      const millions = numericVolume / 1000000;
-      // Format to one decimal place if needed, otherwise no decimals.
-      // E.g., 1.0 million should be "1백만", 1.5 million should be "1.5백만"
-      if (millions % 1 === 0) {
-        return `${millions.toFixed(0)}백만`; // No decimal if whole number
-      } else {
-        return `${millions.toFixed(1)}백만`; // One decimal place
-      }
+    if (numericVolume >= 100000000) { // 억 단위
+      return `${(numericVolume / 100000000).toFixed(1)}억주`;
+    } else if (numericVolume >= 10000) { // 만 단위
+      return `${(numericVolume / 10000).toFixed(0)}만주`;
     } else {
-      return volume; // Return original for values less than 1 million
+      return `${numericVolume.toLocaleString()}주`;
     }
   };
 
@@ -153,15 +168,20 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
           </div>
 
           <div className="flex-1 px-4 overflow-y-auto no-scrollbar">
-            {mockThemes.map((theme) => (
+            {allThemesWithAvgChange.map((theme) => (
               <div
                 key={theme.id}
                 onClick={() => setSelectedThemeId(theme.id)}
                 className={`cursor-pointer px-5 py-4 rounded-2xl transition-all duration-200 mb-2 group
                   ${selectedThemeId === theme.id ? 'bg-blue-600/10' : 'hover:bg-white/[0.03]'}`}
               >
-                <div className={`text-[15px] font-bold ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
-                  {theme.name}
+                <div className={`text-[15px] font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                  <span>{theme.name}</span>
+                  {theme.averageChange !== undefined && (
+                    <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-[13px] font-medium`}>
+                      {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
+                    </span>
+                  )}
                 </div>
                 <div className="text-[12px] text-slate-500 mt-1 line-clamp-1 opacity-60">
                   {theme.description}
@@ -189,22 +209,18 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, any> }) => {
 
             <div className="space-y-1">
               {displayStocks.map((stock, idx) => {
-                const liveData = stockPrices[stock.code];
-                const price = liveData?.price || stock.price;
-                const changeRate = liveData?.changeRate || stock.change;
-                const isUp = changeRate > 0;
-
+                const isUp = parseFloat(stock.change) > 0;
                 return (
                   <div key={idx} className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-1 rounded-[24px] hover:bg-white/[0.04] transition-all group">
                     <div className="text-[14px] font-bold text-slate-400">{idx + 1}</div> {/* 순위 */}
                     <Link to={`/stock/${stock.code}`} className="font-bold text-xs sm:text-[16px] text-slate-100 group-hover:text-blue-400 transition-colors whitespace-nowrap overflow-hidden text-ellipsis md:pl-4">
                       {stock.name} {/* 종목명 */}
                     </Link>
-                    <div className="text-right text-xs sm:text-base font-semibold text-slate-200">{price.toLocaleString()}</div> {/* 현재가 */}
+                    <div className="text-right text-xs sm:text-base font-semibold text-slate-200">{stock.price.toLocaleString()}</div> {/* 현재가 */}
                     <div className={`text-right text-[11px] sm:text-[13px] ${isUp ? 'text-rose-500' : 'text-blue-500'}`}>
-                      {isUp ? '▲' : '▼'} {Math.abs(stock.amount).toLocaleString()} ({changeRate}%) {/* 등락률 */}
+                      {isUp ? '▲' : '▼'} {Math.abs(parseFloat(stock.change))}% {/* 등락률 */}
                     </div>
-                    <div className="text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{formatTradeVolumeInMillions(stock.tradeVolume)}</div> {/* 거래량 */}
+                    <div className="text-right text-[10px] sm:text-[12px] text-slate-500 font-medium">{formatTradeVolume(stock.tradeVolume)}</div> {/* 거래량 */}
                     <div className="hidden md:block text-right text-[10px] sm:text-[12px] text-slate-500 font-medium pr-6">{formatTradeValueInEok(stock.tradeValue)}</div> {/* 거래대금 */}
                     <div className="hidden md:block h-8 w-full px-6 min-h-[32px]"> {/* 차트 */}
                       <ResponsiveContainer width="100%" height={32} debounce={100}>
