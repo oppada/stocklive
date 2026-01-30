@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
