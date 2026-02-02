@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { Activity } from 'lucide-react';
+import { Activity, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import tossThemesData from '../../toss_real_150_themes.json';
 
@@ -26,8 +26,9 @@ interface Theme {
 }
 
 const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> }) => {
-  const [activeTab, setActiveTab] = useState('테마');
+  const [activeTab, setActiveTab] = useState('급상승');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null); // Default to the first theme's ID
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Added for dropdown visibility
 
   const allThemes: Theme[] = tossThemesData.themes.map((theme, index) => ({
     id: String(index + 1),
@@ -36,7 +37,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
     stocks: theme.stocks.map(stock => ({ name: stock.name, code: stock.code }))
   }));
 
-  // Calculate average change for each theme
+  // Calculate average change for each theme and sort
   const allThemesWithAvgChange: Theme[] = allThemes.map(theme => {
     const changes = theme.stocks
       .map(stock => parseFloat(stockPrices[stock.code]?.change || '0'))
@@ -47,14 +48,14 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
       : 0;
 
     return { ...theme, averageChange: parseFloat(averageChange.toFixed(2)) };
-  });
+  }).sort((a, b) => (b.averageChange || 0) - (a.averageChange || 0));
 
-  // Set initial selectedThemeId to the first theme's ID if not already set
+  // Set initial selectedThemeId for the '테마' tab on first load
   useEffect(() => {
     if (allThemesWithAvgChange.length > 0 && selectedThemeId === null) {
       setSelectedThemeId(allThemesWithAvgChange[0].id);
     }
-  }, [allThemesWithAvgChange, selectedThemeId]);
+  }, [allThemesWithAvgChange]);
 
   const currentTheme = allThemesWithAvgChange.find(t => t.id === selectedThemeId);
 
@@ -141,10 +142,16 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
       {/* [상단 영역 1] 사라졌던 카테고리 메뉴 복구 */}
       <div className="w-full bg-[#0E1013] border-b border-white/5 shrink-0">
         <nav className="flex items-center gap-1 px-3 sm:px-6 py-3 no-scrollbar overflow-x-auto">
-          {['테마', '급상승', '급하락', '거래량', '거래대금'].map((tab) => (
+          {['급상승', '급하락', '거래량', '거래대금', '테마'].map((tab) => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab);
+                // '테마' 탭을 클릭하면 항상 첫 번째 테마를 기본으로 선택
+                if (tab === '테마' && allThemesWithAvgChange.length > 0) {
+                  setSelectedThemeId(allThemesWithAvgChange[0].id);
+                }
+              }}
               className={`px-2 py-1 sm:px-4 sm:py-1.5 rounded-xl text-xs sm:text-[14px] font-bold transition-all whitespace-nowrap
                 ${activeTab === tab ? 'text-white bg-white/10' : 'text-slate-500 hover:text-slate-300'}`}
             >
@@ -154,46 +161,51 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
         </nav>
       </div>
 
+      {/* [모바일용] 테마 목록 드롭다운 */}
+      {activeTab === '테마' && (
+        <div className="md:hidden w-full bg-[#0E1013] border-b border-white/5 p-4 relative z-10"> {/* Added z-10 for dropdown stacking */}
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="w-full text-left px-4 py-2 rounded-lg bg-black/20 text-white font-bold flex justify-between items-center transition-colors hover:bg-black/30"
+          >
+            <span className="text-sm">{currentTheme ? currentTheme.name : '테마 선택'}</span>
+            <ChevronDown size={16} className={`transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {isDropdownOpen && (
+            <div className="absolute left-4 right-4 mt-2 bg-[#0E1013] border border-white/10 rounded-lg shadow-lg"> {/* Adjusted background and border for dropdown */}
+              <div className="h-[360px] overflow-y-auto no-scrollbar p-2">
+                {allThemesWithAvgChange.map((theme) => (
+                  <div
+                    key={theme.id}
+                    onClick={() => {
+                      setSelectedThemeId(theme.id);
+                      setIsDropdownOpen(false); // Close dropdown on selection
+                    }}
+                    className={`cursor-pointer px-4 py-1 rounded-lg transition-all duration-200 mb-1 group
+                      ${selectedThemeId === theme.id ? 'bg-blue-600/20' : 'hover:bg-white/[0.03]'}`}
+                  >
+                    <div className={`text-sm font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                      <span>{theme.name}</span>
+                      {theme.averageChange !== undefined && (
+                        <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-xs font-medium`}>
+                          {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* [하단 영역] 사이드바와 메인이 나란히 배치되는 구조 */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* [왼쪽] 마켓테마 사이드바 (상단 메뉴 아래부터 시작하도록 고정) */}
-        <aside className="hidden md:flex w-72 bg-[#0E1013] border-r border-white/5 flex-col pt-8 shrink-0">
-          <div className="px-8 mb-6">
-            <div className="flex items-center gap-2 text-blue-500 mb-1">
-              <Activity size={14} />
-              <span className="text-[11px] font-black uppercase tracking-[0.2em]">Market Themes</span>
-            </div>
-            <h1 className="text-xl font-bold text-slate-100">테마별 탐색</h1>
-          </div>
-
-          <div className="flex-1 px-4 overflow-y-auto no-scrollbar">
-            {allThemesWithAvgChange.map((theme) => (
-              <div
-                key={theme.id}
-                onClick={() => setSelectedThemeId(theme.id)}
-                className={`cursor-pointer px-5 py-4 rounded-2xl transition-all duration-200 mb-2 group
-                  ${selectedThemeId === theme.id ? 'bg-blue-600/10' : 'hover:bg-white/[0.03]'}`}
-              >
-                <div className={`text-[15px] font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
-                  <span>{theme.name}</span>
-                  {theme.averageChange !== undefined && (
-                    <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-[13px] font-medium`}>
-                      {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
-                    </span>
-                  )}
-                </div>
-                <div className="text-[12px] text-slate-500 mt-1 line-clamp-1 opacity-60">
-                  {theme.description}
-                </div>
-              </div>
-            ))}
-          </div>
-        </aside>
-
-        {/* [오른쪽] 메인 콘텐츠 리스트 */}
+        {/* 메인 콘텐츠 리스트 */}
         <main className="flex-1 overflow-y-auto px-2 py-6 md:p-12 pb-32 no-scrollbar">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl">
 
 
             {/* 컬럼 헤더 및 리스트 (기존 스타일 유지) */}
@@ -236,6 +248,39 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
             </div>
           </div>
         </main>
+
+        {/* [오른쪽] 마켓테마 사이드바 (조건부 렌더링) */}
+        {activeTab === '테마' && (
+          <aside className="hidden md:flex w-72 bg-[#0E1013] border-l border-white/5 flex-col pt-8 shrink-0">
+            <div className="px-8 mb-6">
+              <div className="flex items-center gap-2 text-blue-500 mb-1">
+                <Activity size={14} />
+                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Market Themes</span>
+              </div>
+              <h1 className="text-xl font-bold text-slate-100">테마별 탐색</h1>
+            </div>
+
+            <div className="flex-1 px-4 overflow-y-auto no-scrollbar">
+              {allThemesWithAvgChange.map((theme) => (
+                <div
+                  key={theme.id}
+                  onClick={() => setSelectedThemeId(theme.id)}
+                  className={`cursor-pointer px-5 py-1 rounded-2xl transition-all duration-200 mb-1 group
+                    ${selectedThemeId === theme.id ? 'bg-blue-600/10' : 'hover:bg-white/[0.03]'}`}
+                >
+                  <div className={`text-[15px] font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                    <span>{theme.name}</span>
+                    {theme.averageChange !== undefined && (
+                      <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-[13px] font-medium`}>
+                        {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );
