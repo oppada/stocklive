@@ -17,16 +17,8 @@ import { supabase } from './supabaseClient'; // Import supabase from the new cli
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
-import tossThemesData from '../toss_real_150_themes.json';
-
-// Process tossThemesData to extract all unique stock codes for fetching
-const allUniqueThemeStockCodes = Array.from(new Set(
-  tossThemesData.themes.flatMap(theme => theme.stocks.map(stock => stock.code))
-));
-
-const themeData = [
-  { name: "All_Themes_Stocks", codes: allUniqueThemeStockCodes }
-];
+// Removed: import tossThemesData from '../toss_real_150_themes.json';
+// Removed: allUniqueThemeStockCodes constant and themeData constant
 
 const tickerStocks = [
   { name: '삼성전자', code: '005930' },
@@ -49,10 +41,29 @@ const App = () => {
   const isChatRoute = location.pathname === '/chat'; // Define isChatRoute
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
+  const [allUniqueThemeStockCodes, setAllUniqueThemeStockCodes] = useState<string[]>([]); // New state
   const [myNickname] = useState(generateNickname());
   const [kisToken, setKisToken] = useState<string | null>(null);
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch themes and extract unique stock codes for real-time data fetching
+  useEffect(() => {
+    const fetchAndExtractStockCodes = async () => {
+      try {
+        const response = await fetch('/toss_real_150_themes.json'); // From public folder
+        const data = await response.json();
+        const uniqueCodes = Array.from(new Set(
+          data.themes.flatMap((theme: any) => theme.stocks.map((stock: any) => stock.code))
+        ));
+        setAllUniqueThemeStockCodes(uniqueCodes);
+      } catch (error) {
+        console.error("Failed to fetch themes for stock codes:", error);
+      }
+    };
+    fetchAndExtractStockCodes();
+  }, []); // Run once on mount, as theme structure is static
+
 
   const fetchKisToken = async () => {
     try {
@@ -127,14 +138,14 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    if (!kisToken) return;
+    if (!kisToken || allUniqueThemeStockCodes.length === 0) return; // Add dependency on allUniqueThemeStockCodes
     const loadAllPrices = async () => {
       for (const s of tickerStocks) {
         await fetchStockPrice(kisToken, s.code);
         await delay(100); // Small delay to prevent rate limiting
       }
-      // themeData is now a single object {name: "...", codes: ["..."]}
-      for (const code of themeData[0].codes) { // Access the codes array directly
+      // Use the allUniqueThemeStockCodes state directly
+      for (const code of allUniqueThemeStockCodes) { 
         await fetchStockPrice(kisToken, code);
         await delay(100); // Small delay to prevent rate limiting
       }
@@ -142,7 +153,7 @@ const App = () => {
     loadAllPrices();
     const timer = setInterval(loadAllPrices, 60000);
     return () => clearInterval(timer);
-  }, [kisToken]);
+  }, [kisToken, allUniqueThemeStockCodes]); // Add allUniqueThemeStockCodes to dependency array
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 

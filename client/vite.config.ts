@@ -29,10 +29,15 @@ export default defineConfig(({ mode }) => {
         '/api/uapi': {
           target: 'https://openapi.koreainvestment.com:9443',
           changeOrigin: true,
-          secure: false,
-          rewrite: (path) => path.replace(/^\/api\/uapi/, '/uapi'),
-          headers: {
-            'Host': 'openapi.koreainvestment.com'
+          secure: true, // Use secure connection
+          rewrite: (path) => path.replace(/^\/api/, ''), // Simplified rewrite
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              console.log(`[Vite Proxy] Forwarding request to KIS: ${req.method} ${req.url}`);
+            });
+            proxy.on('error', (err, req, res) => {
+              console.error('[Vite Proxy] Proxy error:', err);
+            });
           }
         }
       }

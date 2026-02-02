@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { Activity, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import tossThemesData from '../../toss_real_150_themes.json';
 
 interface StockData {
   price: number;
@@ -29,13 +28,27 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
   const [activeTab, setActiveTab] = useState('급상승');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null); // Default to the first theme's ID
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Added for dropdown visibility
+  const [allThemes, setAllThemes] = useState<Theme[]>([]);
 
-  const allThemes: Theme[] = tossThemesData.themes.map((theme, index) => ({
-    id: String(index + 1),
-    name: theme.theme_name,
-    description: theme.theme_name,
-    stocks: theme.stocks.map(stock => ({ name: stock.name, code: stock.code }))
-  }));
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const response = await fetch('/toss_real_150_themes.json');
+        const data = await response.json();
+        const formattedThemes: Theme[] = data.themes.map((theme: any, index: number) => ({
+          id: String(index + 1),
+          name: theme.theme_name,
+          description: theme.theme_name,
+          stocks: theme.stocks.map((stock: any) => ({ name: stock.name, code: stock.code }))
+        }));
+        setAllThemes(formattedThemes);
+      } catch (error) {
+        console.error("Failed to fetch themes:", error);
+      }
+    };
+
+    fetchThemes();
+  }, []); // Runs once on component mount
 
   // Calculate average change for each theme and sort
   const allThemesWithAvgChange: Theme[] = allThemes.map(theme => {
