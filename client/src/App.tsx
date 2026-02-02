@@ -17,8 +17,14 @@ import { supabase } from './supabaseClient'; // Import supabase from the new cli
 const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
 const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
-// Removed: import tossThemesData from '../toss_real_150_themes.json';
-// Removed: allUniqueThemeStockCodes constant and themeData constant
+// Interface for the fetched theme data structure
+interface ThemeFile {
+  themes: {
+    stocks: {
+      code: string;
+    }[];
+  }[];
+}
 
 const tickerStocks = [
   { name: '삼성전자', code: '005930' },
@@ -52,9 +58,9 @@ const App = () => {
     const fetchAndExtractStockCodes = async () => {
       try {
         const response = await fetch('/toss_real_150_themes.json'); // From public folder
-        const data = await response.json();
+        const data: ThemeFile = await response.json();
         const uniqueCodes = Array.from(new Set(
-          data.themes.flatMap((theme: any) => theme.stocks.map((stock: any) => stock.code))
+          data.themes.flatMap(theme => theme.stocks.map(stock => stock.code))
         ));
         setAllUniqueThemeStockCodes(uniqueCodes);
       } catch (error) {
