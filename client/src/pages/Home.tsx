@@ -77,14 +77,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMe
 
   const currentTheme = allThemesWithAvgChange.find(t => t.id === selectedThemeId);
 
-  useEffect(() => {
-    if (showLoginMessage) {
-      const timer = setTimeout(() => {
-        setShowLoginMessage(false);
-      }, 3000); // Hide message after 3 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [showLoginMessage]);
+
 
 
   // Combine ThemeStock with StockData for display
