@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { Activity, ChevronDown, Heart } from 'lucide-react';
-import { supabase } from '../supabaseClient'; // Import supabase client
+import { ChevronDown, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface StockData {
@@ -279,7 +278,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMe
                     <div className="flex items-center justify-center"> {/* Heart Icon container */}
                       <Heart
                         size={16}
-                        onClick={() => handleFavoriteClick(stock.code)}
+                        onClick={() => onFavoriteToggle(stock.code)}
                         className={`transition-colors cursor-pointer ${
                           favoritedStocks.includes(stock.code) ? 'text-red-500 fill-red-500' : 'text-slate-600 hover:text-red-500'
                         }`}
