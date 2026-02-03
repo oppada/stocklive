@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { Activity, ChevronDown } from 'lucide-react';
+import { Activity, ChevronDown, Heart } from 'lucide-react';
+import { supabase } from '../supabaseClient'; // Import supabase client
 import { Link } from 'react-router-dom';
 
 interface StockData {
@@ -24,10 +25,15 @@ interface Theme {
   averageChange?: number;
 }
 
-const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> }) => {
+const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMessage }: {
+  stockPrices?: Record<string, StockData>;
+  favoritedStocks: string[];
+  onFavoriteToggle: (stockCode: string) => void;
+  showLoginMessage: boolean;
+}) => {
   const [activeTab, setActiveTab] = useState('급상승');
-  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null); // Default to the first theme's ID
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Added for dropdown visibility
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [allThemes, setAllThemes] = useState<Theme[]>([]);
 
   useEffect(() => {
@@ -63,14 +69,23 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
     return { ...theme, averageChange: parseFloat(averageChange.toFixed(2)) };
   }).sort((a, b) => (b.averageChange || 0) - (a.averageChange || 0));
 
-  // Set initial selectedThemeId for the '테마' tab on first load
+  // Set initial selectedThemeId for the '테마' tab on first load or when themes are fetched
   useEffect(() => {
-    if (allThemesWithAvgChange.length > 0 && selectedThemeId === null) {
+    if (activeTab === '테마' && allThemesWithAvgChange.length > 0 && !selectedThemeId) {
       setSelectedThemeId(allThemesWithAvgChange[0].id);
     }
-  }, [allThemesWithAvgChange]);
+  }, [allThemesWithAvgChange, activeTab, selectedThemeId]);
 
   const currentTheme = allThemesWithAvgChange.find(t => t.id === selectedThemeId);
+
+  useEffect(() => {
+    if (showLoginMessage) {
+      const timer = setTimeout(() => {
+        setShowLoginMessage(false);
+      }, 3000); // Hide message after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showLoginMessage]);
 
 
   // Combine ThemeStock with StockData for display
@@ -150,18 +165,18 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0E1013] text-white overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-[#0E1013] text-white overflow-y-auto">
       
       {/* [상단 영역 1] 사라졌던 카테고리 메뉴 복구 */}
-      <div className="w-full bg-[#0E1013] border-b border-white/5 shrink-0">
-        <nav className="flex items-center gap-1 px-3 sm:px-6 py-3 no-scrollbar overflow-x-auto">
+      <div className="sticky top-0 z-20 w-full bg-[#0E1013] border-b border-white/5 shrink-0">
+        <nav className="flex items-center gap-1 px-4 py-2 hide-scrollbar overflow-x-auto">
           {['급상승', '급하락', '거래량', '거래대금', '테마'].map((tab) => (
             <button
               key={tab}
               onClick={() => {
                 setActiveTab(tab);
-                // '테마' 탭을 클릭하면 항상 첫 번째 테마를 기본으로 선택
-                if (tab === '테마' && allThemesWithAvgChange.length > 0) {
+                // '테마' 탭을 클릭하면, 아직 선택된 테마가 없거나 탭이 변경될 때 첫 번째 테마를 기본으로 선택
+                if (tab === '테마' && allThemesWithAvgChange.length > 0 && !selectedThemeId) {
                   setSelectedThemeId(allThemesWithAvgChange[0].id);
                 }
               }}
@@ -176,7 +191,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
 
       {/* [모바일용] 테마 목록 드롭다운 */}
       {activeTab === '테마' && (
-        <div className="md:hidden w-full bg-[#0E1013] border-b border-white/5 p-4 relative z-10"> {/* Added z-10 for dropdown stacking */}
+        <div className="md:hidden w-full bg-[#0E1013] border-b border-white/5 px-4 pt-2 pb-2 relative z-10"> {/* Added z-10 for dropdown stacking */}
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             className="w-full text-left px-4 py-2 rounded-lg bg-black/20 text-white font-bold flex justify-between items-center transition-colors hover:bg-black/30"
@@ -186,7 +201,7 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
           </button>
           {isDropdownOpen && (
             <div className="absolute left-4 right-4 mt-2 bg-[#0E1013] border border-white/10 rounded-lg shadow-lg"> {/* Adjusted background and border for dropdown */}
-              <div className="h-[360px] overflow-y-auto no-scrollbar p-2">
+              <div className="h-[360px] overflow-y-auto hide-scrollbar p-2">
                 {allThemesWithAvgChange.map((theme) => (
                   <div
                     key={theme.id}
@@ -215,14 +230,38 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
 
       {/* [하단 영역] 사이드바와 메인이 나란히 배치되는 구조 */}
       <div className="flex flex-1 overflow-hidden">
-        
+        {activeTab === '테마' && (
+          <div className="hidden md:block w-72 bg-[#0E1013] border-r border-white/5 overflow-y-auto hide-scrollbar shrink-0 pb-32">
+            <div className="p-4">
+              <h2 className="text-xl font-bold text-white mb-4">테마 목록</h2>
+              {allThemesWithAvgChange.map((theme) => (
+                <div
+                  key={theme.id}
+                  onClick={() => setSelectedThemeId(theme.id)}
+                  className={`cursor-pointer px-4 py-1 rounded-lg transition-all duration-200 mb-1 group
+                    ${selectedThemeId === theme.id ? 'bg-blue-600/20' : 'hover:bg-white/[0.03]'}`}
+                >
+                  <div className={`text-sm font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
+                    <span>{theme.name}</span>
+                    {theme.averageChange !== undefined && (
+                      <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-xs font-medium`}>
+                        {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 메인 콘텐츠 리스트 */}
-        <main className="flex-1 overflow-y-auto px-2 py-6 md:p-12 pb-32 no-scrollbar">
-          <div className="max-w-6xl">
+        <main className="flex-1 overflow-y-auto px-4 py-2 pb-32 hide-scrollbar">
+          <div className="max-w-full">
 
 
             {/* 컬럼 헤더 및 리스트 (기존 스타일 유지) */}
-            <div className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 sm:px-6 pb-4 border-b border-white/5 mb-4 tracking-[0.15em]">
+            <div className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] text-[9px] sm:text-[11px] font-bold text-slate-600 uppercase px-4 pb-2 border-b border-white/5 mb-2 tracking-[0.15em]">
               <div>순위</div>
               <div className="pl-4">종목명</div>
               <div className="text-right">현재가</div>
@@ -232,11 +271,20 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
               <div className="hidden md:block text-center">차트</div>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {displayStocks.map((stock, idx) => {
                 const isUp = parseFloat(stock.change) > 0;
                 return (
-                  <div key={idx} className="grid grid-cols-[1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-1 rounded-[24px] hover:bg-white/[0.04] transition-all group">
+                  <div key={idx} className="grid grid-cols-[1.5rem_1.5rem_1.3fr_0.9fr_1.2fr_0.8fr] md:grid-cols-[2rem_3rem_1.5fr_repeat(4,1fr)_140px] items-center px-4 sm:px-6 py-0.5 rounded-[24px] hover:bg-white/[0.04] transition-all group">
+                    <div className="flex items-center justify-center"> {/* Heart Icon container */}
+                      <Heart
+                        size={16}
+                        onClick={() => handleFavoriteClick(stock.code)}
+                        className={`transition-colors cursor-pointer ${
+                          favoritedStocks.includes(stock.code) ? 'text-red-500 fill-red-500' : 'text-slate-600 hover:text-red-500'
+                        }`}
+                      />
+                    </div>
                     <div className="text-[14px] font-bold text-slate-400">{idx + 1}</div> {/* 순위 */}
                     <Link to={`/stock/${stock.code}`} className="font-bold text-xs sm:text-[16px] text-slate-100 group-hover:text-blue-400 transition-colors whitespace-nowrap overflow-hidden text-ellipsis md:pl-4">
                       {stock.name} {/* 종목명 */}
@@ -262,39 +310,13 @@ const Home = ({ stockPrices = {} }: { stockPrices?: Record<string, StockData> })
           </div>
         </main>
 
-        {/* [오른쪽] 마켓테마 사이드바 (조건부 렌더링) */}
-        {activeTab === '테마' && (
-          <aside className="hidden md:flex w-72 bg-[#0E1013] border-l border-white/5 flex-col pt-8 shrink-0">
-            <div className="px-8 mb-6">
-              <div className="flex items-center gap-2 text-blue-500 mb-1">
-                <Activity size={14} />
-                <span className="text-[11px] font-black uppercase tracking-[0.2em]">Market Themes</span>
-              </div>
-              <h1 className="text-xl font-bold text-slate-100">테마별 탐색</h1>
-            </div>
 
-            <div className="flex-1 px-4 overflow-y-auto no-scrollbar">
-              {allThemesWithAvgChange.map((theme) => (
-                <div
-                  key={theme.id}
-                  onClick={() => setSelectedThemeId(theme.id)}
-                  className={`cursor-pointer px-5 py-1 rounded-2xl transition-all duration-200 mb-1 group
-                    ${selectedThemeId === theme.id ? 'bg-blue-600/10' : 'hover:bg-white/[0.03]'}`}
-                >
-                  <div className={`text-[15px] font-bold flex justify-between items-center ${selectedThemeId === theme.id ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`}>
-                    <span>{theme.name}</span>
-                    {theme.averageChange !== undefined && (
-                      <span className={`${theme.averageChange > 0 ? 'text-rose-500' : (theme.averageChange < 0 ? 'text-blue-500' : 'text-slate-500')} text-[13px] font-medium`}>
-                        {theme.averageChange > 0 ? '▲' : (theme.averageChange < 0 ? '▼' : '')} {Math.abs(theme.averageChange)}%
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </aside>
-        )}
       </div>
+      {showLoginMessage && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm">
+          로그인후 이용가능합니다
+        </div>
+      )}
     </div>
   );
 };

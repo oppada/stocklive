@@ -14,12 +14,11 @@ const Discovery = () => {
         {/* 검색바 */}
         <div className="relative mb-12">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-          <input 
-            type="text" 
-            placeholder="어떤 종목이 궁금하세요?" 
-            className="w-full bg-[#16191C] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-white outline-none focus:border-blue-500/50 transition-all text-lg"
-          />
-        </div>
+                      <input 
+                      type="text" 
+                      placeholder="어떤 종목이 궁금하세요?" 
+                      className="w-full bg-[#16191C] border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-white outline-none focus:border-blue-500/50 transition-all text-base"
+                    />        </div>
 
         {/* 스토리 섹션 */}
         <div className="flex gap-8 justify-center overflow-x-auto pb-10 scrollbar-hide">
@@ -46,7 +45,7 @@ const Discovery = () => {
             {['초전도체', '엔비디아 실적', '금리 결정', '비트코인 신고가', '애플 비전프로', '저PBR', 'CXL 반도체'].map((tag, i) => (
               <span 
                 key={i} 
-                className="px-6 py-3 bg-white/5 rounded-full text-[14px] font-medium text-slate-300 hover:bg-blue-600 hover:text-white cursor-pointer transition-all"
+                className="px-6 py-3 bg-white/5 rounded-full text-sm font-medium text-slate-300 hover:bg-blue-600 hover:text-white cursor-pointer transition-all"
               >
                 {tag}
               </span>

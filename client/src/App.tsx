@@ -11,6 +11,7 @@ import Recommendation from './pages/Recommendation';
 import News from './pages/News';
 import Discovery from './pages/Discovery';
 import StockDetail from './pages/StockDetail';
+import WatchlistSidebar from './components/WatchlistSidebar';
 
 import { supabase } from './supabaseClient'; // Import supabase from the new client
 
@@ -51,7 +52,36 @@ const App = () => {
   const [myNickname] = useState(generateNickname());
   const [kisToken, setKisToken] = useState<string | null>(null);
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
+  const [favoritedStocks, setFavoritedStocks] = useState<string[]>([]); // New state for favorited stocks
+  const [showLoginMessage, setShowLoginMessage] = useState(false); // New state for login message
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Function to handle favorite click
+  const handleFavoriteClick = async (stockCode: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      setShowLoginMessage(true);
+      return;
+    }
+
+    setFavoritedStocks(prevFavorites => {
+      if (prevFavorites.includes(stockCode)) {
+        return prevFavorites.filter(code => code !== stockCode); // Remove if already favorited
+      } else {
+        return [...prevFavorites, stockCode]; // Add if not favorited
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (showLoginMessage) {
+      const timer = setTimeout(() => {
+        setShowLoginMessage(false);
+      }, 3000); // Hide message after 3 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showLoginMessage]);
 
   // Fetch themes and extract unique stock codes for real-time data fetching
   useEffect(() => {
@@ -143,23 +173,44 @@ const App = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
+  const pricesLoadedRef = useRef(false);
+
   useEffect(() => {
-    if (!kisToken || allUniqueThemeStockCodes.length === 0) return; // Add dependency on allUniqueThemeStockCodes
-    const loadAllPrices = async () => {
-      for (const s of tickerStocks) {
-        await fetchStockPrice(kisToken, s.code);
-        await delay(100); // Small delay to prevent rate limiting
-      }
-      // Use the allUniqueThemeStockCodes state directly
-      for (const code of allUniqueThemeStockCodes) { 
-        await fetchStockPrice(kisToken, code);
-        await delay(100); // Small delay to prevent rate limiting
-      }
-    };
-    loadAllPrices();
-    const timer = setInterval(loadAllPrices, 60000);
+    if (!kisToken || allUniqueThemeStockCodes.length === 0) return; 
+    
+    // Only call loadAllPrices if not already loaded
+    if (!pricesLoadedRef.current) {
+        pricesLoadedRef.current = true; // Mark as loaded before initial fetch
+
+        const loadAllPrices = async () => {
+            for (const s of tickerStocks) {
+                await fetchStockPrice(kisToken, s.code);
+                await delay(100);
+            }
+            for (const code of allUniqueThemeStockCodes) { 
+                await fetchStockPrice(kisToken, code);
+                await delay(100);
+            }
+        };
+        loadAllPrices(); // Initial call
+    }
+
+    const timer = setInterval(() => { // Interval to repeatedly fetch prices
+        const loadAllPricesInterval = async () => {
+            for (const s of tickerStocks) {
+                await fetchStockPrice(kisToken, s.code);
+                await delay(100);
+            }
+            for (const code of allUniqueThemeStockCodes) { 
+                await fetchStockPrice(kisToken, code);
+                await delay(100);
+            }
+        };
+        loadAllPricesInterval();
+    }, 60000);
+
     return () => clearInterval(timer);
-  }, [kisToken, allUniqueThemeStockCodes]); // Add allUniqueThemeStockCodes to dependency array
+  }, [kisToken, allUniqueThemeStockCodes]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -235,7 +286,7 @@ const App = () => {
         <main className="flex-1 overflow-y-auto p-0 bg-black"> {/* Changed padding to p-0 */}
           <div className="h-full"> {/* Removed max-w-3xl mx-auto */}
             <Routes>
-              <Route path="/" element={<HomePage stockPrices={stockPrices} />} />
+              <Route path="/" element={<HomePage stockPrices={stockPrices} favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} showLoginMessage={showLoginMessage} />} />
               <Route path="/recommendation" element={<Recommendation />} />
               <Route path="/news" element={<News />} />
               <Route path="/discovery" element={<Discovery />} />
@@ -263,6 +314,10 @@ const App = () => {
             </Routes>
           </div>
         </main>
+        {/* Watchlist Sidebar */}
+        <aside className="hidden md:flex w-[280px] border-l border-white/5 bg-[#0a0c10] shrink-0">
+          <WatchlistSidebar favoritedStocks={favoritedStocks} stockPrices={stockPrices} />
+        </aside>
       </div>
 
       <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0a0c10] border-t border-white/5 flex items-center justify-around z-50">

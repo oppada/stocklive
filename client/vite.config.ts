@@ -19,10 +19,7 @@ export default defineConfig(({ mode }) => {
           secure: false, // For development
           rewrite: (path) => path.replace(/^\/api\/uapi\/oauth2\/tokenP/, '/'), // localTokenServer listens on /
           configure: (proxy, options) => {
-            // Optional: Log requests hitting this proxy
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('[Vite Proxy] Redirecting token request to local server:', req.url);
-            });
+            // Log requests hitting this proxy
           }
         },
         // General proxy for other KIS API calls
@@ -32,9 +29,7 @@ export default defineConfig(({ mode }) => {
           secure: true, // Use secure connection
           rewrite: (path) => path.replace(/^\/api/, ''), // Simplified rewrite
           configure: (proxy, options) => {
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log(`[Vite Proxy] Forwarding request to KIS: ${req.method} ${req.url}`);
-            });
+            // Log requests hitting this proxy
             proxy.on('error', (err, req, res) => {
               console.error('[Vite Proxy] Proxy error:', err);
             });

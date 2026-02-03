@@ -27,9 +27,18 @@
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 0px; /* 스크롤바 너비를 0으로 설정 */
+  background: transparent; /* 배경을 투명하게 */
 }
-::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 10px;
+
+/* Chrome, Safari, Edge에서 스크롤바 숨기기 */
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Firefox에서 스크롤바 숨기기 */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
 }

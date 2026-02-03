@@ -12,7 +12,7 @@ const News = () => {
     <div className="flex-1 bg-[#0E1013] overflow-y-auto">
       <div className="p-4 md:p-10 pb-24 mx-auto">
         <div className="flex items-center justify-between mb-10">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Newspaper className="text-blue-500" /> 실시간 뉴스
           </h2>
           <button className="p-2 bg-white/5 rounded-full text-slate-400 hover:text-white transition-colors">
@@ -20,7 +20,7 @@ const News = () => {
           </button>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           {NEWS_DATA.map((news) => (
             <div key={news.id} className="flex gap-6 group cursor-pointer">
               <div className="flex-1">
@@ -28,7 +28,7 @@ const News = () => {
                   {news.isHot && <span className="text-[10px] font-black text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded-sm">HOT</span>}
                   <span className="text-[12px] font-bold text-slate-500">{news.category} · {news.time}</span>
                 </div>
-                <h3 className="text-[17px] font-semibold text-slate-200 group-hover:text-blue-400 transition-colors leading-relaxed mb-2">
+                <h3 className="text-sm font-semibold text-slate-200 group-hover:text-blue-400 transition-colors whitespace-nowrap overflow-hidden text-ellipsis mb-2">
                   {news.title}
                 </h3>
               </div>

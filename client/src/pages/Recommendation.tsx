@@ -16,22 +16,51 @@ const Recommendation = () => {
             <div className="p-2 bg-orange-500/20 rounded-lg">
               <Flame className="text-orange-500" size={24} />
             </div>
-            <h2 className="text-2xl font-bold text-white">오늘의 추천</h2>
+            <h2 className="text-xl font-bold text-white">오늘의 추천</h2>
           </div>
           <span className="text-sm text-slate-500 cursor-pointer hover:text-slate-300">전체보기</span>
         </div>
 
         <div className="grid gap-4">
           {RECOMMEND_DATA.map((item) => (
-            <div key={item.rank} className="group relative bg-[#16191C] p-5 rounded-[24px] border border-white/5 hover:bg-white/[0.05] transition-all cursor-pointer">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-5">
-                  <span className="text-2xl font-black italic text-blue-500/30 group-hover:text-blue-500 transition-colors">
+            <div key={item.rank} className="group relative bg-[#16191C] p-3 rounded-[24px] border border-white/5 hover:bg-white/[0.05] transition-all cursor-pointer">
+              {/* MOBILE LAYOUT (flex-col) */}
+              <div className="flex flex-col md:hidden"> {/* Only visible on mobile */}
+                <div className="flex justify-between items-center w-full"> {/* This holds rank, name, tags, reason, mobile price/change, and mobile ChevronRight */}
+                  <div className="flex items-center">
+                    <span className="text-xl font-black italic text-blue-500/30 group-hover:text-blue-500 transition-colors shrink-0 w-8">
+                      {item.rank}
+                    </span>
+                    <div className="flex-1 ml-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-base font-bold text-white">{item.name}</h3>
+                        {item.tags.map(tag => (
+                          <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/5 text-slate-400 rounded">#{tag}</span>
+                        ))}
+                      </div>
+                      <p className="text-[13px] text-blue-400 font-medium">{item.reason}</p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <div className="text-sm font-bold text-white text-left">{item.price.toLocaleString()}원</div>
+                        <div className={`text-xs font-bold text-left ${item.change > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                          {item.change > 0 ? '+' : ''}{item.change}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-slate-600 group-hover:text-white transition-colors shrink-0 self-center ml-auto" />
+                </div>
+              </div>
+
+              {/* PC LAYOUT (flex-row) */}
+              <div className="hidden md:flex justify-between items-center w-full"> {/* Only visible on PC, main flex container */}
+                {/* Left part: Rank, Name, Tags, Reason */}
+                <div className="flex items-center flex-1"> {/* flex-1 to take up available space */}
+                  <span className="text-xl font-black italic text-blue-500/30 group-hover:text-blue-500 transition-colors shrink-0 w-8">
                     {item.rank}
                   </span>
-                  <div>
+                  <div className="ml-5"> {/* Increased ml for PC */}
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-[17px] font-bold text-white">{item.name}</h3>
+                      <h3 className="text-base font-bold text-white">{item.name}</h3>
                       {item.tags.map(tag => (
                         <span key={tag} className="text-[10px] px-1.5 py-0.5 bg-white/5 text-slate-400 rounded">#{tag}</span>
                       ))}
@@ -39,15 +68,17 @@ const Recommendation = () => {
                     <p className="text-[13px] text-blue-400 font-medium">{item.reason}</p>
                   </div>
                 </div>
-                <div className="text-right flex items-center gap-4">
-                  <div>
-                    <div className="text-[16px] font-bold text-white">{item.price.toLocaleString()}원</div>
-                    <div className={`text-[12px] font-bold ${item.change > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
-                      {item.change > 0 ? '+' : ''}{item.change}%
-                    </div>
+                
+                {/* Middle part: Price and Change (two lines, right-aligned, with padding) */}
+                <div className="flex flex-col items-end text-right pl-5 pr-5">
+                  <div className="text-sm font-bold text-white">{item.price.toLocaleString()}원</div>
+                  <div className={`text-xs font-bold ${item.change > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                    {item.change > 0 ? '+' : ''}{item.change}%
                   </div>
-                  <ChevronRight size={18} className="text-slate-600 group-hover:text-white transition-colors" />
                 </div>
+
+                {/* Right part: ChevronRight */}
+                <ChevronRight size={18} className="text-slate-600 group-hover:text-white transition-colors shrink-0 self-center" />
               </div>
             </div>
           ))}
