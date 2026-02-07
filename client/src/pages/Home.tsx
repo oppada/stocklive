@@ -4,9 +4,9 @@ import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users } fr
 import { Link } from 'react-router-dom';
 import InvestorCategory from '../components/InvestorCategory';
 
-const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMessage }: any) => {
+const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
   const [activeTab, setActiveTab] = useState('급상승');
-  const [investorTab, setInvestorTab] = useState('순매수');
+  const [investorTab] = useState('순매수');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
 
@@ -45,7 +45,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMe
 
   const currentTheme = themesWithAvg.find(t => t.id === selectedThemeId);
 
-  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_100px_90px_140px] items-center gap-1";
+  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_100px_90px_120px] items-center gap-1";
 
   // 데이터 할당 (에러 방지용 초기값)
   let displayStocks: any[] = [];
@@ -132,6 +132,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMe
                 <div className="text-right">등락률</div>
                 <div className="text-right">거래대금</div>
                 <div className="text-right">거래량</div>
+                <div className="hidden md:block text-center">차트</div> {/* Chart column for PC */}
               </div>
 
               {/* 리스트 아이템 */}
@@ -154,6 +155,22 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle, showLoginMe
                       <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{stock.change}%</div> {/* Change Percentage */}
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div> {/* Trade Value */}
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
+                      {/* Chart */}
+                      <div className="hidden md:flex justify-center items-center h-full w-full">
+                        <ResponsiveContainer width="90%" height="90%">
+                          <LineChart data={stock.chart}>
+                            <YAxis hide domain={['dataMin', 'dataMax']} />
+                            <Line
+                              type="monotone"
+                              dataKey="v"
+                              stroke={isUp ? '#F04452' : '#3182F6'}
+                              strokeWidth={2}
+                              dot={false}
+                              isAnimationActive={false}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   );
                 })}
