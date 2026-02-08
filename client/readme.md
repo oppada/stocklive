@@ -1,3 +1,33 @@
+## 📝 2026년 2월 8일 업데이트: NPM 취약점 해결, 로컬 개발 환경 구성 및 Recharts 경고 해결
+
+오늘은 NPM 의존성 취약점, 로컬 개발 환경 설정 문제, Vercel 배포 오류, 그리고 Recharts 라이브러리 경고 해결에 집중했습니다.
+
+### 1. NPM 취약점 및 의존성 문제 해결
+*   **문제:** 반복적인 `npm audit fix --force` 실행에도 불구하고 NPM 의존성 취약점 해결이 되지 않고, `@vercel/node` 버전이 계속 변경되는 "의존성 지옥" 현상이 발생했습니다. 이는 `npm audit`이 부정확한 패치 버전을 제시하고, `package.json`의 `type: module` 설정과 `__dirname` 사용 방식이 충돌하며, `^`를 포함한 버전 오버라이드 때문에 `ETARGET` 오류가 발생했기 때문입니다.
+*   **해결:**
+    *   `client/package.json` 파일에서 `@vercel/node` 의존성을 안정적인 버전인 `^5.5.28`로 되돌려 안정성을 확보했습니다.
+    *   `client/package.json`의 `overrides` 섹션에 `esbuild@0.25.0`, `undici@6.23.0`, `path-to-regexp@8.3.0`, `tar@7.5.7` 등 문제가 된 트랜지티브 의존성들의 정확하고 패치된 버전을 명시적으로 추가했습니다.
+    *   `overrides` 버전에서 `^` 기호를 제거하여 `ETARGET` 오류를 방지했습니다.
+    *   **결과:** 모든 `npm audit` 취약점이 성공적으로 해결되었습니다.
+
+### 2. 로컬 개발 환경 KIS API 환경 변수 로딩 및 Vercel 배포 문제 해결
+*   **문제:** 로컬 개발 환경에서 앱 실행 시 화면이 하얗게 뜨고 `localTokenServer.js`에서 `KIS_APP_KEY: Not Set` 오류가 발생했습니다. 또한, Vercel 배포 시 `tsc: command not found` 오류로 빌드가 실패했습니다.
+*   **분석:**
+    *   로컬 환경 문제는 `client/server/localTokenServer.js` 파일이 ES 모듈로 처리되면서 `__dirname`이 정의되지 않아 `.env.local` 파일을 올바르게 로드하지 못했기 때문입니다.
+    *   Vercel 배포 오류는 `typescript`가 `devDependencies`에 포함되어 빌드 시 `tsc`를 찾지 못했기 때문입니다.
+*   **해결:**
+    *   `client/server/localTokenServer.js` 파일에 `import.meta.url`을 사용하여 `__filename`과 `__dirname`을 ES 모듈 환경에서 올바르게 정의하는 코드를 추가했습니다.
+    *   `dotenv.config` 호출 경로를 `path.resolve(__dirname, '..', '.env.local')`로 수정하여 `.env.local` 파일을 스크립트 위치 기준으로 정확하게 로드하도록 했습니다.
+    *   Vercel 배포 설정에서 빌드 명령을 `npm install && npm run build`로 재정의하여 `devDependencies`를 포함한 모든 의존성이 설치되도록 했습니다.
+    *   **결과:** 로컬 개발 서버에서 KIS 환경 변수가 성공적으로 로드되고 앱이 정상적으로 실행되었으며, Vercel 배포도 성공했습니다.
+
+### 3. Recharts 차트 경고 및 레이아웃 조정
+*   **문제:** `client/src/pages/Home.tsx` 파일의 차트 컴포넌트에서 `recharts` 경고(`The width(-1) and height(-1) of chart should be greater than 0`)가 지속적으로 발생했습니다. 이 경고를 해결하려는 초기 시도(고정 높이 `h-12` 또는 `style={{height: '24px'}}` 적용)는 차트의 크기를 변경하여 종목 리스트 행의 높이를 늘리는 부작용을 초래했습니다.
+*   **분석:** `ResponsiveContainer`가 CSS Grid 레이아웃 내에서 부모 컨테이너로부터 유효한 치수(너비/높이)를 얻지 못하고 있었으며, 백분율 기반이나 `aspect` 비율을 사용하는 방식으로는 이 문제가 해결되지 않았습니다.
+*   **해결:** `client/src/pages/Home.tsx` 파일에서 `ResponsiveContainer` 컴포넌트에 `width={108}` 및 `height={36}`과 같이 명시적인 픽셀 값을 지정했습니다. 이는 차트가 배치되는 그리드 컬럼의 너비(120px)를 고려하여 설정되었으며, 차트가 음수 치수를 보고하는 문제를 해결합니다.
+*   **결과:** `recharts` 경고가 사라졌으며, 차트가 이전보다 약간 커졌지만 전반적인 레이아웃을 크게 해치지 않는 선에서 허용 가능한 수준이 되었습니다.
+
+---
 ## 📝 2026년 1월 27일 업데이트: Git 충돌 해결 및 배포 오류 디버깅, KIS 토큰 캐싱 구현
 
 오늘은 `git push` 과정에서 발생한 `non-fast-forward` 오류와 이어지는 배포 문제들을 해결하는 데 집중했습니다.

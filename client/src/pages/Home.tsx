@@ -122,7 +122,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
               <InvestorCategory investorTab={investorTab} />
             </div>
           ) : (
-            <div className="w-full p-4">
+            <div className="w-full px-2 py-4">
               {/* 모든 카테고리에 공통 적용되는 헤더 */}
               <div className={`${gridLayout} pb-3 border-b border-white/5 text-[11px] font-bold text-slate-600 uppercase`}>
                 <div className="text-center">#</div>
@@ -157,7 +157,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
                       {/* Chart */}
                       <div className="hidden md:flex justify-center items-center h-full w-full">
-                        <ResponsiveContainer width="90%" height="90%">
+                        <ResponsiveContainer width={108} height={36}>
                           <LineChart data={stock.chart}>
                             <YAxis hide domain={['dataMin', 'dataMax']} />
                             <Line
