@@ -4,9 +4,16 @@ import http from 'http';
 import url from 'url';
 import dotenv from 'dotenv';
 import path from 'path'; // path 모듈 추가
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // [수정] 회사 경로 하드코딩 제거 -> 현재 실행 경로(process.cwd()) 기준으로 변경
-dotenv.config({ path: path.join(process.cwd(), '.env.local') });
+// dotenv.config({ path: path.join(process.cwd(), '.env.local') });
+// Resolve the path to .env.local relative to the script's directory
+const pathToEnv = path.resolve(__dirname, '..', '.env.local');
+dotenv.config({ path: pathToEnv });
 
 let cachedToken = null;
 let tokenExpiry = 0; // Timestamp when the token expires
