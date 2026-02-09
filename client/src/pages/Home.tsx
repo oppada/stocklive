@@ -10,7 +10,9 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]); // New state for stocks of selected theme
+  const [rankingStocks, setRankingStocks] = useState<any[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
+  const [isLoadingStocks, setIsLoadingStocks] = useState(false);
 
 
   // Fetch top performing themes from backend
@@ -67,6 +69,44 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
         })();
   }, [activeTab, selectedThemeId]); // Re-run when activeTab or selectedThemeId changes
 
+  // Fetch ranking data for other categories from backend
+  useEffect(() => {
+    const rankingCategories = ['급상승', '급하락', '거래량', '거래대금'];
+    if (rankingCategories.includes(activeTab)) {
+      setIsLoadingStocks(true);
+      const fetchRanking = async () => {
+        try {
+          let rankingType;
+          switch (activeTab) {
+            case '급상승': rankingType = 'gainer'; break;
+            case '급하락': rankingType = 'loser'; break;
+            case '거래량': rankingType = 'volume'; break;
+            case '거래대금': rankingType = 'value'; break;
+            default: rankingType = ''; break;
+          }
+
+          if (rankingType) {
+            const response = await fetch(`/api/ranking/${rankingType}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log(`Ranking data for ${activeTab}:`, data); // DEBUGGING
+            setRankingStocks(data);
+          }
+        } catch (error) {
+          console.error(`Failed to fetch ranking data for ${activeTab}:`, error);
+          setRankingStocks([]);
+        } finally {
+          setIsLoadingStocks(false);
+        }
+      };
+      fetchRanking();
+    } else {
+      setRankingStocks([]); // Clear ranking stocks if not in a ranking tab
+    }
+  }, [activeTab]);
+
   const categoryIcons: Record<string, any> = {
     '급상승': <Flame size={16} className="text-[#F04452]" />,
     '급하락': <ArrowDownCircle size={16} className="text-[#3182F6]" />,
@@ -87,17 +127,10 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   
   if (activeTab === '테마') {
     displayStocks = selectedThemeStocks; // Use stocks fetched from new backend API
+  } else if (['급상승', '급하락', '거래량', '거래대금'].includes(activeTab)) {
+    displayStocks = rankingStocks; // Use fetched ranking data
   } else if (activeTab !== '투자자별') {
-    const mock: any = {
-      '급상승': [
-        { name: '삼성전자', code: '005930', price: 72500, change: '1.25', tradeVolume: '1500000', tradeValue: '1234567890', chart: [{v:10},{v:12},{v:15},{v:14},{v:18}] },
-        { name: 'SK하이닉스', code: '000660', price: 141200, change: '2.40', tradeVolume: '800000', tradeValue: '987654321', chart: [{v:20},{v:22},{v:25},{v:24},{v:28}] },
-      ],
-      '급하락': [{ name: 'LG에너지솔루션', code: '373220', price: 380000, change: '-3.5', tradeVolume: '200000', tradeValue: '543210987', chart: [{v:30},{v:25},{v:20}] }],
-      '거래량': [{ name: '카카오', code: '035720', price: 52000, change: '0.5', tradeVolume: '3000000', tradeValue: '123123123', chart: [{v:10},{v:11},{v:10}] }],
-      '거래대금': [{ name: '현대차', code: '005380', price: 240000, change: '1.8', tradeVolume: '500000', tradeValue: '456456456', chart: [{v:15},{v:18},{v:20}] }],
-    };
-    displayStocks = mock[activeTab] || [];
+    displayStocks = []; // No mock data for other categories
   }
 
   return (
@@ -173,46 +206,55 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                 <div className="hidden md:block text-center">차트</div> {/* Chart column for PC */}
               </div>
 
+              {/* 로딩 인디케이터 */}
+              {isLoadingStocks && (activeTab !== '테마') && ( // Only show loading for ranking, not theme
+                <div className="text-center text-slate-400 py-4">데이터 로딩 중...</div>
+              )}
+
               {/* 리스트 아이템 */}
-              <div className="mt-1 space-y-1 pb-4">
-                {displayStocks.map((stock, idx) => {
-                  const isUp = stock.changeRate > 0;
-                  return (
-                    <div key={stock.code} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group`}>
-                       <div className="text-center text-[14px] font-bold text-slate-500">{idx + 1}</div> {/* Rank */}
-                       <div className="flex justify-center">
-                        <Heart size={16} onClick={() => onFavoriteToggle(stock.code)}
-                          className={`cursor-pointer ${favoritedStocks.includes(stock.code) ? 'text-[#F04452]' : 'text-slate-800'}`} />
+              {!isLoadingStocks && displayStocks.length > 0 ? (
+                <div className="mt-1 space-y-1 pb-4">
+                  {displayStocks.map((stock, idx) => {
+                    const isUp = stock.changeRate > 0;
+                    return (
+                      <div key={stock.code} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group`}>
+                         <div className="text-center text-[14px] font-bold text-slate-500">{idx + 1}</div> {/* Rank */}
+                         <div className="flex justify-center">
+                          <Heart size={16} onClick={() => onFavoriteToggle(stock.code)}
+                            className={`cursor-pointer ${favoritedStocks.includes(stock.code) ? 'text-[#F04452]' : 'text-slate-800'}`} />
+                        </div>
+                        <div className="overflow-hidden"> {/* Stock Name */}
+                          <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[16px] text-slate-100 truncate px-0 group-hover:text-white">
+                            {stock.name || stock.code} {/* Display stock code if name is missing for some reason */}
+                          </Link>
+                        </div>
+                        <div className="text-right text-xs md:text-[15px] font-bold text-slate-200 font-mono">{Number(stock.price).toLocaleString()}</div> {/* Current Price */}
+                        <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div> {/* Change Percentage */}
+                        <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div> {/* Trade Value */}
+                        <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
+                        {/* Chart */}
+                        <div className="hidden md:flex justify-center items-center h-full w-full">
+                          <ResponsiveContainer width={108} height={36}>
+                            <LineChart data={stock.chart}>
+                              <YAxis hide domain={['dataMin', 'dataMax']} />
+                              <Line
+                                type="monotone"
+                                dataKey="v"
+                                stroke={isUp ? '#F04452' : '#3182F6'}
+                                strokeWidth={2}
+                                dot={false}
+                                isAnimationActive={false}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
-                      <div className="overflow-hidden"> {/* Stock Name */}
-                        <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[16px] text-slate-100 truncate px-0 group-hover:text-white">
-                          {stock.name || stock.code} {/* Display stock code if name is missing for some reason */}
-                        </Link>
-                      </div>
-                      <div className="text-right text-xs md:text-[15px] font-bold text-slate-200 font-mono">{Number(stock.price).toLocaleString()}</div> {/* Current Price */}
-                      <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div> {/* Change Percentage */}
-                      <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div> {/* Trade Value */}
-                      <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
-                      {/* Chart */}
-                      <div className="hidden md:flex justify-center items-center h-full w-full">
-                        <ResponsiveContainer width={108} height={36}>
-                          <LineChart data={stock.chart}>
-                            <YAxis hide domain={['dataMin', 'dataMax']} />
-                            <Line
-                              type="monotone"
-                              dataKey="v"
-                              stroke={isUp ? '#F04452' : '#3182F6'}
-                              strokeWidth={2}
-                              dot={false}
-                              isAnimationActive={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              ) : (!isLoadingStocks && activeTab !== '테마' && activeTab !== '투자자별') ? (
+                <div className="text-center text-slate-400 py-4">데이터를 불러올 수 없습니다.</div>
+              ) : null}
             </div>
           )}
         </main>
