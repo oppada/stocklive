@@ -1,4 +1,27 @@
 {
+  "builds": [
+    {
+      "src": "server/index.js",
+      "use": "@vercel/node@20.x",
+      "config": {
+        "includeFiles": ["server/node_modules/**", "client/public/toss_real_150_themes.json"]
+      }
+    },
+    {
+      "src": "client/api/uapi/[...path].ts",
+      "use": "@vercel/node@20.x",
+      "config": {
+        "includeFiles": ["client/node_modules/**"]
+      }
+    },
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/dist"
+      }
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/uapi/:path*",
