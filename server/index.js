@@ -149,4 +149,4 @@ app.get('/api/stocks/prices', async (req, res) => {
   } catch (e) { res.status(500).json({}); }
 });
 
-app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
+module.exports = app;
