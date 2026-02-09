@@ -1,10 +1,10 @@
 {
   "functions": {
     "server/index.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@20.x"
     },
     "client/api/uapi/[...path].ts": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node@20.x"
     }
   },
   "rewrites": [
