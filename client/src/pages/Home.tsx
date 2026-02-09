@@ -4,14 +4,14 @@ import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users } fr
 import { Link } from 'react-router-dom';
 import InvestorCategory from '../components/InvestorCategory';
 
-const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
+const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [activeTab, setActiveTab] = useState('급상승');
   const [investorTab] = useState('순매수');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]); // New state for stocks of selected theme
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
-  const [isLoadingStocks, setIsLoadingStocks] = useState(false);
+
 
   // Fetch top performing themes from backend
   useEffect(() => {
@@ -43,32 +43,28 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
 
   // Fetch stocks for the selected theme from backend
   useEffect(() => {
-    if (activeTab === '테마' && selectedThemeId) {
-      setIsLoadingStocks(true);
-      const fetchStocks = async () => {
-        try {
-          const response = await fetch(`/api/themes/${selectedThemeId}/stocks`); // Use new backend API
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          console.log(`Stocks for theme ${selectedThemeId}:`, data); // DEBUGGING
-          if (Array.isArray(data)) {
-            setSelectedThemeStocks(data);
+        (async () => {
+          if (activeTab === '테마' && selectedThemeId) {
+            try {
+              const response = await fetch(`/api/themes/${selectedThemeId}/stocks`); // Use new backend API
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              const data = await response.json();
+              console.log(`Stocks for theme ${selectedThemeId}:`, data); // DEBUGGING
+              if (Array.isArray(data)) {
+                setSelectedThemeStocks(data);
+              } else {
+                setSelectedThemeStocks([]);
+              }
+            } catch (error) {
+              console.error(`Failed to fetch stocks for theme ${selectedThemeId}:`, error);
+              setSelectedThemeStocks([]); // Set to empty array on error
+            }
           } else {
-            setSelectedThemeStocks([]);
+            setSelectedThemeStocks([]); // Clear stocks if not in theme tab or no theme selected
           }
-        } catch (error) {
-          console.error(`Failed to fetch stocks for theme ${selectedThemeId}:`, error);
-          setSelectedThemeStocks([]); // Set to empty array on error
-        } finally {
-          setIsLoadingStocks(false);
-        }
-      };
-      fetchStocks();
-    } else {
-      setSelectedThemeStocks([]); // Clear stocks if not in theme tab or no theme selected
-    }
+        })();
   }, [activeTab, selectedThemeId]); // Re-run when activeTab or selectedThemeId changes
 
   const categoryIcons: Record<string, any> = {
@@ -82,7 +78,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
 
 
 
-  const currentTheme = allThemes.find(t => t.name === selectedThemeId);
+
 
   const gridLayout = "grid grid-cols-[16px_20px_104px_53px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_100px_90px_120px] items-center gap-1";
 
