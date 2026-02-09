@@ -1,25 +1,20 @@
 {
+  "installCommand": "npm install --prefix client && npm install --prefix server",
+  "buildCommand": "npm run build --prefix client",
+  "outputDirectory": "client/dist",
   "builds": [
-    {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "buildCommand": "cd client && npm install && npm run build",
-        "outputDirectory": "client/dist"
-      }
-    },
     {
       "src": "server/index.js",
       "use": "@vercel/node@20.x",
       "config": {
-        "includeFiles": ["server/node_modules/**", "client/public/toss_real_150_themes.json"]
+        "includeFiles": ["server/node_modules/**", "client/public/toss_real_150_themes.json", "server/package.json"]
       }
     },
     {
       "src": "client/api/uapi/[...path].ts",
       "use": "@vercel/node@20.x",
       "config": {
-        "includeFiles": ["client/node_modules/**"]
+        "includeFiles": ["client/node_modules/**", "client/package.json"]
       }
     }
   ],
