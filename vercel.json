@@ -1,12 +1,4 @@
 {
-  "functions": {
-    "server/index.js": {
-      "runtime": "@vercel/node@20.x"
-    },
-    "client/api/uapi/[...path].ts": {
-      "runtime": "@vercel/node@20.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/uapi/:path*",
