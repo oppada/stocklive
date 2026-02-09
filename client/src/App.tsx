@@ -15,17 +15,7 @@ import WatchlistSidebar from './components/WatchlistSidebar';
 
 import { supabase } from './supabaseClient'; // Import supabase from the new client
 
-const KIS_APP_KEY = import.meta.env.VITE_KIS_APP_KEY;
-const KIS_APP_SECRET = import.meta.env.VITE_KIS_APP_SECRET;
 
-// Interface for the fetched theme data structure
-interface ThemeFile {
-  themes: {
-    stocks: {
-      code: string;
-    }[];
-  }[];
-}
 
 const tickerStocks = [
   { name: '삼성전자', code: '005930' },
@@ -40,7 +30,7 @@ const generateNickname = () => {
   return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * adjs.length)]}`;
 };
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 
 const App = () => {
   const navigate = useNavigate();
@@ -48,9 +38,7 @@ const App = () => {
   const isChatRoute = location.pathname === '/chat'; // Define isChatRoute
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState('');
-  const [allUniqueThemeStockCodes, setAllUniqueThemeStockCodes] = useState<string[]>([]); // New state
   const [myNickname] = useState(generateNickname());
-  const [kisToken, setKisToken] = useState<string | null>(null);
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
   const [favoritedStocks, setFavoritedStocks] = useState<string[]>([]); // New state for favorited stocks
   const [showLoginMessage, setShowLoginMessage] = useState(false); // New state for login message
@@ -83,89 +71,46 @@ const App = () => {
     }
   }, [showLoginMessage]);
 
-  // Fetch themes and extract unique stock codes for real-time data fetching
+
+
+
+
+
+  // Fetch prices for tickerStocks and favoritedStocks from new backend endpoint
   useEffect(() => {
-    const fetchAndExtractStockCodes = async () => {
+    const fetchMarqueeAndWatchlistPrices = async () => {
+      // Combine tickerStocks and favoritedStocks for a single API call
+      const allCodesToFetch = Array.from(new Set([
+        ...tickerStocks.map(s => s.code),
+        ...favoritedStocks, // Assuming favoritedStocks contains only codes
+      ]));
+
+      if (allCodesToFetch.length === 0) return;
+
       try {
-        const response = await fetch('/toss_real_150_themes.json'); // From public folder
-        const data: ThemeFile = await response.json();
-        const uniqueCodes = Array.from(new Set(
-          data.themes.flatMap(theme => theme.stocks.map(stock => stock.code))
-        ));
-        setAllUniqueThemeStockCodes(uniqueCodes);
+        const response = await fetch(`/api/stocks/prices?codes=${allCodesToFetch.join(',')}`);
+        const data = await response.json();
+        console.log('Marquee/Watchlist Prices:', data); // DEBUGGING
+        if (Object.keys(data).length > 0) {
+          setStockPrices(data);
+        }
       } catch (error) {
-        console.error("Failed to fetch themes for stock codes:", error);
+        console.error("Failed to fetch marquee and watchlist stock prices:", error);
       }
     };
-    fetchAndExtractStockCodes();
-  }, []); // Run once on mount, as theme structure is static
 
+    // Initial fetch
+    fetchMarqueeAndWatchlistPrices();
 
-  const fetchKisToken = async () => {
-    try {
-      // ✅ 경로에 /api 추가
-      const response = await fetch('/api/uapi/oauth2/tokenP', {
-        method: 'POST',
-        headers: { "Content-Type": "application/json; charset=UTF-8" },
-        body: JSON.stringify({
-          grant_type: "client_credentials",
-          appkey: KIS_APP_KEY,
-          appsecret: KIS_APP_SECRET
-        })
-      });
-      const data = await response.json();
-      if (data.access_token) {
-        const expires_at = new Date().getTime() + (data.expires_in - 120) * 1000;
-        localStorage.setItem('kis-token', JSON.stringify({ token: data.access_token, expires_at }));
-        setKisToken(data.access_token);
-      }
-    } catch (e) { console.error("KIS 토큰 에러", e); }
-  };
+    // Set up interval for repeated fetching (e.g., every 30 seconds)
+    const intervalId = setInterval(fetchMarqueeAndWatchlistPrices, 30000); // Fetch every 30 seconds
 
-  const fetchStockPrice = async (token: string, stockCode: string) => {
-    try {
-      // ✅ 경로에 /api 추가
-      const response = await fetch(`/api/uapi/domestic-stock/v1/quotations/inquire-price?FID_COND_MRKT_DIV_CODE=J&FID_INPUT_ISCD=${stockCode}`, {
-        headers: {
-          "authorization": `Bearer ${token}`,
-          "appkey": KIS_APP_KEY,
-          "appsecret": KIS_APP_SECRET,
-          "tr_id": "FHKST01010100", //
-          "custtype": "P",
-          "Content-Type": "application/json; charset=UTF-8"
-        }
-      });
-      
-      const data = await response.json();
-      if (data.output) {
-        const prdy_vrss = Number(data.output.prdy_vrss);
-        setStockPrices(prev => ({
-          ...prev,
-          [stockCode]: { 
-            price: Number(data.output.stck_prpr),
-            change: data.output.prdy_ctrt,
-            status: prdy_vrss > 0 ? 'up' : (prdy_vrss < 0 ? 'down' : 'flat'),
-            tradeVolume: data.output.stck_vol, // Add tradeVolume
-            tradeValue: data.output.acml_tr_pbmn, // Add tradeValue
-          }
-        }));
-      }
-    } catch (e) { console.error(`주가 조회 에러 (${stockCode})`, e); }
-  };
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [favoritedStocks]); // Re-run if favorited stocks change
 
+  // Supabase realtime messages setup (KIS token logic removed from here)
   useEffect(() => {
-    const stored = localStorage.getItem('kis-token');
-    if (stored) {
-      const { token, expires_at } = JSON.parse(stored);
-      if (new Date().getTime() < expires_at) {
-        setKisToken(token);
-      } else {
-        fetchKisToken();
-      }
-    } else {
-      fetchKisToken();
-    }
-
     const channel = supabase.channel('realtime-messages').on('postgres_changes', 
       { event: 'INSERT', schema: 'public', table: 'messages' }, 
       (payload) => setMessages(prev => [...prev, payload.new])
@@ -173,44 +118,7 @@ const App = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  const pricesLoadedRef = useRef(false);
 
-  useEffect(() => {
-    if (!kisToken || allUniqueThemeStockCodes.length === 0) return; 
-    
-    // Only call loadAllPrices if not already loaded
-    if (!pricesLoadedRef.current) {
-        pricesLoadedRef.current = true; // Mark as loaded before initial fetch
-
-        const loadAllPrices = async () => {
-            for (const s of tickerStocks) {
-                await fetchStockPrice(kisToken, s.code);
-                await delay(100);
-            }
-            for (const code of allUniqueThemeStockCodes) { 
-                await fetchStockPrice(kisToken, code);
-                await delay(100);
-            }
-        };
-        loadAllPrices(); // Initial call
-    }
-
-    const timer = setInterval(() => { // Interval to repeatedly fetch prices
-        const loadAllPricesInterval = async () => {
-            for (const s of tickerStocks) {
-                await fetchStockPrice(kisToken, s.code);
-                await delay(100);
-            }
-            for (const code of allUniqueThemeStockCodes) { 
-                await fetchStockPrice(kisToken, code);
-                await delay(100);
-            }
-        };
-        loadAllPricesInterval();
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, [kisToken, allUniqueThemeStockCodes]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -253,14 +161,20 @@ const App = () => {
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex gap-8 pr-8">
-              {tickerStocks.map((s) => (
-                <span key={s.code} className="flex items-center gap-1.5 text-slate-300">
-                  <Zap className={`w-3 h-3 ${stockPrices[s.code]?.status === 'up' ? 'text-rose-500' : 'text-blue-500'}`} />
-                  {s.name} <span className={stockPrices[s.code] ? (stockPrices[s.code].status === 'up' ? 'text-rose-500' : 'text-blue-500') : ''}>
-                    {stockPrices[s.code] ? `${stockPrices[s.code].price} (${stockPrices[s.code].change}%)` : '조회 중...'}
+              {tickerStocks.map((s) => {
+                const stock = stockPrices[s.code];
+                const isUp = stock && stock.changeRate > 0;
+                const isDown = stock && stock.changeRate < 0;
+                const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-500' : ''); // Default to no color for flat
+                return (
+                  <span key={s.code} className="flex items-center gap-1.5 text-slate-300">
+                    <Zap className={`w-3 h-3 ${colorClass}`} /> {/* Apply color to Zap icon */}
+                    {stock?.name} <span className={colorClass}> {/* Apply color to text, use stock?.name */}
+                      {stock ? `${stock.price} (${(stock.changeRate || 0).toFixed(2)}%)` : '조회 중...'}
+                    </span>
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </div>
           ))}
         </div>

@@ -9,6 +9,67 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
   const [investorTab] = useState('순매수');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
+  const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]); // New state for stocks of selected theme
+  const [isLoadingThemes, setIsLoadingThemes] = useState(true);
+  const [isLoadingStocks, setIsLoadingStocks] = useState(false);
+
+  // Fetch top performing themes from backend
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const response = await fetch('/api/themes/top-performing'); // Use new backend API
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Top Performing Themes Data:', data); // DEBUGGING
+        if (Array.isArray(data)) {
+          setAllThemes(data);
+          if (data.length > 0) {
+            setSelectedThemeId(data[0].name);
+          }
+        } else {
+          setAllThemes([]); // Ensure it's always an array
+        }
+      } catch (error) {
+        console.error("Failed to fetch top performing themes:", error);
+        setAllThemes([]); // Set to empty array on error to prevent crash
+      } finally {
+        setIsLoadingThemes(false);
+      }
+    };
+    fetchThemes();
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Fetch stocks for the selected theme from backend
+  useEffect(() => {
+    if (activeTab === '테마' && selectedThemeId) {
+      setIsLoadingStocks(true);
+      const fetchStocks = async () => {
+        try {
+          const response = await fetch(`/api/themes/${selectedThemeId}/stocks`); // Use new backend API
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          console.log(`Stocks for theme ${selectedThemeId}:`, data); // DEBUGGING
+          if (Array.isArray(data)) {
+            setSelectedThemeStocks(data);
+          } else {
+            setSelectedThemeStocks([]);
+          }
+        } catch (error) {
+          console.error(`Failed to fetch stocks for theme ${selectedThemeId}:`, error);
+          setSelectedThemeStocks([]); // Set to empty array on error
+        } finally {
+          setIsLoadingStocks(false);
+        }
+      };
+      fetchStocks();
+    } else {
+      setSelectedThemeStocks([]); // Clear stocks if not in theme tab or no theme selected
+    }
+  }, [activeTab, selectedThemeId]); // Re-run when activeTab or selectedThemeId changes
 
   const categoryIcons: Record<string, any> = {
     '급상승': <Flame size={16} className="text-[#F04452]" />,
@@ -19,31 +80,9 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
     '투자자별': <Users size={16} className="text-[#3498DB]" />,
   };
 
-  // 데이터 로드
-  useEffect(() => {
-    fetch('/toss_real_150_themes.json')
-      .then(res => res.json())
-      .then(data => {
-        const formatted = data.themes.map((t: any, i: number) => ({
-          id: String(i + 1), name: t.theme_name, stocks: t.stocks
-        }));
-        setAllThemes(formatted);
-      }).catch(console.error);
-  }, []);
 
-  const themesWithAvg = allThemes.map(theme => {
-    const changes = theme.stocks.map((s: any) => parseFloat(stockPrices[s.code]?.change || '0')).filter((c: any) => !isNaN(c));
-    const avg = changes.length > 0 ? (changes.reduce((a: any, b: any) => a + b, 0) / changes.length) : 0;
-    return { ...theme, averageChange: parseFloat(avg.toFixed(2)) };
-  }).sort((a, b) => (b.averageChange || 0) - (a.averageChange || 0));
 
-  useEffect(() => {
-    if (activeTab === '테마' && themesWithAvg.length > 0 && !selectedThemeId) {
-      setSelectedThemeId(themesWithAvg[0].id);
-    }
-  }, [activeTab, themesWithAvg, selectedThemeId]);
-
-  const currentTheme = themesWithAvg.find(t => t.id === selectedThemeId);
+  const currentTheme = allThemes.find(t => t.name === selectedThemeId);
 
   const gridLayout = "grid grid-cols-[16px_20px_104px_53px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_100px_90px_120px] items-center gap-1";
 
@@ -51,12 +90,7 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
   let displayStocks: any[] = [];
   
   if (activeTab === '테마') {
-    displayStocks = (currentTheme?.stocks.map((s: any) => ({
-      name: s.name, code: s.code, price: stockPrices[s.code]?.price || 0,
-      change: stockPrices[s.code]?.change || '0', tradeVolume: stockPrices[s.code]?.tradeVolume || '0',
-      tradeValue: stockPrices[s.code]?.tradeValue || '0', // Add tradeValue here
-      chart: [{v:10},{v:15},{v:12},{v:18},{v:14}]
-    })) || []).sort((a: any, b: any) => parseFloat(b.change) - parseFloat(a.change));
+    displayStocks = selectedThemeStocks; // Use stocks fetched from new backend API
   } else if (activeTab !== '투자자별') {
     const mock: any = {
       '급상승': [
@@ -89,15 +123,19 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
         {/* 테마 사이드바: 테마명 간격도 타이트하게 조정 */}
         {activeTab === '테마' && (
           <aside className="hidden md:block w-52 border-r border-white/5 overflow-y-auto shrink-0 p-2 hide-scrollbar">
-            {themesWithAvg.map((t) => (
-              <div key={t.id} onClick={() => setSelectedThemeId(t.id)}
-                className={`cursor-pointer px-3 py-1 rounded-xl transition-all ${selectedThemeId === t.id ? 'bg-[#1C1E23]' : 'hover:bg-white/5'}`}>
-                <div className="flex justify-between items-center">
-                  <span className={`font-bold text-[14px] truncate max-w-[120px] ${selectedThemeId === t.id ? 'text-white' : 'text-slate-400'}`}>{t.name}</span>
-                  <span className={`text-[14px] ${t.averageChange > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{t.averageChange}%</span>
+            {isLoadingThemes ? (
+              <div className="p-2 text-slate-500">테마 로딩 중...</div>
+            ) : (
+              allThemes.map((t) => ( // Use allThemes now
+                <div key={t.name} onClick={() => setSelectedThemeId(t.name)} // Use name as ID
+                  className={`cursor-pointer px-3 py-1 rounded-xl transition-all ${selectedThemeId === t.name ? 'bg-[#1C1E23]' : 'hover:bg-white/5'}`}>
+                  <div className="flex justify-between items-center">
+                    <span className={`font-bold text-[14px] truncate max-w-[120px] ${selectedThemeId === t.name ? 'text-white' : 'text-slate-400'}`}>{t.name}</span>
+                    <span className={`text-[14px] ${t.avgChangeRate > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{t.avgChangeRate.toFixed(2)}%</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </aside>
         )}
 
@@ -110,9 +148,13 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
                 onChange={(e) => setSelectedThemeId(e.target.value)}
                 className="w-full bg-[#1C1E23] border border-white/10 rounded-lg px-3 py-1 text-white text-sm"
               >
-                {themesWithAvg.map(t => (
-                  <option key={t.id} value={t.id}>{t.name} ({t.averageChange > 0 ? '+' : ''}{t.averageChange}%)</option>
-                ))}
+                {isLoadingThemes ? (
+                  <option>테마 로딩 중...</option>
+                ) : (
+                  allThemes.map(t => ( // Use allThemes
+                    <option key={t.name} value={t.name}>{t.name} ({t.avgChangeRate > 0 ? '+' : ''}{t.avgChangeRate.toFixed(2)}%)</option>
+                  ))
+                )}
               </select>
             </div>
           )}
@@ -138,9 +180,9 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
               {/* 리스트 아이템 */}
               <div className="mt-1 space-y-1 pb-4">
                 {displayStocks.map((stock, idx) => {
-                  const isUp = parseFloat(stock.change) > 0;
+                  const isUp = stock.changeRate > 0;
                   return (
-                    <div key={idx} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group`}>
+                    <div key={stock.code} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group`}>
                        <div className="text-center text-[14px] font-bold text-slate-500">{idx + 1}</div> {/* Rank */}
                        <div className="flex justify-center">
                         <Heart size={16} onClick={() => onFavoriteToggle(stock.code)}
@@ -148,11 +190,11 @@ const Home = ({ stockPrices = {}, favoritedStocks, onFavoriteToggle }: any) => {
                       </div>
                       <div className="overflow-hidden"> {/* Stock Name */}
                         <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[16px] text-slate-100 truncate px-0 group-hover:text-white">
-                          {stock.name}
+                          {stock.name || stock.code} {/* Display stock code if name is missing for some reason */}
                         </Link>
                       </div>
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-200 font-mono">{Number(stock.price).toLocaleString()}</div> {/* Current Price */}
-                      <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{stock.change}%</div> {/* Change Percentage */}
+                      <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div> {/* Change Percentage */}
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div> {/* Trade Value */}
                       <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
                       {/* Chart */}
