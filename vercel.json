@@ -1,8 +1,20 @@
 {
+  "functions": {
+    "server/index.js": {
+      "runtime": "nodejs18.x"
+    },
+    "client/api/uapi/[...path].ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/uapi/:path*",
-      "destination": "/api/proxy"
+      "destination": "/client/api/uapi/[...path]"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/server/index.js"
     }
   ]
 }
