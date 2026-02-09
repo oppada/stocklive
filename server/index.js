@@ -24,6 +24,8 @@ const KIS_APP_KEY = process.env.KIS_APP_KEY;
 const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
 const KIS_BASE_URL = process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443';
 
+const stockCodeToNameMap = new Map(); // Global map for stock code to name
+
 // Load themes data once at startup
 let themesData = [];
 try {
@@ -32,6 +34,13 @@ try {
   const parsedData = JSON.parse(rawData);
   themesData = parsedData.themes; // Access the 'themes' array within the object
   console.log(`Loaded ${themesData.length} themes from ${themesPath}`);
+
+  // Create a mapping from stock code to stock name for quick lookup
+  themesData.forEach(theme => {
+    theme.stocks.forEach(stock => {
+      stockCodeToNameMap.set(stock.code, stock.name);
+    });
+  });
 } catch (error) {
   console.error('Failed to load themes data:', error);
   process.exit(1); // Exit if essential themes data cannot be loaded
@@ -111,7 +120,7 @@ const fetchStockPrice = async (token, stockCode, retries = 3) => {
           price: parseInt(output.stck_prpr || '0'),
           change: parseInt(output.prdy_vrss || '0'),
           changeRate: parseFloat(output.prdy_ctrt || '0'),
-          name: (typeof output.hts_korp_isnm === 'string' ? output.hts_korp_isnm : stockCode).trim(), // Use hts_korp_isnm, robustly check type, fallback to stockCode
+          name: stockCodeToNameMap.get(stockCode) || (typeof output.hts_korp_isnm === 'string' ? output.hts_korp_isnm : stockCode).trim(), // Prioritize map lookup, then KIS API, then stockCode
           tradeVolume: parseInt(output.acml_vol || '0'), // Ensure default to 0
           tradeValue: parseInt(output.acml_tr_pbmn || '0'), // Ensure default to 0
         };
