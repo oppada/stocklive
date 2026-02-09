@@ -149,4 +149,14 @@ app.get('/api/stocks/prices', async (req, res) => {
   } catch (e) { res.status(500).json({}); }
 });
 
-module.exports = app;
+// --- Conditional Export/Listen for Vercel/Local Development ---
+// If we are in a Vercel environment (process.env.VERCEL is typically true),
+// or if we are loaded as a module (e.g., by Vercel), export the app.
+// Otherwise, for local development, start listening on the port.
+if (process.env.VERCEL || require.main !== module) {
+  module.exports = app;
+} else {
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+}
