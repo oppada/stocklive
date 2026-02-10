@@ -5,7 +5,10 @@ import { Link } from 'react-router-dom';
 import InvestorCategory from '../components/InvestorCategory';
 
 const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
-  const [activeTab, setActiveTab] = useState('급상승');
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('activeTab');
+    return savedTab || '급상승'; // Default to '급상승' if nothing in localStorage
+  });
   const [investorTab] = useState('순매수');
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
@@ -13,7 +16,13 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
   const [isLoadingStocks, setIsLoadingStocks] = useState(false);
+  const [isLoadingThemeStocks, setIsLoadingThemeStocks] = useState(false); // New state for loading theme stocks
 
+
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Fetch top performing themes from backend
   useEffect(() => {
@@ -47,6 +56,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   useEffect(() => {
         (async () => {
           if (activeTab === '테마' && selectedThemeId) {
+            setIsLoadingThemeStocks(true); // Set loading true when starting fetch
+            setSelectedThemeStocks([]); // Clear previous stocks immediately
             try {
               const response = await fetch(`/api/themes/${selectedThemeId}/stocks`); // Use new backend API
               if (!response.ok) {
@@ -62,6 +73,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
             } catch (error) {
               console.error(`Failed to fetch stocks for theme ${selectedThemeId}:`, error);
               setSelectedThemeStocks([]); // Set to empty array on error
+            } finally {
+              setIsLoadingThemeStocks(false); // Set loading false after fetch completes
             }
           } else {
             setSelectedThemeStocks([]); // Clear stocks if not in theme tab or no theme selected
@@ -207,7 +220,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
               </div>
 
               {/* 로딩 인디케이터 */}
-              {isLoadingStocks && (activeTab !== '테마') && ( // Only show loading for ranking, not theme
+              {((isLoadingStocks && (activeTab !== '테마')) || (isLoadingThemeStocks && activeTab === '테마')) && (
                 <div className="text-center text-slate-400 py-4">데이터 로딩 중...</div>
               )}
 
@@ -231,7 +244,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                         <div className="text-right text-xs md:text-[15px] font-bold text-slate-200 font-mono">{Number(stock.price).toLocaleString()}</div> {/* Current Price */}
                         <div className={`text-right text-xs md:text-[15px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div> {/* Change Percentage */}
                         <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div> {/* Trade Value */}
-                        <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeVolume) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
+                        <div className="text-right text-xs md:text-[15px] font-bold text-slate-500 font-mono">{((stock.volume || 0) / 10000).toFixed(0)}만</div> {/* Trade Volume */}
                         {/* Chart */}
                         <div className="hidden md:flex justify-center items-center h-full w-full">
                           <ResponsiveContainer width={108} height={36}>
