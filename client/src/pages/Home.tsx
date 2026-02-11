@@ -14,6 +14,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]); // New state for stocks of selected theme
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
+  const [retryCount, setRetryCount] = useState(0); // New state for retry count
+  const MAX_RETRIES = 5; // Max retries constant
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
   const [isLoadingStocks, setIsLoadingStocks] = useState(false);
   const [isLoadingThemeStocks, setIsLoadingThemeStocks] = useState(false); // New state for loading theme stocks
@@ -87,6 +89,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
     const rankingCategories = ['급상승', '급하락', '거래량', '거래대금'];
     if (rankingCategories.includes(activeTab)) {
       setIsLoadingStocks(true);
+      setRankingStocks([]); // Clear previous ranking stocks when tab changes
+
       const fetchRanking = async () => {
         try {
           let rankingType;
@@ -105,20 +109,31 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
             }
             const data = await response.json();
             console.log(`Ranking data for ${activeTab}:`, data); // DEBUGGING
-            setRankingStocks(data);
+
+            if (data.length === 0 && retryCount < MAX_RETRIES) {
+              console.log(`No ranking data, retrying in 5 seconds (Attempt ${retryCount + 1}/${MAX_RETRIES})...`);
+              setRetryCount(prev => prev + 1);
+              setTimeout(fetchRanking, 5000); // Retry after 5 seconds
+            } else {
+              setRankingStocks(data);
+              setIsLoadingStocks(false); // Only set false if data is received or max retries reached
+              setRetryCount(0); // Reset retry count
+            }
           }
         } catch (error) {
           console.error(`Failed to fetch ranking data for ${activeTab}:`, error);
           setRankingStocks([]);
-        } finally {
-          setIsLoadingStocks(false);
+          setIsLoadingStocks(false); // Set false on explicit error
+          setRetryCount(0); // Reset retry count
         }
       };
       fetchRanking();
     } else {
       setRankingStocks([]); // Clear ranking stocks if not in a ranking tab
+      setIsLoadingStocks(false); // Ensure loading is false when tab is not ranking
+      setRetryCount(0); // Reset retry count
     }
-  }, [activeTab]);
+  }, [activeTab, retryCount]);
 
   const categoryIcons: Record<string, any> = {
     '급상승': <Flame size={16} className="text-[#F04452]" />,

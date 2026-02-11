@@ -4,56 +4,42 @@ const NodeCache = require('node-cache');
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 4000;
 
 const kisPriceCache = new NodeCache({ stdTTL: 60 });
-const kisTokenCache = new NodeCache({ stdTTL: 86400 });
-const themeRankingCache = new NodeCache({ stdTTL: 300 }); // New cache for theme ranking results (5 minutes)
+// NodeCache for KIS token (short-lived, so in-memory is fine for a single execution)
+const kisTokenCache = new NodeCache({ stdTTL: 86400 }); // 24 hours
 
 const KIS_APP_KEY = process.env.KIS_APP_KEY;
 const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
 const KIS_BASE_URL = (process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 let allKrxStocks = []; // Declare at top level
-
-const stockCodeToNameMap = new Map(); 
-
-
+const stockCodeToNameMap = new Map();
 
 let themesData = [];
 
 try {
-
   const themesPath = path.join(__dirname, '../client/public/toss_real_150_themes.json');
-
   themesData = JSON.parse(fs.readFileSync(themesPath, 'utf8')).themes;
-
   themesData.forEach(t => t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
-
   console.log(`Loaded ${themesData.length} themes.`);
-
 } catch (e) { console.error("Theme Load Error", e); }
 
-
-
 try {
-
   const krxStocksPath = path.join(__dirname, '../client/public/krx_stocks.json');
-
   allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
-
-  allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name));
-
+  allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)); // Ensure map is populated for local fetches
   console.log(`Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
-
 } catch (e) { console.error("Error loading krx_stocks.json:", e); }
-
-
-
-
 
 app.use(cors());
 app.use(express.json());
@@ -86,27 +72,15 @@ const fetchStockPrice = async (token, code) => {
     const o = response.data.output;
     if(!o) return null;
 
-    // --- Start Debugging Logs ---
-    // console.log("Raw KIS API output for stock:", code, o);
-    // console.log(`  acml_vol: '${o.acml_vol}', parsed: ${parseInt(o.acml_vol || '0')}`);
-    // console.log(`  acml_tr_pbmn: '${o.acml_tr_pbmn}', parsed: ${parseInt(o.acml_tr_pbmn || '0')}`);
-    // --- End Debugging Logs ---
-
-                const data = { 
-
-                  code, 
-
-                  price: parseInt(o.stck_prpr || '0'), 
-
-                  changeRate: parseFloat(o.prdy_ctrt || '0'), 
-
-                  volume: parseInt(String(o.acml_vol || '0').replace(/,/g, '')),
-
-                  tradeValue: parseInt(String(o.acml_tr_pbmn || '0').replace(/,/g, '')),
-
-                  name: stockCodeToNameMap.get(code) || o.hts_korp_isnm 
-
-                };    kisPriceCache.set(cacheKey, data);
+    const data = { 
+      code, 
+      price: parseInt(o.stck_prpr || '0'), 
+      changeRate: parseFloat(o.prdy_ctrt || '0'), 
+      volume: parseInt(String(o.acml_vol || '0').replace(/,/g, '')),
+      tradeValue: parseInt(String(o.acml_tr_pbmn || '0').replace(/,/g, '')),
+      name: stockCodeToNameMap.get(code) || o.hts_korp_isnm 
+    };
+    kisPriceCache.set(cacheKey, data);
     return data;
   } catch (e) { return null; }
 };
@@ -129,12 +103,22 @@ const chunkedFetchStockPrices = async (token, codesToFetch, chunkSize = 10, dela
   return allResults;
 };
 
+
+
+
+
 // [수정] 테마 수익률 계산 라우트
 app.get('/api/themes/top-performing', async (req, res) => {
   const cacheKey = 'theme_ranking_results';
-  if (themeRankingCache.has(cacheKey)) {
-    console.log("Returning theme ranking from cache.");
-    return res.json(themeRankingCache.get(cacheKey));
+  const { data: cachedThemeData, error: fetchThemeError } = await supabase
+    .from('stock_data_cache')
+    .select('data')
+    .eq('id', cacheKey)
+    .single();
+
+  if (!fetchThemeError && cachedThemeData && cachedThemeData.data) {
+    console.log("Returning theme ranking from Supabase cache.");
+    return res.json(cachedThemeData.data);
   }
 
   try {
@@ -153,7 +137,16 @@ app.get('/api/themes/top-performing', async (req, res) => {
       return { name: t.theme_name, avgChangeRate: avg, stocks: stocksWithPrices };
     }).sort((a, b) => b.avgChangeRate - a.avgChangeRate);
 
-    themeRankingCache.set(cacheKey, result); // Cache the result
+    const { data: upsertThemeData, error: upsertThemeError } = await supabase
+        .from('stock_data_cache')
+        .upsert({ id: cacheKey, data: result })
+        .select();
+
+    if (upsertThemeError) {
+        console.error("Error upserting theme ranking to Supabase:", upsertThemeError);
+    } else {
+        console.log("Successfully upserted theme ranking to Supabase:", upsertThemeData);
+    }
     res.json(result);
   } catch (e) {
     console.error("Failed to fetch top performing themes:", e);
@@ -188,7 +181,7 @@ const fetchAllStockDataAndCache = async () => {
     console.log(`Using ${allStockCodes.length} stock codes from krx_stocks.json to fetch data.`);
 
     const validResults = [];
-    const chunkSize = 20; // Increased to 20 stocks at a time
+    const chunkSize = 10; // Increased to 20 stocks at a time
     const totalStocks = allStockCodes.length;
     const startTime = Date.now();
 
@@ -214,10 +207,19 @@ const fetchAllStockDataAndCache = async () => {
         }
 
         // Delay to avoid API rate limiting
-        await new Promise(resolve => setTimeout(resolve, 500)); 
+        await new Promise(resolve => setTimeout(resolve, 250)); 
     }
     
-    fullStockDataCache.set('all_stocks', validResults);
+    const { data: upsertData, error: upsertError } = await supabase
+      .from('stock_data_cache')
+      .upsert({ id: 'all_stocks', data: validResults })
+      .select();
+
+    if (upsertError) {
+      console.error("Error upserting all_stocks to Supabase:", upsertError);
+    } else {
+      console.log("Successfully upserted all_stocks to Supabase:", upsertData);
+    }
     console.log(`Successfully cached data for ${validResults.length} stocks. Ranking cache is now fully populated.`);
   } catch (error) {
     console.error("Failed to fetch and cache all stock data:", error);
@@ -225,16 +227,22 @@ const fetchAllStockDataAndCache = async () => {
 };
 
 // Initial fetch and set interval for refreshing the cache every 3 minutes
-fetchAllStockDataAndCache();
-setInterval(fetchAllStockDataAndCache, 180000); // 180,000 ms = 3 minutes
+// fetchAllStockDataAndCache();
+// setInterval(fetchAllStockDataAndCache, 180000); // 180,000 ms = 3 minutes
 
 
 app.get('/api/ranking/:type', async (req, res) => {
-  const allStocks = fullStockDataCache.get('all_stocks');
-  if (!allStocks) {
-    // If cache is empty, either wait for it or send a "try again" message
-    return res.status(503).json({ message: "Ranking data is currently being prepared. Please try again in a moment." });
+  const { data: cachedData, error: fetchError } = await supabase
+    .from('stock_data_cache')
+    .select('data')
+    .eq('id', 'all_stocks')
+    .single();
+
+  if (fetchError || !cachedData || !cachedData.data) {
+    console.error("Error fetching all_stocks from Supabase or no data:", fetchError);
+    return res.json([]); // Return empty if error or no data
   }
+  const allStocks = cachedData.data;
 
   let sortedStocks = [];
   const type = req.params.type;
