@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { fetchAllStockDataAndCache } from '../../lib/rankingUtils';
+import { fetchAllStockDataAndCache } from '../lib/rankingUtils';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     // This endpoint is intended to be called by a Vercel Cron Job.

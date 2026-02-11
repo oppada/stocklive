@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getRankedStocks } from '../../lib/rankingUtils';
+import { getRankedStocks } from '../lib/rankingUtils';
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
