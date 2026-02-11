@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { fetchStockPrice, getKisToken } from '../../lib/kisApi';
-import { themesData, stockCodeToNameMap, Theme, Stock } from '../../lib/dataLoader'; // Import Theme and Stock interfaces
+import { fetchStockPrice, getKisToken } from '../../../lib/kisApi';
+import { themesData, stockCodeToNameMap, Theme, Stock } from '../../../lib/dataLoader'; // Import Theme and Stock interfaces
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {

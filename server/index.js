@@ -41,7 +41,7 @@ try {
 
 try {
 
-  const krxStocksPath = path.join(__dirname, '../all/krx_stocks.json');
+  const krxStocksPath = path.join(__dirname, '../client/public/krx_stocks.json');
 
   allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
 
@@ -87,7 +87,7 @@ const fetchStockPrice = async (token, code) => {
     if(!o) return null;
 
     // --- Start Debugging Logs ---
-    console.log("Raw KIS API output for stock:", code, o);
+    // console.log("Raw KIS API output for stock:", code, o);
     // console.log(`  acml_vol: '${o.acml_vol}', parsed: ${parseInt(o.acml_vol || '0')}`);
     // console.log(`  acml_tr_pbmn: '${o.acml_tr_pbmn}', parsed: ${parseInt(o.acml_tr_pbmn || '0')}`);
     // --- End Debugging Logs ---

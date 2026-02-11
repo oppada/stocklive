@@ -18,7 +18,7 @@ export const fetchAllStockDataAndCache = async () => {
         } else {
             console.warn("No valid stock data fetched to populate ranking cache.");
         }
-    } catch (error: Error) { // Explicitly type error
+    } catch (error: any) { // Explicitly type error
         console.error("Failed to fetch and cache all stock data for ranking:", error);
     }
 };

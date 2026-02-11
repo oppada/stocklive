@@ -33,7 +33,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }, {});
 
         res.status(200).json(stockPrices);
-    } catch (error: Error) { // Explicitly type error as Error
+    } catch (error: any) { // Explicitly type error as Error
         console.error('API /api/stocks/prices error:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message || 'An unknown error occurred.' });
     }
