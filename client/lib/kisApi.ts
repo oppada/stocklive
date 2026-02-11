@@ -8,6 +8,9 @@ import * as NodeCache from 'node-cache';
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL || process.env.KV_REST_API_URL;
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
+console.log("kisApi: Redis URL:", redisUrl ? "[SET]" : "[NOT SET]");
+console.log("kisApi: Redis Token:", redisToken ? "[SET]" : "[NOT SET]");
+
 let redis: Redis;
 if (redisUrl && redisToken) {
     redis = new Redis({
@@ -15,7 +18,7 @@ if (redisUrl && redisToken) {
         token: redisToken,
     });
 } else {
-    console.error('Upstash Redis environment variables are not properly configured. Check UPSTASH_REDIS_REST_URL/TOKEN or REDIS_URL/KV_REST_API_TOKEN.');
+    console.error('kisApi: Upstash Redis environment variables are not properly configured. Check UPSTASH_REDIS_REST_URL/TOKEN or REDIS_URL/KV_REST_API_TOKEN.');
     // Provide a dummy Redis client to prevent crashes during development/testing without Redis
     redis = {
         get: async () => null,
@@ -25,13 +28,17 @@ if (redisUrl && redisToken) {
 }
 
 // --- Environment Variables for KIS API ---
-const KIS_APP_KEY = process.env.VITE_KIS_APP_KEY;
-const KIS_SECRET_KEY = process.env.VITE_KIS_APP_SECRET;
-const KIS_BASE_URL = (process.env.VITE_KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
+const KIS_APP_KEY = process.env.KIS_APP_KEY;
+const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
+const KIS_BASE_URL = (process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
+
+console.log("kisApi: KIS_APP_KEY:", KIS_APP_KEY ? "[SET]" : "[NOT SET]");
+console.log("kisApi: KIS_SECRET_KEY:", KIS_SECRET_KEY ? "[SET]" : "[NOT SET]");
+console.log("kisApi: KIS_BASE_URL:", KIS_BASE_URL);
 
 // Basic validation for KIS environment variables
 if (!KIS_APP_KEY || !KIS_SECRET_KEY || !KIS_BASE_URL) {
-    console.error('KIS API environment variables are not completely set. Please check VITE_KIS_APP_KEY, VITE_KIS_APP_SECRET, VITE_KIS_BASE_URL.');
+    console.error('kisApi: KIS API environment variables are not completely set. Please check KIS_APP_KEY, KIS_SECRET_KEY, KIS_BASE_URL.');
 }
 
 // NodeCache for local in-memory caching for development or if Redis is not configured
