@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getKisToken, fetchStockPrice } from '../../lib/kisApi';
-import { stockCodeToNameMap } from '../../lib/dataLoader';
+import { stockCodeToNameMap, Stock } from '../../lib/dataLoader'; // Import Stock interface
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -27,13 +27,13 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         );
         
         // Filter out null results and transform into an object with stock code as key
-        const stockPrices = results.filter(Boolean).reduce((acc, stock) => {
+        const stockPrices = results.filter((stock): stock is Stock => Boolean(stock)).reduce((acc: { [key: string]: Stock }, stock: Stock) => {
             acc[stock.code] = stock;
             return acc;
         }, {});
 
         res.status(200).json(stockPrices);
-    } catch (error: any) {
+    } catch (error: Error) { // Explicitly type error as Error
         console.error('API /api/stocks/prices error:', error);
         res.status(500).json({ error: 'Internal Server Error', message: error.message || 'An unknown error occurred.' });
     }

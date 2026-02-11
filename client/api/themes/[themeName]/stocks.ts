@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { fetchStockPrice, getKisToken } from '../../lib/kisApi';
-import { themesData, stockCodeToNameMap } from '../../lib/dataLoader';
+import { themesData, stockCodeToNameMap, Theme, Stock } from '../../lib/dataLoader'; // Import Theme and Stock interfaces
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -14,7 +14,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const theme = themesData.find(t => t.theme_name === themeName);
+        // Explicitly type 't'
+        const theme = themesData.find((t: Theme) => t.theme_name === themeName);
         if (!theme) {
             return res.status(404).json({ error: 'Not Found', message: `Theme "${themeName}" not found.` });
         }
@@ -25,16 +26,19 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }
 
         // Filter for unique stock codes within the theme
-        const uniqueStockCodes = Array.from(new Set(theme.stocks.map(s => s.code)));
+        // Explicitly type 's'
+        const uniqueStockCodes = Array.from(new Set(theme.stocks.map((s: { code: string; name: string }) => s.code)));
         
         const results = await Promise.all(
             uniqueStockCodes.map(code => fetchStockPrice(code, stockCodeToNameMap))
         );
 
-        const stocksWithPrices = results.filter(Boolean); // Filter out any null results
+        // Explicitly type 'Stock' for stocksWithPrices
+        const stocksWithPrices: Stock[] = results.filter(Boolean); // Filter out any null results
 
         // Sort by changeRate as in original backend
-        stocksWithPrices.sort((a, b) => b.changeRate - a.changeRate);
+        // Explicitly type 'a' and 'b'
+        stocksWithPrices.sort((a: Stock, b: Stock) => b.changeRate - a.changeRate);
 
         res.status(200).json(stocksWithPrices);
     } catch (error: any) {

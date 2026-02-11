@@ -12,6 +12,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.45.4",
     "@upstash/redis": "^1.33.0",
+    "axios": "^1.7.2",
+    "node-cache": "^5.1.2",
     "lucide-react": "^0.446.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -22,6 +24,8 @@
     "@tailwindcss/postcss": "^4.1.18",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
+    "@types/node-cache": "^4.2.5",
+    "@types/axios": "^0.14.0",
     "@vercel/node": "^5.5.28",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",

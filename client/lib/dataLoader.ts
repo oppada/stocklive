@@ -46,7 +46,7 @@ try {
     // Load KRX Stocks Data
     const rawKrxStocksData = fs.readFileSync(krxStocksPath, 'utf8');
     allKrxStocks = JSON.parse(rawKrxStocksData);
-    allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
+    allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name));
     console.log(`Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
 
 } catch (e: any) {

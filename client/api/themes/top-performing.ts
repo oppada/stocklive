@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { chunkedFetchStockPrices, redis } from '../../lib/kisApi'; // Adjust path as necessary
-import { themesData, stockCodeToNameMap } from '../../lib/dataLoader'; // Adjust path as necessary
+import { chunkedFetchStockPrices, redis } from '../../lib/kisApi';
+import { themesData, stockCodeToNameMap, Theme, Stock } from '../../lib/dataLoader'; // Import Theme and Stock interfaces
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -19,18 +19,18 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         }
 
         // 1. Get all unique stock codes from all themes
-        const allThemeStockCodes = Array.from(new Set(themesData.flatMap(t => t.stocks.map(s => s.code))));
+        const allThemeStockCodes = Array.from(new Set(themesData.flatMap((t: Theme) => t.stocks.map(s => s.code))));
         
         // 2. Fetch prices for all unique stock codes using chunking
         const allFetchedStocks = await chunkedFetchStockPrices(allThemeStockCodes, stockCodeToNameMap, 10, 500); // 10 stocks per chunk, 500ms delay
-        const priceMap = new Map(allFetchedStocks.map(r => [r.code, r]));
+        const priceMap = new Map(allFetchedStocks.map((r: Stock) => [r.code, r]));
 
         // 3. Calculate avgChangeRate for each theme using the comprehensive priceMap
-        const result = themesData.map(t => {
-            const stocksWithPrices = t.stocks.map(s => priceMap.get(s.code)).filter(Boolean);
-            const avg = stocksWithPrices.length ? stocksWithPrices.reduce((a, b) => a + b.changeRate, 0) / stocksWithPrices.length : 0;
-            return { name: t.theme_name, avgChangeRate: avg, stocks: stocksWithPrices.map(s => ({ code: s.code, name: s.name, changeRate: s.changeRate })) };
-        }).sort((a, b) => b.avgChangeRate - a.avgChangeRate);
+        const result = themesData.map((t: Theme) => {
+            const stocksWithPrices = t.stocks.map(s => priceMap.get(s.code)).filter((s): s is Stock => Boolean(s)); // Filter for truthy and assert type
+            const avg = stocksWithPrices.length ? stocksWithPrices.reduce((a: number, b: Stock) => a + (b.changeRate || 0), 0) / stocksWithPrices.length : 0;
+            return { name: t.theme_name, avgChangeRate: avg, stocks: stocksWithPrices.map((s: Stock) => ({ code: s.code, name: s.name, changeRate: s.changeRate })) };
+        }).sort((a, b) => b.avgChangeRate - a.avgChangeRate); // 'a' and 'b' will be typed by inference from the map callback.
 
         // Cache the result in Redis
         await redis.set(cacheKey, result, { ex: THEME_RANKING_CACHE_TTL });
