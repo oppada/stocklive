@@ -35,8 +35,8 @@ if (!KIS_APP_KEY || !KIS_SECRET_KEY || !KIS_BASE_URL) {
 }
 
 // NodeCache for local in-memory caching for development or if Redis is not configured
-const localKisPriceCache = new NodeCache({ stdTTL: 60 });
-const localKisTokenCache = new NodeCache({ stdTTL: 86400 });
+const localKisPriceCache = new NodeCache.default({ stdTTL: 60 });
+const localKisTokenCache = new NodeCache.default({ stdTTL: 86400 });
 
 // Helper to get KIS API base headers
 const getKisHeaders = (token?: string) => {
