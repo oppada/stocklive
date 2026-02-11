@@ -1,8 +1,8 @@
 {
-  "routes": [
+  "crons": [
     {
-      "src": "/api/uapi/(.*)",
-      "dest": "/api/uapi/[...path]"
+      "path": "/api/cron/update-ranking-cache",
+      "schedule": "0 */3 * * *"
     }
   ]
 }
