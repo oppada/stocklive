@@ -1,6 +1,6 @@
 import { Redis } from '@upstash/redis';
 import axios from 'axios';
-import NodeCache from 'node-cache';
+import * as NodeCache from 'node-cache';
 
 // --- Redis Client Initialization ---
 // Prioritize UPSTASH_REDIS_REST_URL/TOKEN as expected by Redis.fromEnv()

@@ -18,13 +18,16 @@
         "esModuleInterop": true,
 
 
-        "forceConsistentCasingInFileNames": true,
+            "forceConsistentCasingInFileNames": true,
 
 
-    
+            "allowSyntheticDefaultImports": true,
 
 
-        /* Linting */
+        
+
+
+            /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
