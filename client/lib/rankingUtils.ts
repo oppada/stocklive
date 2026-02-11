@@ -1,5 +1,5 @@
 import { chunkedFetchStockPrices, redis } from './kisApi';
-import { allKrxStocks, stockCodeToNameMap, Stock } from './dataLoader'; // Import Stock interface
+import { allKrxStocks, stockCodeToNameMap, type Stock } from './dataLoader'; // Import Stock interface
 
 const RANKING_CACHE_KEY = 'all_stocks_for_ranking';
 const RANKING_CACHE_TTL = 600; // Cache for 10 minutes

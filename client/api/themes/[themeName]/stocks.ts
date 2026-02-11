@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { fetchStockPrice, getKisToken } from '../../../lib/kisApi';
-import { themesData, stockCodeToNameMap, Theme, Stock } from '../../../lib/dataLoader'; // Import Theme and Stock interfaces
+import { themesData, stockCodeToNameMap, type Theme, type Stock } from '../../../lib/dataLoader'; // Changed to type-only imports
 
 export default async function (req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'GET') {
@@ -37,8 +37,8 @@ export default async function (req: VercelRequest, res: VercelResponse) {
         const stocksWithPrices: Stock[] = results.filter(Boolean); // Filter out any null results
 
         // Sort by changeRate as in original backend
-        // Explicitly type 'a' and 'b'
-        stocksWithPrices.sort((a: Stock, b: Stock) => b.changeRate - a.changeRate);
+        // Explicitly type 'a' and 'b' and handle undefined changeRate
+        stocksWithPrices.sort((a: Stock, b: Stock) => (b.changeRate || 0) - (a.changeRate || 0)); // Updated sort logic
 
         res.status(200).json(stocksWithPrices);
     } catch (error: any) {
