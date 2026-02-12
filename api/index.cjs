@@ -179,9 +179,9 @@ app.get('/api/cron/update-ranking-cache', async (req, res) => {
 
 // --- Vercel 환경 설정 ---
 if (process.env.VERCEL || require.main !== module) {
-    module.exports = app;
+  module.exports = app; // Vercel용
 } else {
-    app.listen(port, () => {
-        console.log(`Server running on http://localhost:${port}`);
-    });
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
 }
