@@ -1,0 +1,17 @@
+{
+  "name": "api-server",
+  "version": "1.0.0",
+  "description": "Backend API server for StockLive",
+  "main": "index.cjs",
+  "scripts": {
+    "start": "node index.cjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
+    "axios": "^1.13.5",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "node-cache": "^5.1.2"
+  }
+}

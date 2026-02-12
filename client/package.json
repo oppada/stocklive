@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start-token-server": "node ../server/localTokenServer.cjs",
+    "start-token-server": "node ../api/localTokenServer.mjs",
     "dev": "concurrently \"npm run start-token-server\" \"vite --force\"",
     "build": "tsc && vite build",
     "preview": "vite preview"

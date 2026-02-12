@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/server/index.cjs"
+      "destination": "/api/index.cjs"
     },
     {
       "source": "/(.*)",
@@ -15,6 +15,19 @@
       "schedule": "0 */3 * * *"
     }
   ],
+  "functions": {
+    "api/index.cjs": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": [
+        "api/lib/*.cjs",
+        "api/krx_stocks.json",
+        "api/toss_real_150_themes.json",
+        "api/localTokenServer.mjs",
+        "api/.env"
+      ]
+    }
+  },
   "builds": [
     {
       "src": "client/index.html",
@@ -22,15 +35,15 @@
       "config": { "distDir": "client/dist" }
     },
     {
-      "src": "server/index.cjs",
+      "src": "api/index.cjs",
       "use": "@vercel/node@3.0.12",
       "config": {
         "includeFiles": [
-          "server/lib/*.cjs",
-          "server/krx_stocks.json",
-          "server/toss_real_150_themes.json",
-          "server/localTokenServer.cjs",
-          "server/.env"
+          "api/lib/*.cjs",
+          "api/krx_stocks.json",
+          "api/toss_real_150_themes.json",
+          "api/localTokenServer.mjs",
+          "api/.env"
         ]
       }
     }
