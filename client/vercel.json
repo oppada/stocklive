@@ -1,16 +1,19 @@
 {
-  "functions": {
-    "api/index.js": {
+  "builds": [
+    {
       "src": "../server/index.js",
-      "includeFiles": [
-        "../server/lib/**",
-        "../server/krx_stocks.json",
-        "../server/toss_real_150_themes.json",
-        "../server/localTokenServer.js",
-        "../server/.env"
-      ]
+      "use": "@vercel/node@3.0.12",
+      "config": {
+        "includeFiles": [
+          "../server/lib/**",
+          "../server/krx_stocks.json",
+          "../server/toss_real_150_themes.json",
+          "../server/localTokenServer.js",
+          "../server/.env"
+        ]
+      }
     }
-  },
+  ],
   "crons": [
     {
       "path": "/api/cron/update-ranking-cache",
@@ -20,7 +23,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "../server/index.js"
     },
     {
       "source": "/(.*)",
