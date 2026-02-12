@@ -1,6 +1,38 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/server/index.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/server/index.cjs"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/client/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/update-ranking-cache",
+      "schedule": "0 */3 * * *"
+    }
+  ],
+  "builds": [
+    {
+      "src": "client/index.html",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "client/dist" }
+    },
+    {
+      "src": "server/index.cjs",
+      "use": "@vercel/node@3.0.12",
+      "config": {
+        "includeFiles": [
+          "server/lib/*.cjs",
+          "server/krx_stocks.json",
+          "server/toss_real_150_themes.json",
+          "server/localTokenServer.js",
+          "server/.env"
+        ]
+      }
+    }
   ]
 }
