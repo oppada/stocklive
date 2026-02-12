@@ -2,12 +2,22 @@
   "version": 2,
   "functions": {
     "api/index.cjs": {
-      "runtime": "vercel-node@latest"
+      "memory": 1024,
+      "maxDuration": 10
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.cjs" },
-    { "source": "/assets/(.*)", "destination": "/client/dist/assets/$1" },
-    { "source": "/(.*)", "destination": "/client/dist/index.html" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.cjs"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/client/dist/assets/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/client/dist/index.html"
+    }
   ]
 }
