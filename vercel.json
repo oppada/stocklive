@@ -19,13 +19,7 @@
     "api/index.cjs": {
       "memory": 1024,
       "maxDuration": 10,
-      "includeFiles": [
-        "api/lib/*.cjs",
-        "api/krx_stocks.json",
-        "api/toss_real_150_themes.json",
-        "api/localTokenServer.mjs",
-        "api/.env"
-      ]
+      "includeFiles": "api/lib/*.cjs,api/krx_stocks.json,api/toss_real_150_themes.json,api/localTokenServer.mjs,api/.env"
     }
   },
   "builds": [
