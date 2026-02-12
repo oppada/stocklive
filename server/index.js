@@ -213,6 +213,17 @@ app.get('/api/stocks/prices', async (req, res) => {
   } catch (e) { res.status(500).json({}); }
 });
 
+// New endpoint for Vercel Cron Job to trigger cache update
+app.get('/api/cron/update-ranking-cache', async (req, res) => {
+  try {
+    await fetchAllStockDataAndCache();
+    res.status(200).json({ message: "Stock ranking cache updated successfully." });
+  } catch (error) {
+    console.error("Error updating stock ranking cache via cron:", error);
+    res.status(500).json({ error: "Failed to update stock ranking cache." });
+  }
+});
+
 // --- Conditional Export/Listen for Vercel/Local Development ---
 // If we are in a Vercel environment (process.env.VERCEL is typically true),
 // or if we are loaded as a module (e.g., by Vercel), export the app.
