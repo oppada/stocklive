@@ -1,7 +1,14 @@
 {
   "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "api/lib/**"
+    "api/index.js": {
+      "src": "../server/index.js",
+      "includeFiles": [
+        "../server/lib/**",
+        "../server/krx_stocks.json",
+        "../server/toss_real_150_themes.json",
+        "../server/localTokenServer.js",
+        "../server/.env"
+      ]
     }
   },
   "crons": [
@@ -13,7 +20,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
