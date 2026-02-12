@@ -26,7 +26,8 @@
     {
       "src": "client/index.html",
       "use": "@vercel/static-build",
-      "config": { "distDir": "client/dist" }
+      "config": { "distDir": "client/dist" },
+      "buildCommand": "npm install && npm run build"
     },
     {
       "src": "api/index.cjs",
