@@ -1,7 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/*.cjs": {
+    "api/index.cjs": {
       "runtime": "vercel-node@latest"
     }
   },
