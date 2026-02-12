@@ -1,3 +1,4 @@
+const path = require('path');
 const NodeCache = require('node-cache');
 const axios = require('axios');
 require('dotenv').config(); // Load environment variables here too for standalone testing or Vercel
