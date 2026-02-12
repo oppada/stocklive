@@ -1,238 +1,187 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+const NodeCache = require('node-cache');
+require('dotenv').config();
+
+// KIS API 라이브러리 (파일 경로가 정확한지 확인하세요)
+const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
 
 const app = express();
 const port = process.env.PORT || 4000;
 
-const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
-const fs = require('fs');
-const path = require('path');
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
-const NodeCache = require('node-cache');
-
-
-
+// Supabase 클라이언트 설정
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let allKrxStocks = []; // Declare at top level
+// 데이터 및 맵 초기화
+let allKrxStocks = [];
+let themesData = [];
 const stockCodeToNameMap = new Map();
 
-let themesData = [];
+// [파일 로드] 로컬 JSON 데이터 읽기
+try {
+    const themesPath = path.join(__dirname, 'toss_real_150_themes.json');
+    if (fs.existsSync(themesPath)) {
+        const rawData = JSON.parse(fs.readFileSync(themesPath, 'utf8'));
+        themesData = rawData.themes || [];
+        themesData.forEach(t => t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
+        console.log(`✅ Loaded ${themesData.length} themes.`);
+    }
+} catch (e) { console.error("❌ Theme Load Error", e); }
 
 try {
-  const themesPath = path.join(__dirname, 'toss_real_150_themes.json');
-  themesData = JSON.parse(fs.readFileSync(themesPath, 'utf8')).themes;
-  themesData.forEach(t => t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
-  console.log(`Loaded ${themesData.length} themes.`);
-} catch (e) { console.error("Theme Load Error", e); }
-
-try {
-  const krxStocksPath = path.join(__dirname, 'krx_stocks.json');
-  allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
-  allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)); // Ensure map is populated for local fetches
-  console.log(`Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
-} catch (e) { console.error("Error loading krx_stocks.json:", e); }
+    const krxStocksPath = path.join(__dirname, 'krx_stocks.json');
+    if (fs.existsSync(krxStocksPath)) {
+        allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
+        allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name));
+        console.log(`✅ Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
+    }
+} catch (e) { console.error("❌ Error loading krx_stocks.json:", e); }
 
 app.use(cors());
 app.use(express.json());
 
+// --- API 라우트 영역 ---
 
-
-
-
-
-
-// [수정] 테마 수익률 계산 라우트
+// 1. 테마 수익률 순위 조회 (Supabase 캐시 사용)
 app.get('/api/themes/top-performing', async (req, res) => {
-  const cacheKey = 'theme_ranking_results';
-  const { data: cachedThemeData, error: fetchThemeError } = await supabase
-    .from('stock_data_cache')
-    .select('data')
-    .eq('id', cacheKey)
-    .single();
-
-  if (!fetchThemeError && cachedThemeData && cachedThemeData.data) {
-    console.log("Returning theme ranking from Supabase cache.");
-    return res.json(cachedThemeData.data);
-  }
-
-  try {
-    const token = await getKisToken();
-    // 1. Get all unique stock codes from all themes
-    const allThemeStockCodes = Array.from(new Set(themesData.flatMap(t => t.stocks.map(s => s.code))));
+    const cacheKey = 'theme_ranking_results';
     
-    // 2. Fetch prices for all unique stock codes using chunking
-    const allFetchedStocks = await chunkedFetchStockPrices(token, allThemeStockCodes, stockCodeToNameMap, 10, 500); // 10 stocks per chunk, 500ms delay
-    const priceMap = new Map(allFetchedStocks.map(r => [r.code, r]));
-
-    // 3. Calculate avgChangeRate for each theme using the comprehensive priceMap
-    const result = themesData.map(t => {
-      const stocksWithPrices = t.stocks.map(s => priceMap.get(s.code)).filter(Boolean);
-      const avg = stocksWithPrices.length ? stocksWithPrices.reduce((a, b) => a + b.changeRate, 0) / stocksWithPrices.length : 0;
-      return { name: t.theme_name, avgChangeRate: avg, stocks: stocksWithPrices };
-    }).sort((a, b) => b.avgChangeRate - a.avgChangeRate);
-
-    const { data: upsertThemeData, error: upsertThemeError } = await supabase
+    // Supabase에서 캐시된 데이터 먼저 확인
+    const { data: cachedThemeData, error: fetchThemeError } = await supabase
         .from('stock_data_cache')
-        .upsert({ id: cacheKey, data: result })
-        .select();
+        .select('data')
+        .eq('id', cacheKey)
+        .single();
 
-    if (upsertThemeError) {
-        console.error("Error upserting theme ranking to Supabase:", upsertThemeError);
-    } else {
-        console.log("Successfully upserted theme ranking to Supabase:", upsertThemeData);
+    if (!fetchThemeError && cachedThemeData && cachedThemeData.data) {
+        return res.json(cachedThemeData.data);
     }
-    res.json(result);
-  } catch (e) {
-    console.error("Failed to fetch top performing themes:", e);
-    res.status(500).json([]);
-  }
-});
 
-// [추가] 테마 상세 종목 조회 (프론트엔드 연동)
-app.get('/api/themes/:themeName/stocks', async (req, res) => {
-  const theme = themesData.find(t => t.theme_name === req.params.themeName);
-  if (!theme) return res.status(404).json([]);
-  try {
-    const token = await getKisToken();
-    // Filter for unique stock codes within the theme
-    const uniqueStockCodes = Array.from(new Set(theme.stocks.map(s => s.code)));
-    const results = await Promise.all(uniqueStockCodes.map(code => fetchStockPrice(token, code, stockCodeToNameMap)));
-    res.json(results.filter(Boolean).sort((a, b) => b.changeRate - a.changeRate));
-  } catch (e) {
-    console.error(`Failed to fetch stocks for theme ${req.params.themeName}:`, e);
-    res.status(500).json([]);
-  }
-});
-
-const fullStockDataCache = new NodeCache({ stdTTL: 600 }); // 10분 TTL
-
-const fetchAllStockDataAndCache = async () => {
-  console.log("Starting to fetch all stock data for ranking cache...");
-  try {
-    const token = await getKisToken();
-    
-    const allStockCodes = allKrxStocks.map(s => s.code);
-    console.log(`Using ${allStockCodes.length} stock codes from krx_stocks.json to fetch data.`);
-
-    const validResults = [];
-    const chunkSize = 10; // Increased to 20 stocks at a time
-    const totalStocks = allStockCodes.length;
-    const startTime = Date.now();
-
-    for (let i = 0; i < totalStocks; i += chunkSize) {
-        if (!token) {
-            console.error("No KIS token available, stopping stock data fetch.");
-            break;
-        }
-        const chunk = allStockCodes.slice(i, i + chunkSize);
-        const promises = chunk.map(code => fetchStockPrice(token, code, stockCodeToNameMap));
-        const chunkResults = await Promise.all(promises);
-        validResults.push(...chunkResults.filter(Boolean));
+    // 캐시가 없으면 실시간 계산 (Vercel에서 실행 시 10초 제한 주의)
+    try {
+        const token = await getKisToken();
+        const allThemeStockCodes = Array.from(new Set(themesData.flatMap(t => t.stocks.map(s => s.code))));
         
-        // Log progress every 100 stocks processed or at the end
-        if ((i + chunkSize) % 100 === 0 || (i + chunkSize) >= totalStocks) {
-            const processedCount = Math.min(i + chunkSize, totalStocks);
-            const percentage = ((processedCount / totalStocks) * 100).toFixed(1);
-            const elapsedTime = (Date.now() - startTime) / 1000; // seconds
-            const estimatedTotalTime = (elapsedTime / processedCount) * totalStocks;
-            const estimatedRemainingTime = estimatedTotalTime - elapsedTime;
+        // 데이터가 많으므로 청크 단위로 호출
+        const allFetchedStocks = await chunkedFetchStockPrices(token, allThemeStockCodes, stockCodeToNameMap, 10, 500);
+        const priceMap = new Map(allFetchedStocks.map(r => [r.code, r]));
 
-            console.log(`Processed ${processedCount}/${totalStocks} stocks (${percentage}%), found ${validResults.length} valid stocks. Estimated remaining: ${estimatedRemainingTime.toFixed(1)}s`);
-        }
+        const result = themesData.map(t => {
+            const stocksWithPrices = t.stocks.map(s => priceMap.get(s.code)).filter(Boolean);
+            const avg = stocksWithPrices.length ? stocksWithPrices.reduce((a, b) => a + b.changeRate, 0) / stocksWithPrices.length : 0;
+            return { name: t.theme_name, avgChangeRate: avg, stocks: stocksWithPrices };
+        }).sort((a, b) => b.avgChangeRate - a.avgChangeRate);
 
-        // Delay to avoid API rate limiting
-        await new Promise(resolve => setTimeout(resolve, 250)); 
+        // 결과 Supabase에 저장 (캐싱)
+        await supabase.from('stock_data_cache').upsert({ id: cacheKey, data: result });
+        
+        res.json(result);
+    } catch (e) {
+        console.error("Failed to fetch top performing themes:", e);
+        res.status(500).json([]);
+    }
+});
+
+// 2. 특정 테마 내 종목 상세 조회
+app.get('/api/themes/:themeName/stocks', async (req, res) => {
+    const theme = themesData.find(t => t.theme_name === req.params.themeName);
+    if (!theme) return res.status(404).json([]);
+    
+    try {
+        const token = await getKisToken();
+        const uniqueStockCodes = Array.from(new Set(theme.stocks.map(s => s.code)));
+        const results = await Promise.all(uniqueStockCodes.map(code => fetchStockPrice(token, code, stockCodeToNameMap)));
+        res.json(results.filter(Boolean).sort((a, b) => b.changeRate - a.changeRate));
+    } catch (e) {
+        res.status(500).json([]);
+    }
+});
+
+// 3. 전종목 랭킹 조회 (Gainer, Loser, Volume 등)
+app.get('/api/ranking/:type', async (req, res) => {
+    const { data: cachedData, error: fetchError } = await supabase
+        .from('stock_data_cache')
+        .select('data')
+        .eq('id', 'all_stocks')
+        .single();
+
+    if (fetchError || !cachedData || !cachedData.data) {
+        return res.json([]);
     }
     
-    const { data: upsertData, error: upsertError } = await supabase
-      .from('stock_data_cache')
-      .upsert({ id: 'all_stocks', data: validResults })
-      .select();
+    const allStocks = cachedData.data;
+    let sortedStocks = [];
+    const type = req.params.type;
 
-    if (upsertError) {
-      console.error("Error upserting all_stocks to Supabase:", upsertError);
-    } else {
-      console.log("Successfully upserted all_stocks to Supabase:", upsertData);
+    switch(type) {
+        case 'gainer': sortedStocks = [...allStocks].sort((a, b) => b.changeRate - a.changeRate); break;
+        case 'loser': sortedStocks = [...allStocks].sort((a, b) => a.changeRate - b.changeRate); break;
+        case 'volume': sortedStocks = [...allStocks].sort((a, b) => b.volume - a.volume); break;
+        case 'value': sortedStocks = [...allStocks].sort((a, b) => b.tradeValue - a.tradeValue); break;
+        default: return res.status(404).send('Invalid ranking type');
     }
-    console.log(`Successfully cached data for ${validResults.length} stocks. Ranking cache is now fully populated.`);
-  } catch (error) {
-    console.error("Failed to fetch and cache all stock data:", error);
-  }
+    
+    res.json(sortedStocks.slice(0, 50));
+});
+
+// 4. 개별 종목 현재가 조회 (Marquee 및 관심종목용)
+app.get('/api/stocks/prices', async (req, res) => {
+    const codes = (req.query.codes || "").split(',').filter(Boolean);
+    try {
+        const token = await getKisToken();
+        const results = await Promise.all(codes.map(c => fetchStockPrice(token, c.trim(), stockCodeToNameMap)));
+        res.json(results.filter(Boolean).reduce((a, s) => ({ ...a, [s.code]: s }), {}));
+    } catch (e) { res.status(500).json({}); }
+});
+
+// 5. [중요] 캐시 업데이트 트리거 (Vercel Cron 또는 수동 호출용)
+// 이 함수가 실행될 때 3분간의 수집 로직이 돌아갑니다.
+const fetchAllStockDataAndCache = async () => {
+    console.log("🚀 Starting background cache update...");
+    try {
+        const token = await getKisToken();
+        const allStockCodes = allKrxStocks.map(s => s.code);
+        const validResults = [];
+        const chunkSize = 10;
+
+        for (let i = 0; i < allStockCodes.length; i += chunkSize) {
+            const chunk = allStockCodes.slice(i, i + chunkSize);
+            const chunkResults = await Promise.all(chunk.map(code => fetchStockPrice(token, code, stockCodeToNameMap)));
+            validResults.push(...chunkResults.filter(Boolean));
+            
+            // API 제한을 피하기 위한 짧은 대기
+            await new Promise(r => setTimeout(r, 200)); 
+            
+            // 로그 (Vercel Logs에서 확인 가능)
+            if (i % 100 === 0) console.log(`Progress: ${i}/${allStockCodes.length}`);
+        }
+        
+        // Supabase에 최종 결과물 덮어쓰기
+        await supabase.from('stock_data_cache').upsert({ id: 'all_stocks', data: validResults });
+        console.log("✅ Cache update completed!");
+    } catch (error) {
+        console.error("❌ Cache update failed:", error);
+    }
 };
 
-// Initial fetch and set interval for refreshing the cache every 3 minutes
-// fetchAllStockDataAndCache();
-// setInterval(fetchAllStockDataAndCache, 180000); // 180,000 ms = 3 minutes
-
-
-app.get('/api/ranking/:type', async (req, res) => {
-  const { data: cachedData, error: fetchError } = await supabase
-    .from('stock_data_cache')
-    .select('data')
-    .eq('id', 'all_stocks')
-    .single();
-
-  if (fetchError || !cachedData || !cachedData.data) {
-    console.error("Error fetching all_stocks from Supabase or no data:", fetchError);
-    return res.json([]); // Return empty if error or no data
-  }
-  const allStocks = cachedData.data;
-
-  let sortedStocks = [];
-  const type = req.params.type;
-
-  switch(type) {
-    case 'gainer':
-      sortedStocks = [...allStocks].sort((a, b) => b.changeRate - a.changeRate);
-      break;
-    case 'loser':
-      sortedStocks = [...allStocks].sort((a, b) => a.changeRate - b.changeRate);
-      break;
-    case 'volume':
-      sortedStocks = [...allStocks].sort((a, b) => b.volume - a.volume);
-      break;
-    case 'value':
-      sortedStocks = [...allStocks].sort((a, b) => b.tradeValue - a.tradeValue);
-      break;
-    default:
-      return res.status(404).send('Invalid ranking type');
-  }
-  
-  res.json(sortedStocks.slice(0, 50));
-});
-
-app.get('/api/stocks/prices', async (req, res) => {
-  const codes = (req.query.codes || "").split(',').filter(Boolean);
-  try {
-    const token = await getKisToken();
-    const results = await Promise.all(codes.map(c => fetchStockPrice(token, c.trim(), stockCodeToNameMap)));
-    res.json(results.filter(Boolean).reduce((a, s) => ({ ...a, [s.code]: s }), {}));
-  } catch (e) { res.status(500).json({}); }
-});
-
-// New endpoint for Vercel Cron Job to trigger cache update
 app.get('/api/cron/update-ranking-cache', async (req, res) => {
-  try {
-    await fetchAllStockDataAndCache();
-    res.status(200).json({ message: "Stock ranking cache updated successfully." });
-  } catch (error) {
-    console.error("Error updating stock ranking cache via cron:", error);
-    res.status(500).json({ error: "Failed to update stock ranking cache." });
-  }
+    // 주의: 이 요청은 시간이 오래 걸리므로 Vercel에서 즉시 응답을 주고 
+    // 백그라운드에서 실행하게 하려면 별도의 서버가 필요할 수 있습니다.
+    // 하지만 일단 호출 시 실행되도록 구성합니다.
+    fetchAllStockDataAndCache(); 
+    res.status(200).json({ message: "Update triggered" });
 });
 
-// --- Conditional Export/Listen for Vercel/Local Development ---
-// If we are in a Vercel environment (process.env.VERCEL is typically true),
-// or if we are loaded as a module (e.g., by Vercel), export the app.
-// Otherwise, for local development, start listening on the port.
+// --- Vercel 환경 설정 ---
 if (process.env.VERCEL || require.main !== module) {
-  module.exports = app;
+    module.exports = app;
 } else {
-  app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-  });
+    app.listen(port, () => {
+        console.log(`Server running on http://localhost:${port}`);
+    });
 }
