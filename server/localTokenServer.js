@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 // [수정] 회사 경로 하드코딩 제거 -> 현재 실행 경로(process.cwd()) 기준으로 변경
 // dotenv.config({ path: path.join(process.cwd(), '.env.local') });
 // Resolve the path to .env.local relative to the script's directory
-const pathToEnv = path.resolve(__dirname, '..', '.env.local');
+const pathToEnv = path.resolve(__dirname, '.env');
 dotenv.config({ path: pathToEnv });
 
 let cachedToken = null;
@@ -21,9 +21,9 @@ let fetchTokenPromise = null; // New variable to hold the pending token fetch pr
 
 // Environment variables are now read once when the server starts
 // Note: These will be read from process.env when this script is run directly.
-const KIS_APP_KEY = process.env.VITE_KIS_APP_KEY;
-const KIS_APP_SECRET = process.env.VITE_KIS_APP_SECRET;
-const KIS_BASE_URL = process.env.VITE_KIS_BASE_URL;
+const KIS_APP_KEY = process.env.KIS_APP_KEY;
+const KIS_APP_SECRET = process.env.KIS_SECRET_KEY;
+const KIS_BASE_URL = process.env.KIS_BASE_URL;
 export const LOCAL_TOKEN_SERVER_PORT = process.env.LOCAL_TOKEN_SERVER_PORT || 3001; // Port for this server
 
 async function fetchNewKisToken() {
