@@ -20,6 +20,8 @@
       "src": "../server/index.cjs",
       "use": "@vercel/node@3.0.12",
       "config": {
+        "memory": 1024,
+        "maxDuration": 10,
         "includeFiles": [
           "../server/lib/*.cjs",
           "../server/krx_stocks.json",
