@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi');
+const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');

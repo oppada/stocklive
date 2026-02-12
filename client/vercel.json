@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/index.js": {
-      "includeFiles": "../server/lib/**,../server/krx_stocks.json,../server/toss_real_150_themes.json,../server/localTokenServer.js,../server/.env"
+    "api/index.cjs": {
+      "includeFiles": "../server/lib/*.cjs,../server/krx_stocks.json,../server/toss_real_150_themes.json,../server/localTokenServer.js,../server/.env,../server/index.cjs"
     }
   },
   "crons": [
@@ -13,7 +13,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/index.cjs"
     },
     {
       "source": "/(.*)",

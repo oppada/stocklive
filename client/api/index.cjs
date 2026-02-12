@@ -3,6 +3,6 @@
 // This is to align with Vercel's conventional routing for serverless functions
 // where a file in the 'api' directory becomes a serverless function.
 
-const app = require('../../server/index'); // Adjust path as needed
+const app = require('../../server/index.cjs'); // Adjust path as needed
 
 module.exports = app;
