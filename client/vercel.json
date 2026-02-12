@@ -1,13 +1,7 @@
 {
   "functions": {
     "api/index.js": {
-      "includeFiles": [
-        "../server/lib/**",
-        "../server/krx_stocks.json",
-        "../server/toss_real_150_themes.json",
-        "../server/localTokenServer.js",
-        "../server/.env"
-      ]
+      "includeFiles": "../server/lib/**,../server/krx_stocks.json,../server/toss_real_150_themes.json,../server/localTokenServer.js,../server/.env"
     }
   },
   "crons": [
