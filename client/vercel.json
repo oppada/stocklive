@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/index.cjs": {
-      "includeFiles": "../server/lib/*.cjs,../server/krx_stocks.json,../server/toss_real_150_themes.json,../server/localTokenServer.js,../server/.env,../server/index.cjs"
+      "includeFiles": "../server/lib/*.cjs,../server/krx_stocks.json,../server/toss_real_150_themes.json,../server/localTokenServer.js,../server/.env"
     }
   },
   "crons": [
