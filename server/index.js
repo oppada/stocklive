@@ -1,22 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const NodeCache = require('node-cache');
-const axios = require('axios');
+const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi');
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+const NodeCache = require('node-cache');
 
 const app = express();
 const port = process.env.PORT || 4000;
 
-const kisPriceCache = new NodeCache({ stdTTL: 60 });
-// NodeCache for KIS token (short-lived, so in-memory is fine for a single execution)
-const kisTokenCache = new NodeCache({ stdTTL: 86400 }); // 24 hours
 
-const KIS_APP_KEY = process.env.KIS_APP_KEY;
-const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
-const KIS_BASE_URL = (process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
@@ -28,14 +22,14 @@ const stockCodeToNameMap = new Map();
 let themesData = [];
 
 try {
-  const themesPath = path.join(__dirname, '../client/public/toss_real_150_themes.json');
+  const themesPath = path.join(__dirname, 'toss_real_150_themes.json');
   themesData = JSON.parse(fs.readFileSync(themesPath, 'utf8')).themes;
   themesData.forEach(t => t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
   console.log(`Loaded ${themesData.length} themes.`);
 } catch (e) { console.error("Theme Load Error", e); }
 
 try {
-  const krxStocksPath = path.join(__dirname, '../client/public/krx_stocks.json');
+  const krxStocksPath = path.join(__dirname, 'krx_stocks.json');
   allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
   allKrxStocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)); // Ensure map is populated for local fetches
   console.log(`Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
@@ -44,64 +38,7 @@ try {
 app.use(cors());
 app.use(express.json());
 
-const getKisToken = async () => {
-  if (kisTokenCache.has('token')) return kisTokenCache.get('token');
-  try {
-    const response = await axios.post(`${KIS_BASE_URL}/oauth2/tokenP`, {
-      appkey: KIS_APP_KEY, appsecret: KIS_SECRET_KEY, grant_type: 'client_credentials'
-    });
-    const token = response.data.access_token;
-    kisTokenCache.set('token', token, response.data.expires_in - 60);
-    console.log("New Token Issued Successfully.");
-    return token;
-  } catch (error) { throw error; }
-};
 
-const fetchStockPrice = async (token, code) => {
-  const cacheKey = `price_${code}`;
-  if (kisPriceCache.has(cacheKey)) return kisPriceCache.get(cacheKey);
-  try {
-    const response = await axios.get(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price`, {
-      headers: {
-        'authorization': `Bearer ${token}`,
-        'appkey': KIS_APP_KEY, 'appsecret': KIS_SECRET_KEY,
-        'tr_id': 'FHKST01010100', 'custtype': 'P'
-      },
-      params: { 'FID_COND_MRKT_DIV_CODE': 'J', 'FID_INPUT_ISCD': code }
-    });
-    const o = response.data.output;
-    if(!o) return null;
-
-    const data = { 
-      code, 
-      price: parseInt(o.stck_prpr || '0'), 
-      changeRate: parseFloat(o.prdy_ctrt || '0'), 
-      volume: parseInt(String(o.acml_vol || '0').replace(/,/g, '')),
-      tradeValue: parseInt(String(o.acml_tr_pbmn || '0').replace(/,/g, '')),
-      name: stockCodeToNameMap.get(code) || o.hts_korp_isnm 
-    };
-    kisPriceCache.set(cacheKey, data);
-    return data;
-  } catch (e) { return null; }
-};
-
-const chunkedFetchStockPrices = async (token, codesToFetch, chunkSize = 10, delayMs = 500) => {
-  const allResults = [];
-  for (let i = 0; i < codesToFetch.length; i += chunkSize) {
-    if (!token) {
-      console.error("No KIS token available during chunked fetch.");
-      break;
-    }
-    const chunk = codesToFetch.slice(i, i + chunkSize);
-    const promises = chunk.map(code => fetchStockPrice(token, code));
-    const chunkResults = await Promise.all(promises);
-    allResults.push(...chunkResults.filter(Boolean));
-    if (i + chunkSize < codesToFetch.length) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-  }
-  return allResults;
-};
 
 
 
@@ -127,7 +64,7 @@ app.get('/api/themes/top-performing', async (req, res) => {
     const allThemeStockCodes = Array.from(new Set(themesData.flatMap(t => t.stocks.map(s => s.code))));
     
     // 2. Fetch prices for all unique stock codes using chunking
-    const allFetchedStocks = await chunkedFetchStockPrices(token, allThemeStockCodes, 10, 500); // 10 stocks per chunk, 500ms delay
+    const allFetchedStocks = await chunkedFetchStockPrices(token, allThemeStockCodes, stockCodeToNameMap, 10, 500); // 10 stocks per chunk, 500ms delay
     const priceMap = new Map(allFetchedStocks.map(r => [r.code, r]));
 
     // 3. Calculate avgChangeRate for each theme using the comprehensive priceMap
@@ -162,7 +99,7 @@ app.get('/api/themes/:themeName/stocks', async (req, res) => {
     const token = await getKisToken();
     // Filter for unique stock codes within the theme
     const uniqueStockCodes = Array.from(new Set(theme.stocks.map(s => s.code)));
-    const results = await Promise.all(uniqueStockCodes.map(code => fetchStockPrice(token, code)));
+    const results = await Promise.all(uniqueStockCodes.map(code => fetchStockPrice(token, code, stockCodeToNameMap)));
     res.json(results.filter(Boolean).sort((a, b) => b.changeRate - a.changeRate));
   } catch (e) {
     console.error(`Failed to fetch stocks for theme ${req.params.themeName}:`, e);
@@ -191,7 +128,7 @@ const fetchAllStockDataAndCache = async () => {
             break;
         }
         const chunk = allStockCodes.slice(i, i + chunkSize);
-        const promises = chunk.map(code => fetchStockPrice(token, code));
+        const promises = chunk.map(code => fetchStockPrice(token, code, stockCodeToNameMap));
         const chunkResults = await Promise.all(promises);
         validResults.push(...chunkResults.filter(Boolean));
         
@@ -271,7 +208,7 @@ app.get('/api/stocks/prices', async (req, res) => {
   const codes = (req.query.codes || "").split(',').filter(Boolean);
   try {
     const token = await getKisToken();
-    const results = await Promise.all(codes.map(c => fetchStockPrice(token, c.trim())));
+    const results = await Promise.all(codes.map(c => fetchStockPrice(token, c.trim(), stockCodeToNameMap)));
     res.json(results.filter(Boolean).reduce((a, s) => ({ ...a, [s.code]: s }), {}));
   } catch (e) { res.status(500).json({}); }
 });

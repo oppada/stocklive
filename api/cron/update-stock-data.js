@@ -20,7 +20,7 @@ const kisTokenCache = new NodeCache({ stdTTL: 86400 }); // 24 hours
 
 let allKrxStocks = [];
 try {
-  const krxStocksPath = path.join(__dirname, '../../client/public/krx_stocks.json');
+  const krxStocksPath = path.join(__dirname, '../krx_stocks.json');
   allKrxStocks = JSON.parse(fs.readFileSync(krxStocksPath, 'utf8'));
   console.log(`Loaded ${allKrxStocks.length} stocks from krx_stocks.json.`);
 } catch (e) {
@@ -134,7 +134,7 @@ const updateStockData = async () => {
     // For now, reload it.
     let themesData = [];
     try {
-      const themesPath = path.join(__dirname, '../../client/public/toss_real_150_themes.json');
+      const themesPath = path.join(__dirname, '../toss_real_150_themes.json');
       themesData = JSON.parse(fs.readFileSync(themesPath, 'utf8')).themes;
     } catch (e) {
       console.error("Cron Job: Theme Load Error during ranking update", e);
