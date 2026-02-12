@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.cjs": {
-      "memory": 1024
-    }
-  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.cjs" },
     { "source": "/assets/(.*)", "destination": "/client/dist/assets/$1" },
