@@ -134,7 +134,7 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
-      <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0">
+      <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0 sticky top-0 z-50">
         <div className="flex items-center gap-8">
           <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">MATE</span></h1>
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-400">
@@ -157,7 +157,7 @@ const App = () => {
         <div className="flex items-center gap-4"><Bell className="w-5 h-5 text-slate-400" /><User className="w-5 h-5 text-slate-400" /></div>
       </header>
 
-      <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0">
+      <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0 sticky top-14 z-40">
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex gap-8 pr-8">
@@ -197,8 +197,8 @@ const App = () => {
               </div>
             </form>        </aside>
 
-        <main className="flex-1 overflow-y-auto p-0 bg-black"> {/* Changed padding to p-0 */}
-          <div className="h-full"> {/* Removed max-w-3xl mx-auto */}
+        <main className="flex-1 overflow-y-auto p-0 bg-black relative">
+          <div className="h-full">
             <Routes>
               <Route path="/" element={<HomePage stockPrices={stockPrices} favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} showLoginMessage={showLoginMessage} />} />
               <Route path="/recommendation" element={<Recommendation />} />
@@ -207,15 +207,16 @@ const App = () => {
               <Route path="/stock/:symbol" element={<StockDetail />} />
               {/* Add a route for chat on mobile if needed, or handle it within existing structure */}
               <Route path="/chat" element={
-                <div className="flex flex-col h-full bg-[#0a0c10] text-slate-100 font-sans pb-16">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                <div className="flex flex-col h-full bg-[#0a0c10] text-slate-100 font-sans">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2 pb-24">
                     {messages.map((m, i) => (
                       <div key={i} className="text-[13px]"><span className="font-bold text-slate-400">{m.user}:</span> <span className="text-slate-200">{m.text}</span></div>
                     ))}
                     <div ref={chatEndRef} />
                   </div>
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/5 shrink-0">
-                    <div className="flex items-center gap-2">
+                  {/* 모바일 하단 네비바 높이(h-16)만큼 띄우기 위해 bottom-16 추가 */}
+                  <form onSubmit={handleSendMessage} className="fixed md:absolute bottom-16 left-0 right-0 p-4 bg-[#0a0c10] border-t border-white/5 shrink-0 z-40">
+                    <div className="flex items-center gap-2 max-w-3xl mx-auto">
                       <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full bg-slate-900 rounded-xl px-4 py-3 text-xs text-white outline-none flex-1" placeholder="채팅 입력..." />
                       <button type="submit" className="px-4 py-3 bg-blue-600 rounded-xl text-xs font-bold hover:bg-blue-500 transition-colors">
                         전송

@@ -196,7 +196,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto hide-scrollbar pb-16">
+        <main className="flex-1 overflow-y-auto hide-scrollbar pb-32">
           {/* 테마 탭 모바일용 드롭다운 */}
           {activeTab === '테마' && (
             <div className="md:hidden p-2 mb-1">
