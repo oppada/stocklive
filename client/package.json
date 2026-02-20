@@ -1,7 +1,7 @@
 {
-  "name": "client",
+  "name": "stocklive-client",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "start-token-server": "node ../api/localTokenServer.mjs",
@@ -36,6 +36,9 @@
     "tailwindcss": "^4.1.18",
     "typescript": "^5.5.3",
     "vite": "^7.3.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.34.8"
   },
   "overrides": {
     "esbuild": "0.25.0",
