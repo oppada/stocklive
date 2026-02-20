@@ -157,21 +157,23 @@ const App = () => {
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex gap-10 pr-8">
-              {Object.entries(marketIndicators).map(([name, data]: [string, any]) => {
-                const isUp = data.change > 0;
-                const isDown = data.change < 0;
-                const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-500' : 'text-slate-400');
-                const sign = isUp ? '+' : '';
-                return (
-                  <span key={name} className="flex items-center gap-2 text-slate-300">
-                    <span className="text-slate-400">{name}</span>
-                    <span className="font-mono">{Number(data.price).toLocaleString()}</span>
-                    <span className={`${colorClass} font-mono`}>
-                      {sign}{data.change.toLocaleString()} ({sign}{data.changeRate.toFixed(2)}%)
+              {Object.entries(marketIndicators)
+                .filter(([_, data]) => data !== null) // 데이터가 null인 항목 제외
+                .map(([name, data]: [string, any]) => {
+                  const isUp = (data?.change || 0) > 0;
+                  const isDown = (data?.change || 0) < 0;
+                  const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-500' : 'text-slate-400');
+                  const sign = isUp ? '+' : '';
+                  return (
+                    <span key={name} className="flex items-center gap-2 text-slate-300">
+                      <span className="text-slate-400">{name}</span>
+                      <span className="font-mono">{Number(data?.price || 0).toLocaleString()}</span>
+                      <span className={`${colorClass} font-mono`}>
+                        {sign}{(data?.change || 0).toLocaleString()} ({sign}{(data?.changeRate || 0).toFixed(2)}%)
+                      </span>
                     </span>
-                  </span>
-                );
-              })}
+                  );
+                })}
             </div>
           ))}
         </div>
