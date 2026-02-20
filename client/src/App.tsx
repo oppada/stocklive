@@ -136,7 +136,7 @@ const App = () => {
     <div className="flex flex-col h-screen w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
       <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0">
         <div className="flex items-center gap-8">
-          <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">LIVE</span></h1>
+          <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">MATE</span></h1>
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-400">
             {[
               { name: '홈', path: '/' },

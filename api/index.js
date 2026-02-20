@@ -21,11 +21,17 @@ const stockCodeToNameMap = new Map();
 
 // JSON 데이터 읽기 (Vercel 환경에 맞춰 경로 수정)
 try {
-    const themesPath = path.join(process.cwd(), 'api', 'toss_real_150_themes.json');
+    const themesPath = path.join(process.cwd(), 'api', 'toss_stock_themes_local_v3.json');
     if (fs.existsSync(themesPath)) {
         const rawData = JSON.parse(fs.readFileSync(themesPath, 'utf8'));
-        themesData = rawData.themes || [];
-        themesData.forEach(t => t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name)));
+        // v3 파일은 themes 키 없이 바로 배열 형태임
+        themesData = Array.isArray(rawData) ? rawData : (rawData.themes || []);
+        themesData.forEach(t => {
+            if (t.stocks && Array.isArray(t.stocks)) {
+                t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name));
+            }
+        });
+        console.log(`✅ Loaded ${themesData.length} themes and mapped ${stockCodeToNameMap.size} stocks.`);
     }
 } catch (e) { console.error("❌ Theme Load Error", e); }
 
@@ -86,6 +92,6 @@ module.exports = app;
 if (require.main === module) {
     const PORT = process.env.PORT || 4000;
     app.listen(PORT, () => {
-        console.log(`🚀 StockLive Backend Server running on http://localhost:${PORT}`);
+        console.log(`🚀 StockMate Backend Server running on http://localhost:${PORT}`);
     });
 }

@@ -1,7 +1,7 @@
 {
   "name": "api-server",
   "version": "1.0.0",
-  "description": "Backend API server for StockLive",
+  "description": "Backend API server for StockMate",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
