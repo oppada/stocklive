@@ -40,6 +40,7 @@ const App = () => {
   const [inputText, setInputText] = useState('');
   const [myNickname] = useState(generateNickname());
   const [stockPrices, setStockPrices] = useState<Record<string, any>>({});
+  const [marketIndicators, setMarketIndicators] = useState<Record<string, any>>({});
   const [favoritedStocks, setFavoritedStocks] = useState<string[]>([]); // New state for favorited stocks
   const [showLoginMessage, setShowLoginMessage] = useState(false); // New state for login message
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -71,41 +72,43 @@ const App = () => {
     }
   }, [showLoginMessage]);
 
+  // Fetch market indicators for ticker
+  useEffect(() => {
+    const fetchMarketIndicators = async () => {
+      try {
+        const response = await fetch('/api/market/indicators');
+        const data = await response.json();
+        if (data && Object.keys(data).length > 0) {
+          setMarketIndicators(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch market indicators:", error);
+      }
+    };
 
-
-
-
+    fetchMarketIndicators();
+    const intervalId = setInterval(fetchMarketIndicators, 60000); // 1분마다 갱신
+    return () => clearInterval(intervalId);
+  }, []);
 
   // Fetch prices for tickerStocks and favoritedStocks from new backend endpoint
   useEffect(() => {
-    const fetchMarqueeAndWatchlistPrices = async () => {
-      // Combine tickerStocks and favoritedStocks for a single API call
-      const allCodesToFetch = Array.from(new Set([
-        ...tickerStocks.map(s => s.code),
-        ...favoritedStocks, // Assuming favoritedStocks contains only codes
-      ]));
-
-      if (allCodesToFetch.length === 0) return;
+    const fetchWatchlistPrices = async () => {
+      if (favoritedStocks.length === 0) return;
 
       try {
-        const response = await fetch(`/api/stocks/prices?codes=${allCodesToFetch.join(',')}`);
+        const response = await fetch(`/api/stocks/prices?codes=${favoritedStocks.join(',')}`);
         const data = await response.json();
-        console.log('Marquee/Watchlist Prices:', data); // DEBUGGING
         if (Object.keys(data).length > 0) {
           setStockPrices(data);
         }
       } catch (error) {
-        console.error("Failed to fetch marquee and watchlist stock prices:", error);
+        console.error("Failed to fetch watchlist stock prices:", error);
       }
     };
 
-    // Initial fetch
-    fetchMarqueeAndWatchlistPrices();
-
-    // Set up interval for repeated fetching (e.g., every 30 seconds)
-    const intervalId = setInterval(fetchMarqueeAndWatchlistPrices, 30000); // Fetch every 30 seconds
-
-    // Cleanup interval on component unmount
+    fetchWatchlistPrices();
+    const intervalId = setInterval(fetchWatchlistPrices, 30000); // 30초마다 갱신
     return () => clearInterval(intervalId);
   }, [favoritedStocks]); // Re-run if favorited stocks change
 
@@ -160,17 +163,18 @@ const App = () => {
       <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0 z-40">
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="flex gap-8 pr-8">
-              {tickerStocks.map((s) => {
-                const stock = stockPrices[s.code];
-                const isUp = stock && stock.changeRate > 0;
-                const isDown = stock && stock.changeRate < 0;
-                const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-500' : ''); // Default to no color for flat
+            <div key={i} className="flex gap-10 pr-8">
+              {Object.entries(marketIndicators).map(([name, data]: [string, any]) => {
+                const isUp = data.change > 0;
+                const isDown = data.change < 0;
+                const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-500' : 'text-slate-400');
+                const sign = isUp ? '+' : '';
                 return (
-                  <span key={s.code} className="flex items-center gap-1.5 text-slate-300">
-                    <Zap className={`w-3 h-3 ${colorClass}`} /> {/* Apply color to Zap icon */}
-                    {stock?.name} <span className={colorClass}> {/* Apply color to text, use stock?.name */}
-                      {stock ? `${stock.price} (${(stock.changeRate || 0).toFixed(2)}%)` : '조회 중...'}
+                  <span key={name} className="flex items-center gap-2 text-slate-300">
+                    <span className="text-slate-400">{name}</span>
+                    <span className="font-mono">{Number(data.price).toLocaleString()}</span>
+                    <span className={`${colorClass} font-mono`}>
+                      {sign}{data.change.toLocaleString()} ({sign}{data.changeRate.toFixed(2)}%)
                     </span>
                   </span>
                 );

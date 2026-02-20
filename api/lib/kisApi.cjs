@@ -1,26 +1,71 @@
 const path = require('path');
 const NodeCache = require('node-cache');
 const axios = require('axios');
-require('dotenv').config(); // Load environment variables here too for standalone testing or Vercel
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
 const kisPriceCache = new NodeCache({ stdTTL: 60 }); // Cache for stock prices (60 seconds)
 const kisTokenCache = new NodeCache({ stdTTL: 86400 }); // Cache for KIS token (24 hours)
+
+// Supabase 클라이언트 초기화 (토큰 공유용)
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 const KIS_APP_KEY = process.env.KIS_APP_KEY;
 const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
 const KIS_BASE_URL = (process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
 
-const getKisToken = async () => {
+const getKisToken = async (retry = true) => {
+  // 1. 메모리 캐시 확인
   if (kisTokenCache.has('token')) return kisTokenCache.get('token');
+
   try {
+    // 2. 데이터베이스 캐시 확인 (Supabase)
+    const { data: cached } = await supabase
+      .from('stock_data_cache')
+      .select('data')
+      .eq('id', 'kis_token')
+      .maybeSingle(); // single() 대신 maybeSingle() 사용
+
+    if (cached && cached.data && cached.data.expires_at > Date.now()) {
+      const token = cached.data.access_token;
+      const remainingSec = Math.floor((cached.data.expires_at - Date.now()) / 1000);
+      kisTokenCache.set('token', token, remainingSec > 60 ? remainingSec - 60 : remainingSec);
+      console.log("♻️ Supabase 캐시에서 기존 토큰을 재사용합니다.");
+      return token;
+    }
+
+    // 3. 신규 토큰 발급 요청
+    console.log("📡 KIS API로부터 신규 토큰 발급을 요청합니다...");
     const response = await axios.post(`${KIS_BASE_URL}/oauth2/tokenP`, {
       appkey: KIS_APP_KEY, appsecret: KIS_SECRET_KEY, grant_type: 'client_credentials'
     });
+    
     const token = response.data.access_token;
-    kisTokenCache.set('token', token, response.data.expires_in - 60);
-    console.log("New Token Issued Successfully.");
+    const expiresIn = response.data.expires_in;
+    const expiresAt = Date.now() + (expiresIn * 1000);
+
+    // 4. 메모리 및 데이터베이스 캐시 업데이트
+    kisTokenCache.set('token', token, expiresIn - 60);
+    await supabase.from('stock_data_cache').upsert({
+      id: 'kis_token',
+      data: { access_token: token, expires_at: expiresAt },
+      updated_at: new Date()
+    });
+
+    console.log("✅ 신규 토큰 발급 및 Supabase 저장 완료.");
     return token;
-  } catch (error) { throw error; }
+  } catch (error) {
+    // 1분당 1회 제한 에러 발생 시 대기 후 재시도
+    if (error.response && error.response.data.error_code === 'EGW00133' && retry) {
+      console.log("⚠️ 토큰 발급 제한에 걸렸습니다. 65초 후 자동으로 다시 시도합니다. 잠시만 기다려주세요...");
+      await new Promise(resolve => setTimeout(resolve, 65000));
+      return getKisToken(false); // 재시도 시에는 retry를 false로 설정하여 무한 루프 방지
+    }
+
+    const errorData = error.response ? error.response.data : error.message;
+    console.error("❌ 토큰 발급 최종 에러:", errorData);
+    throw error;
+  }
 };
 
 // stockCodeToNameMap is now passed as an argument
@@ -52,6 +97,48 @@ const fetchStockPrice = async (token, code, stockCodeToNameMap) => {
   } catch (e) { return null; }
 };
 
+// 국내 지수 조회 (코스피: 0001, 코스닥: 1001)
+const fetchDomesticIndex = async (token, code) => {
+  try {
+    const response = await axios.get(`${KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-index-price`, {
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'appkey': KIS_APP_KEY, 'appsecret': KIS_SECRET_KEY,
+        'tr_id': 'FHPST01010000', 'custtype': 'P'
+      },
+      params: { 'FID_COND_MRKT_DIV_CODE': 'U', 'FID_INPUT_ISCD': code }
+    });
+    const o = response.data.output;
+    if(!o) return null;
+    return {
+      price: parseFloat(o.bstp_nmix_prpr || '0'),
+      change: parseFloat(o.bstp_nmix_prdy_vrss || '0'),
+      changeRate: parseFloat(o.bstp_nmix_prdy_ctrt || '0')
+    };
+  } catch (e) { return null; }
+};
+
+// 해외 지수 및 환율 조회 (나스닥: NAS@IXIC, S&P500: SNI@SPX, 환율: FX@USDKRW 등)
+const fetchOverseasIndex = async (token, code) => {
+  try {
+    const response = await axios.get(`${KIS_BASE_URL}/uapi/overseas-price/v1/quotations/inquire-price-index`, {
+      headers: {
+        'authorization': `Bearer ${token}`,
+        'appkey': KIS_APP_KEY, 'appsecret': KIS_SECRET_KEY,
+        'tr_id': 'FHHST03010100', 'custtype': 'P'
+      },
+      params: { 'FID_COND_MRKT_DIV_CODE': 'I', 'FID_INPUT_ISCD': code }
+    });
+    const o = response.data.output;
+    if(!o) return null;
+    return {
+      price: parseFloat(o.last || '0'),
+      change: parseFloat(o.diff || '0'),
+      changeRate: parseFloat(o.rate || '0')
+    };
+  } catch (e) { return null; }
+};
+
 const chunkedFetchStockPrices = async (token, codesToFetch, stockCodeToNameMap, chunkSize = 10, delayMs = 500) => {
   const allResults = [];
   for (let i = 0; i < codesToFetch.length; i += chunkSize) {
@@ -73,5 +160,7 @@ const chunkedFetchStockPrices = async (token, codesToFetch, stockCodeToNameMap, 
 module.exports = {
     getKisToken,
     fetchStockPrice,
-    chunkedFetchStockPrices
+    chunkedFetchStockPrices,
+    fetchDomesticIndex,
+    fetchOverseasIndex
 };

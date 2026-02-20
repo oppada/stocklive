@@ -137,7 +137,7 @@ def collect():
                 'count': len(theme_stocks)
             })
 
-            with open('toss_themes_v6.json', 'w', encoding='utf-8') as f:
+            with open('toss_stock_themes_local_v3.json', 'w', encoding='utf-8') as f:
                 json.dump(all_data, f, ensure_ascii=False, indent=2)
 
     finally:

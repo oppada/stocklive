@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
-const { getKisToken, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
+const { getKisToken, chunkedFetchStockPrices, fetchDomesticIndex, fetchOverseasIndex } = require('./lib/kisApi.cjs');
 
 // Supabase 설정
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
@@ -26,6 +26,20 @@ module.exports = async (req, res) => {
         const themesData = JSON.parse(fs.readFileSync(themesPath, 'utf8'));
 
         const token = await getKisToken();
+
+        // --- 시장 지수 수집 추가 ---
+        console.log("📈 시장 지수 수집 중...");
+        const indicators = {
+            '코스피': await fetchDomesticIndex(token, '0001'),
+            '코스닥': await fetchDomesticIndex(token, '1001'),
+            '나스닥': await fetchOverseasIndex(token, 'NAS@IXIC'),
+            'S&P500': await fetchOverseasIndex(token, 'SNI@SPX'),
+            '필라델피아반도체': await fetchOverseasIndex(token, 'SHS@SOX'),
+            'VIX': await fetchOverseasIndex(token, 'HSI@VIX'),
+            '달러인덱스': await fetchOverseasIndex(token, 'IDX@DXY'),
+            '달러환율': await fetchOverseasIndex(token, 'FX@USDKRW')
+        };
+
         const allCodes = Array.from(new Set(allStocksList.map(s => s.code)));
         const stockCodeToNameMap = new Map();
         allStocksList.forEach(s => stockCodeToNameMap.set(s.code, s.name));
@@ -56,6 +70,7 @@ module.exports = async (req, res) => {
         // Supabase 캐시 업데이트
         await supabase.from('stock_data_cache').upsert({ id: 'all_stocks', data: priceResults, updated_at: new Date() });
         await supabase.from('stock_data_cache').upsert({ id: 'theme_ranking_results', data: themeRankings, updated_at: new Date() });
+        await supabase.from('stock_data_cache').upsert({ id: 'market_indicators', data: indicators, updated_at: new Date() });
 
         console.log("✅ [Cron] 업데이트 완료!");
         res.status(200).json({ success: true, updated: priceResults.length });

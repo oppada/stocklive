@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 // KIS API 라이브러리 (기존 라이브러리 재사용)
-const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
+const { getKisToken, fetchStockPrice, chunkedFetchStockPrices, fetchDomesticIndex, fetchOverseasIndex } = require('./lib/kisApi.cjs');
 
 // Supabase 설정
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
@@ -30,6 +30,19 @@ async function forceUpdate() {
         const token = await getKisToken();
         console.log("🔑 KIS API 토큰 발급 성공.");
 
+        // --- 시장 지수 및 환율 수집 추가 ---
+        console.log("📈 시장 지수 및 환율 수집 중...");
+        const indicators = {
+            '코스피': await fetchDomesticIndex(token, '0001'),
+            '코스닥': await fetchDomesticIndex(token, '1001'),
+            '나스닥': await fetchOverseasIndex(token, 'NAS@IXIC'),
+            'S&P500': await fetchOverseasIndex(token, 'SNI@SPX'),
+            '필라델피아반도체': await fetchOverseasIndex(token, 'SHS@SOX'),
+            'VIX': await fetchOverseasIndex(token, 'HSI@VIX'),
+            '달러인덱스': await fetchOverseasIndex(token, 'IDX@DXY'),
+            '달러환율': await fetchOverseasIndex(token, 'FX@USDKRW')
+        };
+
         // 3. 종목 코드 추출 (중복 제거)
         const allCodes = Array.from(new Set(allStocksList.map(s => s.code)));
         const stockCodeToNameMap = new Map();
@@ -39,7 +52,6 @@ async function forceUpdate() {
         console.log(`🔍 총 ${allCodes.length}개 종목의 실시간 가격 조회를 시작합니다 (청크 단위 처리)...`);
 
         // 4. 실시간 가격 조회 (KIS API 호출 제한 준수: 10개씩 0.5초 간격)
-        // 전체 종목이 많으므로 시간이 걸립니다.
         const priceResults = await chunkedFetchStockPrices(token, allCodes, stockCodeToNameMap, 10, 500);
         console.log(`✅ 가격 조회 완료: ${priceResults.length}개 종목 데이터 수집됨`);
 
@@ -69,20 +81,16 @@ async function forceUpdate() {
         console.log("📤 Supabase 데이터베이스 업로드 중...");
 
         // (1) 전체 종목 데이터 캐시 (all_stocks)
-        const { error: err1 } = await supabase
-            .from('stock_data_cache')
-            .upsert({ id: 'all_stocks', data: priceResults, updated_at: new Date() });
-
-        if (err1) throw err1;
+        await supabase.from('stock_data_cache').upsert({ id: 'all_stocks', data: priceResults, updated_at: new Date() });
         console.log("✨ 'all_stocks' 업데이트 완료.");
 
         // (2) 테마 랭킹 데이터 캐시 (theme_ranking_results)
-        const { error: err2 } = await supabase
-            .from('stock_data_cache')
-            .upsert({ id: 'theme_ranking_results', data: themeRankings, updated_at: new Date() });
-
-        if (err2) throw err2;
+        await supabase.from('stock_data_cache').upsert({ id: 'theme_ranking_results', data: themeRankings, updated_at: new Date() });
         console.log("✨ 'theme_ranking_results' 업데이트 완료.");
+
+        // (3) 시장 지수 데이터 캐시 (market_indicators)
+        await supabase.from('stock_data_cache').upsert({ id: 'market_indicators', data: indicators, updated_at: new Date() });
+        console.log("✨ 'market_indicators' 업데이트 완료.");
 
         console.log("🎉 모든 업데이트 작업이 성공적으로 완료되었습니다!");
 

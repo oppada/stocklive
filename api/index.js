@@ -22,18 +22,26 @@ const stockCodeToNameMap = new Map();
 // JSON 데이터 읽기 (Vercel 환경에 맞춰 경로 수정)
 try {
     const themesPath = path.join(process.cwd(), 'api', 'toss_stock_themes_local_v3.json');
+    const krxPath = path.join(process.cwd(), 'api', 'krx_stocks.json');
+
+    // 1. 전체 종목 리스트에서 이름 매핑
+    if (fs.existsSync(krxPath)) {
+        const krxData = JSON.parse(fs.readFileSync(krxPath, 'utf8'));
+        krxData.forEach(s => stockCodeToNameMap.set(s.code, s.name));
+    }
+
+    // 2. 테마 데이터 로딩 및 이름 매핑 보완
     if (fs.existsSync(themesPath)) {
         const rawData = JSON.parse(fs.readFileSync(themesPath, 'utf8'));
-        // v3 파일은 themes 키 없이 바로 배열 형태임
         themesData = Array.isArray(rawData) ? rawData : (rawData.themes || []);
         themesData.forEach(t => {
             if (t.stocks && Array.isArray(t.stocks)) {
                 t.stocks.forEach(s => stockCodeToNameMap.set(s.code, s.name));
             }
         });
-        console.log(`✅ Loaded ${themesData.length} themes and mapped ${stockCodeToNameMap.size} stocks.`);
+        console.log(`✅ Loaded ${themesData.length} themes and mapped ${stockCodeToNameMap.size} total stocks.`);
     }
-} catch (e) { console.error("❌ Theme Load Error", e); }
+} catch (e) { console.error("❌ Data Load Error", e); }
 
 app.use(cors());
 app.use(express.json());
@@ -79,6 +87,19 @@ app.get('/api/themes/:themeName/stocks', async (req, res) => {
     }
 });
 
+app.get('/api/market/indicators', async (req, res) => {
+    try {
+        const { data: cachedData } = await supabase
+            .from('stock_data_cache')
+            .select('data')
+            .eq('id', 'market_indicators')
+            .single();
+
+        if (cachedData) return res.json(cachedData.data);
+        res.json({});
+    } catch (e) { res.status(500).json({}); }
+});
+
 app.get('/api/ranking/:type', async (req, res) => {
     try {
         const { data: cachedData } = await supabase
@@ -90,8 +111,24 @@ app.get('/api/ranking/:type', async (req, res) => {
         if (!cachedData) return res.json([]);
         
         const allStocks = cachedData.data;
+        
+        // --- 보통주/우선주 필터링 로직 추가 ---
+        const filteredStocks = allStocks.filter(stock => {
+            // 1. 숫자 6자리 코드만 허용 (알파벳 포함된 ETN 등 제외)
+            if (!/^\d{6}$/.test(stock.code)) return false;
+
+            // 2. 명칭 기반 ETF/ETN 필터링
+            const etfBrands = ['KODEX', 'TIGER', 'ACE', 'KBSTAR', 'ARIRANG', 'SOL', 'HANARO', 'KOSEF', '1Q', 'UNICORN', 'RISE', 'ACE', 'WON', '히어로즈'];
+            const etfKeywords = ['ETF', 'ETN', '인버스', '레버리지', '(합성)', '선물'];
+
+            const isEtfBrand = etfBrands.some(brand => stock.name.startsWith(brand));
+            const hasEtfKeyword = etfKeywords.some(key => stock.name.includes(key));
+
+            return !isEtfBrand && !hasEtfKeyword;
+        });
+
         const type = req.params.type;
-        let sorted = [...allStocks];
+        let sorted = [...filteredStocks]; // 필터링된 리스트 사용
 
         if (type === 'gainer') sorted.sort((a, b) => b.changeRate - a.changeRate);
         else if (type === 'loser') sorted.sort((a, b) => a.changeRate - b.changeRate);
