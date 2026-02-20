@@ -53,6 +53,32 @@ app.get('/api/themes/top-performing', async (req, res) => {
     } catch (e) { res.status(500).json([]); }
 });
 
+// 특정 테마의 종목 리스트 조회 라우트 추가
+app.get('/api/themes/:themeName/stocks', async (req, res) => {
+    const themeName = req.params.themeName;
+    try {
+        const { data: cachedThemeData } = await supabase
+            .from('stock_data_cache')
+            .select('data')
+            .eq('id', 'theme_ranking_results')
+            .single();
+
+        if (!cachedThemeData) return res.json([]);
+
+        // 캐시 데이터에서 해당 테마 이름과 일치하는 항목 찾기
+        const theme = cachedThemeData.data.find(t => t.name === themeName);
+        
+        if (theme && theme.stocks) {
+            res.json(theme.stocks);
+        } else {
+            res.json([]);
+        }
+    } catch (e) { 
+        console.error("❌ Theme Stocks Fetch Error:", e);
+        res.status(500).json([]); 
+    }
+});
+
 app.get('/api/ranking/:type', async (req, res) => {
     try {
         const { data: cachedData } = await supabase
