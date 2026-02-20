@@ -68,14 +68,19 @@ const App = () => {
   // Fetch market indicators for ticker
   useEffect(() => {
     const fetchMarketIndicators = async () => {
+      console.log("📡 Fetching Market Indicators...");
       try {
         const response = await fetch('/api/market/indicators');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        console.log('📊 Market Indicators Data:', data);
         if (data && Object.keys(data).length > 0) {
           setMarketIndicators(data);
+        } else {
+          console.warn("⚠️ Market Indicators data is empty.");
         }
       } catch (error) {
-        console.error("Failed to fetch market indicators:", error);
+        console.error("❌ Failed to fetch market indicators:", error);
       }
     };
 

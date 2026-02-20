@@ -32,16 +32,22 @@ async function forceUpdate() {
 
         // --- 시장 지수 및 환율 수집 추가 ---
         console.log("📈 시장 지수 및 환율 수집 중...");
-        const indicators = {
-            '코스피': await fetchDomesticIndex(token, '0001'),
-            '코스닥': await fetchDomesticIndex(token, '1001'),
-            '나스닥': await fetchOverseasIndex(token, 'NAS@IXIC'),
-            'S&P500': await fetchOverseasIndex(token, 'SNI@SPX'),
-            '필라델피아반도체': await fetchOverseasIndex(token, 'SHS@SOX'),
-            'VIX': await fetchOverseasIndex(token, 'HSI@VIX'),
-            '달러인덱스': await fetchOverseasIndex(token, 'IDX@DXY'),
-            '달러환율': await fetchOverseasIndex(token, 'FX@USDKRW')
-        };
+        const indicators = {};
+        
+        try {
+            indicators['코스피'] = await fetchDomesticIndex(token, '0001');
+            indicators['코스닥'] = await fetchDomesticIndex(token, '1001');
+            indicators['나스닥'] = await fetchOverseasIndex(token, 'NAS@IXIC');
+            indicators['S&P500'] = await fetchOverseasIndex(token, 'SNI@SPX');
+            indicators['필라델피아반도체'] = await fetchOverseasIndex(token, 'SHS@SOX');
+            indicators['VIX'] = await fetchOverseasIndex(token, 'HSI@VIX');
+            indicators['달러인덱스'] = await fetchOverseasIndex(token, 'IDX@DXY');
+            indicators['달러환율'] = await fetchOverseasIndex(token, 'USDKRW');
+            
+            console.log("✅ 수집된 지수 요약:", Object.keys(indicators).map(k => `${k}: ${indicators[k] ? '성공' : '실패'}`).join(', '));
+        } catch (e) {
+            console.error("⚠️ 일부 지수 수집 중 오류 발생:", e.message);
+        }
 
         // 3. 종목 코드 추출 (중복 제거)
         const allCodes = Array.from(new Set(allStocksList.map(s => s.code)));
