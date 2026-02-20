@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   },
   "scripts": {
-    "build": "cd client && rm -rf node_modules package-lock.json && npm install --force && npm run build"
+    "build": "cd client && npm run build"
   },
   "dependencies": {
     "express": "^4.18.2",
