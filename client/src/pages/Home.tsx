@@ -162,7 +162,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   }
 
   return (
-    <div className="flex flex-col h-screen w-full bg-[#0E1013] text-white">
+    <div className="flex flex-col h-full w-full bg-[#0E1013] text-white">
       {/* 탭 네비게이션 */}
       <div className="sticky top-0 z-30 bg-[#0E1013] border-b border-white/5">
         <nav className="flex items-center justify-around gap-1 px-2 py-2 hide-scrollbar md:justify-start md:gap-5 md:px-4">
@@ -196,7 +196,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto hide-scrollbar pb-32">
+        <main className="flex-1 overflow-y-auto hide-scrollbar pb-24">
           {/* 테마 탭 모바일용 드롭다운 */}
           {activeTab === '테마' && (
             <div className="md:hidden p-2 mb-1">

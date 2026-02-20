@@ -133,8 +133,8 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
-      <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0 sticky top-0 z-50">
+    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
+      <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0 z-50">
         <div className="flex items-center gap-8">
           <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">MATE</span></h1>
           <nav className="hidden md:flex items-center gap-8 text-[13px] font-bold text-slate-400">
@@ -157,7 +157,7 @@ const App = () => {
         <div className="flex items-center gap-4"><Bell className="w-5 h-5 text-slate-400" /><User className="w-5 h-5 text-slate-400" /></div>
       </header>
 
-      <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0 sticky top-14 z-40">
+      <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0 z-40">
         <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex gap-8 pr-8">
@@ -197,7 +197,7 @@ const App = () => {
               </div>
             </form>        </aside>
 
-        <main className="flex-1 overflow-y-auto p-0 bg-black relative">
+        <main className="flex-1 overflow-hidden p-0 bg-black relative">
           <div className="h-full">
             <Routes>
               <Route path="/" element={<HomePage stockPrices={stockPrices} favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} showLoginMessage={showLoginMessage} />} />
