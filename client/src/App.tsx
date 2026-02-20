@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { 
-  Search, Bell, User, MessageCircle, Home as HomeIcon, PieChart, Newspaper, Zap
+  Search, Bell, User, MessageCircle, Home as HomeIcon, PieChart, Newspaper
 } from 'lucide-react'; 
 
 // Page component imports
@@ -16,13 +16,6 @@ import WatchlistSidebar from './components/WatchlistSidebar';
 import { supabase } from './supabaseClient'; // Import supabase from the new client
 
 
-
-const tickerStocks = [
-  { name: '삼성전자', code: '005930' },
-  { name: 'SK하이닉스', code: '000660' },
-  { name: '현대차', code: '005380' },
-  { name: 'KODEX 200', code: '069500' },
-];
 
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
