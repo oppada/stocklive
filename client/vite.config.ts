@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss()
     ],
+    build: {
+      chunkSizeWarningLimit: 1000,
+    },
     server: {
       proxy: {
         // Proxy all /api requests to the Node.js backend server
