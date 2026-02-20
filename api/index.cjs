@@ -81,3 +81,11 @@ app.get('/api/stocks/prices', async (req, res) => {
 
 // Vercel 핵심: app 객체를 직접 내보냄
 module.exports = app;
+
+// 로컬 서버 실행 (npm start용)
+if (require.main === module) {
+    const PORT = process.env.PORT || 4000;
+    app.listen(PORT, () => {
+        console.log(`🚀 StockLive Backend Server running on http://localhost:${PORT}`);
+    });
+}
