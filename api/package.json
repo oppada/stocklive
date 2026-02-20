@@ -2,9 +2,9 @@
   "name": "api-server",
   "version": "1.0.0",
   "description": "Backend API server for StockLive",
-  "main": "index.cjs",
+  "main": "index.js",
   "scripts": {
-    "start": "node index.cjs"
+    "start": "node index.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",

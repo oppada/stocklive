@@ -1,7 +1,7 @@
 {
   "version": 2,
   "functions": {
-    "api/index.cjs": {
+    "api/*.js": {
       "memory": 1024,
       "maxDuration": 10
     }
@@ -9,7 +9,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.cjs"
+      "destination": "/api/index.js"
     },
     {
       "source": "/assets/(.*)",
