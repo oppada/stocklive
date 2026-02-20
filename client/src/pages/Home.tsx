@@ -196,7 +196,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto hide-scrollbar pb-24">
+        <main className="flex-1 overflow-y-auto hide-scrollbar pb-16">
           {/* 테마 탭 모바일용 드롭다운 */}
           {activeTab === '테마' && (
             <div className="md:hidden p-2 mb-1">
@@ -241,7 +241,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
 
               {/* 리스트 아이템 */}
               {!isLoadingStocks && displayStocks.length > 0 ? (
-                <div className="mt-1 space-y-1 pb-4">
+                <div className="mt-1 space-y-1">
                   {displayStocks.map((stock, idx) => {
                     const isUp = stock.changeRate > 0;
                     return (
