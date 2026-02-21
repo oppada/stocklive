@@ -15,7 +15,7 @@
   }
 }
 
-/* 티커 속도를 20s로 수정하여 더 빠르게 움직이게 함 */
+/* 티커 속도를 40s로 수정하여 더 천천히 움직이게 함 */
 @keyframes marquee {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -23,7 +23,7 @@
 
 .animate-marquee {
   display: inline-flex;
-  animation: marquee 20s linear infinite; 
+  animation: marquee 40s linear infinite; 
 }
 
 ::-webkit-scrollbar {

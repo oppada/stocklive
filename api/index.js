@@ -101,50 +101,36 @@ app.get('/api/market/indicators', async (req, res) => {
 });
 
 app.get('/api/ranking/:type', async (req, res) => {
+    const type = req.params.type; // gainer, loser, volume, value
     try {
+        // 네이버 기반 랭킹 캐시 데이터 가져오기
         const { data: cachedData } = await supabase
+            .from('stock_data_cache')
+            .select('data')
+            .eq('id', `ranking_${type}`)
+            .single();
+
+        if (cachedData) return res.json(cachedData.data);
+        
+        // 데이터가 없을 경우 all_stocks에서 폴백
+        const { data: allStocks } = await supabase
             .from('stock_data_cache')
             .select('data')
             .eq('id', 'all_stocks')
             .single();
 
-        if (!cachedData) return res.json([]);
-        
-        const allStocks = cachedData.data;
-        
-        // --- 보통주/우선주 필터링 로직 추가 ---
-        const filteredStocks = allStocks.filter(stock => {
-            // 1. 숫자 6자리 코드만 허용 (알파벳 포함된 ETN 등 제외)
-            if (!/^\d{6}$/.test(stock.code)) return false;
-
-            // 2. 명칭 기반 ETF/ETN 필터링
-            const etfBrands = ['KODEX', 'TIGER', 'ACE', 'KBSTAR', 'ARIRANG', 'SOL', 'HANARO', 'KOSEF', '1Q', 'UNICORN', 'RISE', 'ACE', 'WON', '히어로즈'];
-            const etfKeywords = ['ETF', 'ETN', '인버스', '레버리지', '(합성)', '선물'];
-
-            const isEtfBrand = etfBrands.some(brand => stock.name.startsWith(brand));
-            const hasEtfKeyword = etfKeywords.some(key => stock.name.includes(key));
-
-            return !isEtfBrand && !hasEtfKeyword;
-        });
-
-        const type = req.params.type;
-        let sorted = [...filteredStocks]; // 필터링된 리스트 사용
-
-        if (type === 'gainer') sorted.sort((a, b) => b.changeRate - a.changeRate);
-        else if (type === 'loser') sorted.sort((a, b) => a.changeRate - b.changeRate);
-        else if (type === 'volume') sorted.sort((a, b) => b.volume - a.volume);
-        else if (type === 'value') sorted.sort((a, b) => b.tradeValue - a.tradeValue);
-
-        res.json(sorted.slice(0, 50));
+        if (!allStocks) return res.json([]);
+        res.json(allStocks.data.slice(0, 50));
     } catch (e) { res.status(500).json([]); }
 });
 
 app.get('/api/stocks/prices', async (req, res) => {
     const codes = (req.query.codes || "").split(',').filter(Boolean);
     try {
-        const token = await getKisToken();
-        const results = await Promise.all(codes.map(c => fetchStockPrice(token, c.trim(), stockCodeToNameMap)));
-        res.json(results.filter(Boolean).reduce((a, s) => ({ ...a, [s.code]: s }), {}));
+        // 한투 API 대신 네이버 금융 엔진 활용
+        const { fetchNaverPrices } = require('./lib/publicApi.cjs');
+        const results = await fetchNaverPrices(codes);
+        res.json(results.reduce((a, s) => ({ ...a, [s.code]: s }), {}));
     } catch (e) { res.status(500).json({}); }
 });
 
