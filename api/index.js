@@ -110,7 +110,7 @@ app.get('/api/market/indicators', async (req, res) => {
 app.get('/api/ranking/:type', async (req, res) => {
     const type = req.params.type; // gainer, loser, volume, value
     try {
-        // 네이버 기반 랭킹 캐시 데이터 가져오기
+        // ... (기존 랭킹 로직 유지)
         const { data: cachedData } = await supabase
             .from('stock_data_cache')
             .select('data')
@@ -118,17 +118,22 @@ app.get('/api/ranking/:type', async (req, res) => {
             .single();
 
         if (cachedData) return res.json(cachedData.data);
-        
-        // 데이터가 없을 경우 all_stocks에서 폴백
-        const { data: allStocks } = await supabase
-            .from('stock_data_cache')
-            .select('data')
-            .eq('id', 'all_stocks')
-            .single();
-
-        if (!allStocks) return res.json([]);
-        res.json(allStocks.data.slice(0, 50));
+        res.json([]);
     } catch (e) { res.status(500).json([]); }
+});
+
+// 투자자별 매매 동향 엔드포인트 추가
+app.get('/api/investor-trend/:type', async (req, res) => {
+    const type = req.params.type; // buy, sell
+    const investor = req.query.investor || 'foreign'; // foreign, institution, individual
+    try {
+        const { fetchInvestorTrends } = require('./lib/publicApi.cjs');
+        const data = await fetchInvestorTrends(type, investor);
+        res.json(data);
+    } catch (e) {
+        console.error("❌ Investor Trend API Error:", e);
+        res.status(500).json([]);
+    }
 });
 
 app.get('/api/stocks/prices', async (req, res) => {

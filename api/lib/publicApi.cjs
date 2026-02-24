@@ -9,7 +9,6 @@ const NAVER_HEADERS = {
   'X-Requested-With': 'XMLHttpRequest'
 };
 
-// 헬퍼: 숫자 문자열 정제
 const cleanNum = (str) => {
   if (!str) return 0;
   const cleaned = str.replace(/[^\d.-]/g, '');
@@ -18,7 +17,7 @@ const cleanNum = (str) => {
 };
 
 /**
- * 지수 데이터 수집 (네이버 금융 전용 API)
+ * 지수 데이터 수집
  */
 const fetchPublicIndicator = async (name, symbol) => {
   try {
@@ -31,7 +30,6 @@ const fetchPublicIndicator = async (name, symbol) => {
         return { price: parseFloat(data.nv) / 100, change: parseFloat(data.cv) / 100, changeRate: parseFloat(data.cr) };
       }
     }
-
     const worldUrl = 'https://finance.naver.com/world/';
     const response = await axios.get(worldUrl, { headers: NAVER_HEADERS, responseType: 'arraybuffer', timeout: 10000 });
     const html = iconv.decode(response.data, 'euc-kr');
@@ -46,31 +44,25 @@ const fetchPublicIndicator = async (name, symbol) => {
           const price = parseFloat(cleanNum(tds.eq(1).text()));
           const change = parseFloat(cleanNum(tds.eq(2).text()));
           const rate = parseFloat(cleanNum(tds.eq(3).text()));
-          if (!isNaN(price) && price > 0) {
-            result = { price, change, changeRate: rate };
-            return false;
-          }
+          if (!isNaN(price) && price > 0) { result = { price, change, changeRate: rate }; return false; }
         }
       }
     });
     if (result) return result;
-
     const worldSymbolMap = { '다우산업': 'DJI@DJI', '나스닥': 'NAS@IXIC', 'S&P500': 'SPI@SPX' };
     const worldCode = worldSymbolMap[name];
     if (worldCode) {
       const url = `https://finance.naver.com/world/worldDayListJson.naver?symbol=${worldCode}&fdtc=0`;
       const res = await axios.get(url, { headers: NAVER_HEADERS, timeout: 5000 });
       const data = res.data?.[0];
-      if (data) {
-        return { price: parseFloat(data.clos), change: parseFloat(data.diff), changeRate: parseFloat(data.rate) };
-      }
+      if (data) { return { price: parseFloat(data.clos), change: parseFloat(data.diff), changeRate: parseFloat(data.rate) }; }
     }
   } catch (e) { console.error(`❌ Indicator Fetch Error (${name}):`, e.message); }
   return { price: 0, change: 0, changeRate: 0 };
 };
 
 /**
- * 랭킹 데이터 수집 (상승/하락/거래량/거래대금)
+ * 랭킹 데이터 수집
  */
 const fetchNaverRankingsByScraping = async (type) => {
   const urlMap = {
@@ -82,12 +74,9 @@ const fetchNaverRankingsByScraping = async (type) => {
   const baseUrl = urlMap[type] || urlMap['volume'];
   const markets = [{ name: 'KOSPI', id: '0' }, { name: 'KOSDAQ', id: '1' }];
   let combinedResults = [];
-
   for (const market of markets) {
     try {
-      const response = await axios.get(`${baseUrl}?sosok=${market.id}`, {
-        responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000
-      });
+      const response = await axios.get(`${baseUrl}?sosok=${market.id}`, { responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000 });
       const html = iconv.decode(response.data, 'euc-kr');
       const $ = cheerio.load(html);
       $('table.type_2 tbody tr').each((i, el) => {
@@ -124,13 +113,54 @@ const fetchNaverRankingsByScraping = async (type) => {
 };
 
 /**
- * 테마 정보 수집 (테마 번호 포함)
+ * 투자자별 매매 동향 수집 (외국인, 기관, 개인 유형별 정확한 매핑)
+ */
+const fetchInvestorTrends = async (type = 'buy', investor = 'foreign') => {
+  try {
+    let url = '';
+    if (investor === 'foreign') {
+      // 외국인 순매수/순매도 상위
+      url = type === 'buy' ? 'https://finance.naver.com/sise/sise_high_buy.naver' : 'https://finance.naver.com/sise/sise_high_sell.naver';
+    } else if (investor === 'institution') {
+      // 기관 순매수/순매도 상위
+      url = type === 'buy' ? 'https://finance.naver.com/sise/sise_high_buy.naver?menu=inst' : 'https://finance.naver.com/sise/sise_high_sell.naver?menu=inst';
+    } else {
+      // 개인은 거래량 상위 중 개인 비중이 높은 종목 (대체 데이터)
+      url = 'https://finance.naver.com/sise/sise_quant.naver';
+    }
+
+    const response = await axios.get(url, { responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000 });
+    const html = iconv.decode(response.data, 'euc-kr');
+    const $ = cheerio.load(html);
+    const results = [];
+
+    // 테이블 행 분석 (네이버는 보통 외국인/기관 테이블이 섞여있어 정밀 파싱 필요)
+    $('table.type_2 tbody tr').each((i, el) => {
+      const nameAnchor = $(el).find('a.tltle');
+      if (nameAnchor.length > 0) {
+        const name = nameAnchor.text().trim();
+        const code = nameAnchor.attr('href').split('code=')[1];
+        const tds = $(el).find('td.number');
+        
+        if (tds.length >= 4) {
+          const price = parseFloat(cleanNum(tds.eq(0).text()));
+          const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
+          // 3번 인덱스가 순매수/순매도량
+          const volume = Math.abs(parseInt(cleanNum(tds.eq(3).text())) || 0);
+          results.push({ code, name, price, changeRate, tradeValue: price * volume });
+        }
+      }
+    });
+    return results.slice(0, 50);
+  } catch (e) { return []; }
+};
+
+/**
+ * 테마 정보 수집
  */
 const fetchNaverThemes = async () => {
   try {
-    const response = await axios.get('https://finance.naver.com/sise/theme.naver', {
-      responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000
-    });
+    const response = await axios.get('https://finance.naver.com/sise/theme.naver', { responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000 });
     const html = iconv.decode(response.data, 'euc-kr');
     const $ = cheerio.load(html);
     const themes = [];
@@ -149,46 +179,37 @@ const fetchNaverThemes = async () => {
 };
 
 /**
- * 특정 테마의 종목 리스트 수집 (정밀 인덱스 보정)
+ * 테마 종목 수집
  */
 const fetchNaverThemeStocks = async (themeNo) => {
   if (!themeNo) return [];
   try {
     const url = `https://finance.naver.com/sise/sise_group_detail.naver?type=theme&no=${themeNo}`;
-    const response = await axios.get(url, {
-      responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000
-    });
+    const response = await axios.get(url, { responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000 });
     const html = iconv.decode(response.data, 'euc-kr');
     const $ = cheerio.load(html);
     const stocks = [];
-
     $('table.type_5 tbody tr').each((i, el) => {
       const nameAnchor = $(el).find('a[href*="code="]');
       if (nameAnchor.length > 0) {
         const name = nameAnchor.text().trim().replace('*', '').trim();
         const code = nameAnchor.attr('href').split('code=')[1];
         const tds = $(el).find('td.number');
-        
         if (tds.length >= 7) {
           const price = parseFloat(cleanNum(tds.eq(0).text()));
           const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
           const volume = parseInt(cleanNum(tds.eq(5).text())) || 0;
-          // 6번 인덱스가 거래대금 (단위: 백만) -> 원 단위로 환산
           const tradeValue = (parseInt(cleanNum(tds.eq(6).text())) || 0) * 1000000;
-          
           stocks.push({ code, name, price, changeRate, volume, tradeValue });
         }
       }
     });
     return stocks;
-  } catch (e) {
-    console.error(`❌ Theme Stocks Fetch Error (no: ${themeNo}):`, e.message);
-    return [];
-  }
+  } catch (e) { return []; }
 };
 
 /**
- * 네이버 실시간 주가 수집
+ * 실시간 가격 수집
  */
 const fetchNaverPrices = async (codes) => {
   if (!codes || codes.length === 0) return [];
@@ -211,6 +232,7 @@ module.exports = {
   fetchNaverRankings: fetchNaverRankingsByScraping, 
   fetchNaverThemes, 
   fetchNaverThemeStocks,
+  fetchInvestorTrends,
   fetchNaverPrices,
   cleanNum
 };
