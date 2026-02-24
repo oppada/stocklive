@@ -17,33 +17,8 @@ const KIS_SECRET_KEY = process.env.KIS_SECRET_KEY;
 const KIS_BASE_URL = (process.env.KIS_BASE_URL || 'https://openapi.koreainvestment.com:9443').trim().replace(/\/$/, "");
 
 const getKisToken = async (retry = true) => {
-  if (kisTokenCache.has('token')) return kisTokenCache.get('token');
-  try {
-    const { data: cached } = await supabase.from('stock_data_cache').select('data').eq('id', 'kis_token').maybeSingle();
-    if (cached && cached.data && cached.data.expires_at > Date.now()) {
-      const token = cached.data.access_token;
-      const remainingSec = Math.floor((cached.data.expires_at - Date.now()) / 1000);
-      kisTokenCache.set('token', token, remainingSec > 60 ? remainingSec - 60 : remainingSec);
-      console.log("♻️ Supabase 캐시 토큰 재사용");
-      return token;
-    }
-    console.log("📡 KIS 신규 토큰 발급 요청...");
-    const response = await axios.post(`${KIS_BASE_URL}/oauth2/tokenP`, {
-      appkey: KIS_APP_KEY, appsecret: KIS_SECRET_KEY, grant_type: 'client_credentials'
-    });
-    const token = response.data.access_token;
-    const expiresIn = response.data.expires_in;
-    const expiresAt = Date.now() + (expiresIn * 1000);
-    kisTokenCache.set('token', token, expiresIn - 60);
-    await supabase.from('stock_data_cache').upsert({ id: 'kis_token', data: { access_token: token, expires_at: expiresAt }, updated_at: new Date() });
-    return token;
-  } catch (error) {
-    if (error.response && error.response.data.error_code === 'EGW00133' && retry) {
-      await new Promise(resolve => setTimeout(resolve, 65000));
-      return getKisToken(false);
-    }
-    throw error;
-  }
+  console.log("🚫 KIS API 사용이 중단되었습니다. 토큰 발급을 시도하지 않습니다.");
+  return "DISABLED_TOKEN";
 };
 
 const fetchStockPrice = async (token, code, stockCodeToNameMap) => {

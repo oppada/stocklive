@@ -13,10 +13,9 @@ module.exports = async (req, res) => {
         const indicators = {
             '코스피': await fetchPublicIndicator('코스피', '^KS11'),
             '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
+            '다우산업': await fetchPublicIndicator('다우산업', 'DJI@DJI'),
             '나스닥': await fetchPublicIndicator('나스닥', '^IXIC'),
-            'S&P500': await fetchPublicIndicator('S&P500', '^GSPC'),
-            '반도체': await fetchPublicIndicator('반도체', '^SOX'),
-            '달러환율': await fetchPublicIndicator('달러환율', 'USDKRW=X')
+            'S&P500': await fetchPublicIndicator('S&P500', '^GSPC')
         };
 
         // 2. 주요 랭킹 수집 (네이버 금융 Top 50)

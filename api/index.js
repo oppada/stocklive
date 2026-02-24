@@ -5,9 +5,6 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-// KIS API 라이브러리
-const { getKisToken, fetchStockPrice, chunkedFetchStockPrices } = require('./lib/kisApi.cjs');
-
 const app = express();
 
 // Supabase 클라이언트 설정
@@ -73,14 +70,24 @@ app.get('/api/themes/:themeName/stocks', async (req, res) => {
 
         if (!cachedThemeData) return res.json([]);
 
-        // 캐시 데이터에서 해당 테마 이름과 일치하는 항목 찾기
+        // 1. 캐시 데이터에서 해당 테마 찾기
         const theme = cachedThemeData.data.find(t => t.name === themeName);
         
-        if (theme && theme.stocks) {
-            res.json(theme.stocks);
-        } else {
-            res.json([]);
+        if (theme) {
+            // 2. 이미 종목 리스트가 캐시되어 있다면 바로 반환
+            if (theme.stocks && theme.stocks.length > 0) {
+                return res.json(theme.stocks);
+            }
+            
+            // 3. 종목 리스트가 없으면 실시간으로 크롤링 (테마 번호 활용)
+            const { fetchNaverThemeStocks } = require('./lib/publicApi.cjs');
+            if (theme.no) {
+                console.log(`📡 Fetching real-time stocks for theme: ${themeName} (no: ${theme.no})`);
+                const stocks = await fetchNaverThemeStocks(theme.no);
+                return res.json(stocks);
+            }
         }
+        res.json([]);
     } catch (e) { 
         console.error("❌ Theme Stocks Fetch Error:", e);
         res.status(500).json([]); 
