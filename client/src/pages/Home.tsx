@@ -13,13 +13,12 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [foreignStocks, setForeignStocks] = useState<any[]>([]);
   const [institutionStocks, setInstitutionStocks] = useState<any[]>([]);
   const [individualStocks, setIndividualStocks] = useState<any[]>([]);
+  const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '', individual: '' });
   const [isLoadingInvestor, setIsLoadingInvestor] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]);
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
-  const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 5;
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
   const [isLoadingStocks, setIsLoadingStocks] = useState(false);
   const [isLoadingThemeStocks, setIsLoadingThemeStocks] = useState(false);
@@ -98,9 +97,20 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
             fetch(`/api/investor-trend/${investorTab}?investor=institution`),
             fetch(`/api/investor-trend/${investorTab}?investor=individual`)
           ]);
-          setForeignStocks(await resF.json());
-          setInstitutionStocks(await resI.json());
-          setIndividualStocks(await resP.json());
+          
+          const dataF = await resF.json();
+          const dataI = await resI.json();
+          const dataP = await resP.json();
+
+          setForeignStocks(dataF.list || dataF);
+          setInstitutionStocks(dataI.list || dataI);
+          setIndividualStocks(dataP.list || dataP);
+          
+          setInvestorUpdateTimes({
+            foreign: dataF.updated_at_text || '',
+            institution: dataI.updated_at_text || '',
+            individual: dataP.updated_at_text || ''
+          });
         } catch (error) {
           console.error("Failed to fetch investor data:", error);
         } finally {
@@ -126,38 +136,54 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   if (activeTab === '테마') displayStocks = selectedThemeStocks;
   else if (['급상승', '급하락', '거래량', '거래대금'].includes(activeTab)) displayStocks = rankingStocks;
 
-  const renderInvestorColumn = (title: string, stocks: any[]) => (
-    <div className="flex flex-col space-y-1 min-h-[500px]">
-      <div className="px-3 py-1.5 bg-[#1C1E23] rounded-xl text-center font-bold text-[13px] text-slate-300 border border-white/5">
-        {title}
-      </div>
-      <div className="grid grid-cols-[25px_1fr_55px_65px] px-2 py-1 text-[10px] font-bold text-slate-600 uppercase border-b border-white/5 h-8 items-center">
-        <div>#</div>
-        <div>종목명</div>
-        <div className="text-right">등락률</div>
-        <div className="text-right">대금</div>
-      </div>
-      <div className="space-y-0">
-        {stocks.map((stock, idx) => {
-          const isUp = stock.changeRate > 0;
-          return (
-            <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-2 py-0 hover:bg-[#1C1E23] rounded-lg transition-all group h-8">
-              <div className="text-[11px] font-bold text-slate-500">{idx + 1}</div>
-              <Link to={`/stock/${stock.code}`} className="text-[12px] font-bold text-slate-200 truncate group-hover:text-white">
-                {stock.name}
-              </Link>
-              <div className={`text-right text-[11px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
-                {isUp ? '+' : ''}{stock.changeRate.toFixed(2)}%
+  const renderInvestorColumn = (title: string, stocks: any[]) => {
+    let timeKey: 'foreign' | 'institution' | 'individual' = 'foreign';
+    if (title === '기관') timeKey = 'institution';
+    if (title === '개인') timeKey = 'individual';
+    const currentTime = investorUpdateTimes[timeKey];
+
+    return (
+      <div className="flex flex-col space-y-1 min-h-[500px]">
+        <div className="sticky top-0 z-20 px-3 py-1.5 bg-[#1C1E23] rounded-xl text-center font-bold text-[13px] text-slate-300 border border-white/5 flex flex-col items-center justify-center gap-0">
+          <span>{title}</span>
+          {currentTime && <span className="text-[9px] text-slate-500 font-normal mt-[-2px]">{currentTime}</span>}
+        </div>
+        <div className="sticky top-[42px] z-10 grid grid-cols-[25px_1fr_55px_65px] px-2 py-1 text-[10px] font-bold text-slate-600 uppercase border-b border-white/5 bg-[#0E1013] h-8 items-center">
+          <div>#</div>
+          <div>종목명</div>
+          <div className="text-right">등락률</div>
+          <div className="text-right">대금</div>
+        </div>
+        <div className="space-y-0">
+          {(stocks || []).map((stock: any, idx: number) => {
+            const rawRate = typeof stock.changeRate === 'string' ? parseFloat(stock.changeRate.replace('%', '')) : stock.changeRate;
+            const rate = isNaN(rawRate) ? 0 : rawRate;
+            const isUp = rate > 0;
+            // 거래대금 표시 최적화 (조, 억, 만 단위 모두 대응)
+            const rawValue = stock.tradeValue || '';
+            const displayValue = (typeof rawValue === 'string' && (rawValue.includes('조') || rawValue.includes('억') || rawValue.includes('만'))) 
+              ? rawValue 
+              : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
+
+            return (
+              <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-2 py-0 hover:bg-[#1C1E23] rounded-lg transition-all group h-8">
+                <div className="text-[11px] font-bold text-slate-500">{idx + 1}</div>
+                <Link to={`/stock/${stock.code}`} className="text-[12px] font-bold text-slate-200 truncate group-hover:text-white">
+                  {stock.name}
+                </Link>
+                <div className={`text-right text-[11px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                  {isUp ? '+' : ''}{rate.toFixed(2)}%
+                </div>
+                <div className="text-right text-[11px] font-bold text-slate-500 font-mono">
+                  {displayValue}
+                </div>
               </div>
-              <div className="text-right text-[11px] font-bold text-slate-500 font-mono">
-                {(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="flex flex-col h-full w-full bg-[#0E1013] text-white">
@@ -176,11 +202,11 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
       {activeTab === '투자자별' && (
         <div className="px-4 py-2 bg-[#0E1013] border-b border-white/5 flex gap-2">
           <button onClick={() => setInvestorTab('buy')}
-            className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all ${investorTab === 'buy' ? 'bg-[#F04452] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
+            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${investorTab === 'buy' ? 'bg-[#F04452] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
             순매수
           </button>
           <button onClick={() => setInvestorTab('sell')}
-            className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all ${investorTab === 'sell' ? 'bg-[#3182F6] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
+            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${investorTab === 'sell' ? 'bg-[#3182F6] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
             순매도
           </button>
         </div>
@@ -192,12 +218,12 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
             {isLoadingThemes ? (
               <div className="p-2 text-slate-500 text-sm">테마 불러오는 중...</div>
             ) : (
-              allThemes.map((t) => (
+              (allThemes || []).map((t: any) => (
                 <div key={t.name} onClick={() => setSelectedThemeId(t.name)}
                   className={`cursor-pointer px-3 py-1.5 rounded-xl transition-all mb-1 ${selectedThemeId === t.name ? 'bg-[#1C1E23]' : 'hover:bg-white/5'}`}>
                   <div className="flex justify-between items-center">
                     <span className={`font-bold text-[13px] truncate max-w-[110px] ${selectedThemeId === t.name ? 'text-white' : 'text-slate-400'}`}>{t.name}</span>
-                    <span className={`text-[12px] font-bold ${t.avgChangeRate > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{t.avgChangeRate.toFixed(2)}%</span>
+                    <span className={`text-[12px] font-bold ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{parseFloat(t.avgChangeRate || 0).toFixed(2)}%</span>
                   </div>
                 </div>
               ))
@@ -224,8 +250,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                 {activeTab === '테마' && (
                   <div className="md:hidden p-2 mb-1">
                     <select value={selectedThemeId || ''} onChange={(e) => setSelectedThemeId(e.target.value)} className="w-full bg-[#1C1E23] border border-white/10 rounded-lg px-3 py-1 text-white text-sm">
-                      {allThemes.map(t => (
-                        <option key={t.name} value={t.name}>{t.name} ({t.avgChangeRate.toFixed(2)}%)</option>
+                      {(allThemes || []).map((t: any) => (
+                        <option key={t.name} value={t.name}>{t.name} ({parseFloat(t.avgChangeRate || 0).toFixed(2)}%)</option>
                       ))}
                     </select>
                   </div>
@@ -247,8 +273,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                     <div className="text-center text-slate-400 py-20">데이터 로딩 중...</div>
                   ) : (
                     <div className="space-y-0">
-                      {displayStocks.map((stock, idx) => {
-                        const isUp = stock.changeRate > 0;
+                      {(displayStocks || []).map((stock: any, idx: number) => {
+                        const isUp = (stock.changeRate || 0) > 0;
                         return (
                           <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group h-9`}>
                              <div className="text-center text-[13px] font-bold text-slate-500">{idx + 1}</div>
@@ -256,13 +282,13 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                               <Heart size={14} onClick={() => onFavoriteToggle(stock.code)} className={`cursor-pointer ${favoritedStocks.includes(stock.code) ? 'text-[#F04452]' : 'text-slate-800'}`} />
                             </div>
                             <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[15px] text-slate-100 truncate px-0 group-hover:text-white">{stock.name}</Link>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price).toLocaleString()}</div>
+                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
                             <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue) / 100000000).toFixed(0)}억</div>
+                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue || '0') / 100000000).toFixed(0)}억</div>
                             <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono">{((stock.volume || 0) / 10000).toFixed(0)}만</div>
                             <div className="hidden md:flex justify-center items-center h-full w-full">
                               <ResponsiveContainer width={100} height={28}>
-                                <LineChart data={stock.chart}><YAxis hide domain={['dataMin', 'dataMax']} /><Line type="monotone" dataKey="v" stroke={isUp ? '#F04452' : '#3182F6'} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart>
+                                <LineChart data={stock.chart || []}><YAxis hide domain={['dataMin', 'dataMax']} /><Line type="monotone" dataKey="v" stroke={isUp ? '#F04452' : '#3182F6'} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart>
                               </ResponsiveContainer>
                             </div>
                           </div>

@@ -8,7 +8,7 @@
   "crons": [
     {
       "path": "/api/update-data",
-      "schedule": "*/5 * * * *"
+      "schedule": "* * * * *"
     }
   ],
   "rewrites": [

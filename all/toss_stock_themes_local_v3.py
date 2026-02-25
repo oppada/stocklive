@@ -16,11 +16,58 @@ def get_driver():
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=chrome_options)
 
+def collect_investor_rankings(driver):
+    """토스증권에서 투자자별 순매수 상위 종목을 수집합니다."""
+    investors = {'foreign': 'FOREIGNER', 'institution': 'INSTITUTION'}
+    results = {}
+
+    for key, api_key in investors.items():
+        print(f"📊 [{key}] 투자자별 순매수 데이터 수집 중...")
+        url = f"https://www.tossinvest.com/?ranking-type=net_buying&investorType={api_key}"
+        driver.get(url)
+        time.sleep(6)
+
+        js_extract_investor = """
+        const stocks = [];
+        const links = Array.from(document.querySelectorAll('a[href*="/stocks/"]'));
+        links.forEach(link => {
+            const codeMatch = link.href.match(/\\/stocks\\/(A?\\d{6})/);
+            if (codeMatch) {
+                const code = codeMatch[1].replace('A', '');
+                const parts = link.innerText.split('\\n').map(p => p.trim()).filter(p => p.length > 0);
+                const name = parts[0];
+                const priceStr = parts.find(p => p.includes(',') || /^[0-9]+$/.test(p.replace(/,/g, '')));
+                const rateStr = parts.find(p => p.includes('%'));
+                const valueStr = parts.find(p => p.includes('억') || p.includes('만원'));
+
+                if (name && isNaN(name.replace(/,/g, ''))) {
+                    stocks.push({
+                        code, 
+                        name, 
+                        price: priceStr || '0',
+                        changeRate: rateStr || '0%',
+                        tradeValue: valueStr || '0'
+                    });
+                }
+            }
+        });
+        return stocks;
+        """
+        results[key] = driver.execute_script(js_extract_investor)
+    return results
+
 def collect():
     driver = get_driver()
-    print("🚀 [v6] 토스증권 전종목 수집 시작 (JS 문법 및 테마명 매핑 수정)...")
+    print("🚀 [v7] 토스증권 데이터 통합 수집 시작 (테마 + 투자자별 랭킹)...")
     
     try:
+        # 1. 투자자별 랭킹 수집
+        investor_data = collect_investor_rankings(driver)
+        with open('toss_investor_rankings.json', 'w', encoding='utf-8') as f:
+            json.dump(investor_data, f, ensure_ascii=False, indent=2)
+        print("✅ 투자자별 랭킹 수집 완료.")
+
+        # 2. 테마 리스트 추출
         driver.get("https://www.tossinvest.com/?ranking-type=trending_category")
         time.sleep(8) 
 
