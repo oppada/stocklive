@@ -68,19 +68,16 @@ const App = () => {
   // Fetch market indicators for ticker
   useEffect(() => {
     const fetchMarketIndicators = async () => {
-      console.log("📡 Fetching Market Indicators...");
       try {
         const response = await fetch('/api/market/indicators');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) return;
         const data = await response.json();
-        console.log('📊 Market Indicators Data:', data);
-        if (data && Object.keys(data).length > 0) {
+        // 데이터가 유효할 때만 상태 업데이트
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           setMarketIndicators(data);
-        } else {
-          console.warn("⚠️ Market Indicators data is empty.");
         }
       } catch (error) {
-        console.error("❌ Failed to fetch market indicators:", error);
+        // 에러 시 무시 (기존 데이터 유지)
       }
     };
 

@@ -1,34 +1,29 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-async function checkData() {
-    console.log("🔍 Supabase 데이터 점검 시작...");
-    
-    const { data: indicators, error: err } = await supabase
-        .from('stock_data_cache')
-        .select('id, updated_at')
-        .eq('id', 'market_indicators')
-        .single();
+async function checkDB() {
+    console.log("🔍 [최종 상태 점검] StockMate DB 상태...");
+    const ids = ['market_indicators', 'ranking_gainer', 'toss_themes', 'toss_investor_trend_all'];
 
-    if (err) {
-        console.error("❌ market_indicators 항목을 찾을 수 없습니다. (먼저 forceUpdate.js를 완료해야 합니다.)", err.message);
-    } else {
-        console.log("✅ market_indicators 발견! 마지막 업데이트:", indicators.updated_at);
+    for (const id of ids) {
+        const { data, error } = await supabase.from('stock_data_cache').select('updated_at, data').eq('id', id).single();
+        if (error) {
+            console.log(`❌ [${id}]: 데이터 없음`);
+        } else {
+            // 개수 파악
+            let count = 0;
+            if (id === 'toss_investor_trend_all') {
+                count = data.data?.buy?.foreign?.list?.length || 0;
+            } else if (Array.isArray(data.data)) {
+                count = data.data.length;
+            } else {
+                count = Object.keys(data.data || {}).length;
+            }
+            console.log(`✅ [${id}]: 정상 (업데이트: ${new Date(data.updated_at).toLocaleString()}, 데이터 개수: ${count})`);
+        }
     }
-
-    const { data: allStocks } = await supabase
-        .from('stock_data_cache')
-        .select('id, updated_at')
-        .eq('id', 'all_stocks')
-        .single();
-
-    if (allStocks) {
-        console.log("✅ all_stocks 발견! 마지막 업데이트:", allStocks.updated_at);
-    }
-
-    process.exit();
 }
-
-checkData();
+checkDB();
