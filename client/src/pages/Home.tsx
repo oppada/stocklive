@@ -284,8 +284,12 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                             <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[15px] text-slate-100 truncate px-0 group-hover:text-white">{stock.name}</Link>
                             <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
                             <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono">{(parseInt(stock.tradeValue || '0') / 100000000).toFixed(0)}억</div>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono">{((stock.volume || 0) / 10000).toFixed(0)}만</div>
+                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono truncate">{(parseInt(stock.tradeValue || '0') / 100000000).toFixed(0)}억</div>
+                            <div className="text-right text-[10px] md:text-[14px] font-bold text-slate-500 font-mono whitespace-nowrap">
+                              {stock.volume >= 1000000 
+                                ? `${(stock.volume / 100000000).toFixed(1)}억` 
+                                : `${(stock.volume / 10000).toFixed(0)}만`}
+                            </div>
                             <div className="hidden md:flex justify-center items-center h-full w-full">
                               <ResponsiveContainer width={100} height={28}>
                                 <LineChart data={stock.chart || []}><YAxis hide domain={['dataMin', 'dataMax']} /><Line type="monotone" dataKey="v" stroke={isUp ? '#F04452' : '#3182F6'} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart>
