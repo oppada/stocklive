@@ -1,33 +1,48 @@
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
 async function collectInvestorTrend() {
     console.log("🚀 [Toss JS] 투자자 동향 수집 시작...");
     
-    const browser = await puppeteer.launch({
-        headless: "new",
-        args: ['--no-sandbox', '--disable-dev-shm-usage']
-    });
-
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
-    const results = {
-        "buy": { "foreign": { "list": [], "time": "" }, "institution": { "list": [], "time": "" }, "individual": { "list": [], "time": "" } },
-        "sell": { "foreign": { "list": [], "time": "" }, "institution": { "list": [], "time": "" }, "individual": { "list": [], "time": "" } }
-    };
+    const isVercel = process.env.VERCEL;
+    let browser;
 
     try {
-        await page.goto("https://www.tossinvest.com/?ranking-type=domestic_investor_trend", { waitUntil: 'networkidle2', timeout: 60000 });
-        console.log("⏳ 페이지 로딩 및 스크롤 중...");
-        
-        // 정밀 스크롤 (95개 확보용)
-        for (let i = 0; i < 15; i++) {
-            await page.evaluate((y) => window.scrollTo(0, y), i * 800);
-            await new Promise(r => setTimeout(r, 600));
+        if (isVercel) {
+            // Vercel(서버) 환경용 설정
+            const chromium = require('@sparticuz/chromium');
+            const puppeteer = require('puppeteer-core');
+            browser = await puppeteer.launch({
+                args: chromium.args,
+                defaultViewport: chromium.defaultViewport,
+                executablePath: await chromium.executablePath(),
+                headless: chromium.headless,
+                ignoreHTTPSErrors: true,
+            });
+        } else {
+            // 로컬(내 컴퓨터) 환경용 설정
+            const puppeteer = require('puppeteer');
+            browser = await puppeteer.launch({
+                headless: "new",
+                args: ['--no-sandbox', '--disable-dev-shm-usage']
+            });
         }
-        await new Promise(r => setTimeout(r, 2000));
+
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+        const results = {
+            "buy": { "foreign": { "list": [], "time": "" }, "institution": { "list": [], "time": "" }, "individual": { "list": [], "time": "" } },
+            "sell": { "foreign": { "list": [], "time": "" }, "institution": { "list": [], "time": "" }, "individual": { "list": [], "time": "" } }
+        };
+
+        await page.goto("https://www.tossinvest.com/?ranking-type=domestic_investor_trend", { waitUntil: 'networkidle2', timeout: 60000 });
+        
+        // 정밀 스크롤
+        for (let i = 0; i < 12; i++) {
+            await page.evaluate((y) => window.scrollTo(0, y), i * 800);
+            await new Promise(r => setTimeout(r, 500));
+        }
 
         const extractData = async () => {
             return await page.evaluate(() => {
@@ -42,9 +57,7 @@ async function collectInvestorTrend() {
                 Object.keys(headerMap).forEach(key => {
                     const type = headerMap[key];
                     const headerEl = allElements.find(el => el.innerText && el.innerText.trim() === key && el.children.length < 3);
-                    
                     if (headerEl) {
-                        // 시간 추출
                         let p = headerEl.parentElement;
                         for(let i=0; i<5; i++) {
                             if(!p) break;
@@ -55,8 +68,6 @@ async function collectInvestorTrend() {
                             }
                             p = p.parentElement;
                         }
-
-                        // 리스트 추출 (95개)
                         let container = headerEl.parentElement;
                         while(container && !container.querySelector('a[href*="/stocks/A"]')) {
                             container = container.nextElementSibling || container.parentElement;
@@ -84,43 +95,31 @@ async function collectInvestorTrend() {
             });
         };
 
-        console.log("📊 순매수 데이터 수집 중...");
         results.buy = await extractData();
 
-        console.log("🔄 순매도 탭 전환...");
+        // 순매도 전환
         const buttons = await page.$$('button');
-        let clicked = false;
         for (const btn of buttons) {
             const text = await page.evaluate(el => el.innerText, btn);
             if (text.includes('순매도')) {
                 await btn.click();
-                clicked = true;
+                await new Promise(r => setTimeout(r, 4000));
                 break;
             }
         }
-        if (clicked) {
-            await new Promise(r => setTimeout(r, 5000));
-            // 순매도 탭 스크롤
-            for (let i = 0; i < 10; i++) {
-                await page.evaluate((y) => window.scrollTo(0, y), i * 1000);
-                await new Promise(r => setTimeout(r, 400));
-            }
-            results.sell = await extractData();
-        } else {
-            results.sell = results.buy;
-        }
+        results.sell = await extractData();
+
+        await browser.close();
+        
+        const savePath = path.join(__dirname, 'toss_investor_data.json');
+        fs.writeFileSync(savePath, JSON.stringify(results, null, 4));
+        return results;
 
     } catch (e) {
+        if (browser) await browser.close();
         console.error("❌ Toss JS Error:", e.message);
         throw e;
-    } finally {
-        await browser.close();
     }
-
-    const savePath = path.join(__dirname, 'toss_investor_data.json');
-    fs.writeFileSync(savePath, JSON.stringify(results, null, 4));
-    console.log("✅ [Toss JS] 수집 및 JSON 저장 완료.");
-    return results;
 }
 
 if (require.main === module) {

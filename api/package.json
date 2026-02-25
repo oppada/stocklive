@@ -7,6 +7,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^143.0.4",
     "@supabase/supabase-js": "^2.95.3",
     "axios": "^1.13.5",
     "cheerio": "^1.2.0",
@@ -15,6 +16,7 @@
     "express": "^5.2.1",
     "iconv-lite": "^0.7.2",
     "node-cache": "^5.1.2",
+    "puppeteer-core": "^24.37.5",
     "yahoo-finance2": "^3.13.0"
   }
 }
