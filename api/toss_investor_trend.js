@@ -117,7 +117,7 @@ async function collectInvestorTrend() {
         await browser.close();
     }
 
-    const savePath = path.join(__dirname, 'toss_investor_trend.json');
+    const savePath = path.join(__dirname, 'toss_investor_data.json');
     fs.writeFileSync(savePath, JSON.stringify(results, null, 4));
     console.log("✅ [Toss JS] 수집 및 JSON 저장 완료.");
     return results;
