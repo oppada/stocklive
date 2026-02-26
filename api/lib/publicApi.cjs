@@ -113,28 +113,35 @@ const fetchNaverRankingsByScraping = async (type) => {
 };
 
 /**
- * 투자자별 매매 동향 수집 (외국인, 기관, 개인 유형별 정확한 매핑)
+ * 투자자별 매매 동향 수집 (외국인, 기관 순매수/순매도 상위)
  */
 const fetchInvestorTrends = async (type = 'buy', investor = 'foreign') => {
   try {
     let url = '';
+    const isBuy = type === 'buy';
+    
     if (investor === 'foreign') {
-      // 외국인 순매수/순매도 상위
-      url = type === 'buy' ? 'https://finance.naver.com/sise/sise_high_buy.naver' : 'https://finance.naver.com/sise/sise_high_sell.naver';
+      url = isBuy ? 'https://finance.naver.com/sise/sise_high_buy.nhn' : 'https://finance.naver.com/sise/sise_high_sell.nhn';
     } else if (investor === 'institution') {
-      // 기관 순매수/순매도 상위
-      url = type === 'buy' ? 'https://finance.naver.com/sise/sise_high_buy.naver?menu=inst' : 'https://finance.naver.com/sise/sise_high_sell.naver?menu=inst';
-    } else {
-      // 개인은 거래량 상위 중 개인 비중이 높은 종목 (대체 데이터)
-      url = 'https://finance.naver.com/sise/sise_quant.naver';
+      url = isBuy ? 'https://finance.naver.com/sise/sise_high_buy.nhn?menu=inst' : 'https://finance.naver.com/sise/sise_high_sell.nhn?menu=inst';
     }
 
-    const response = await axios.get(url, { responseType: 'arraybuffer', headers: NAVER_HEADERS, timeout: 10000 });
+    if (!url) return [];
+
+    // Referer를 해당 페이지로 설정하여 보안 차단 방지
+    const headers = { ...NAVER_HEADERS, 'Referer': url };
+    
+    const response = await axios.get(url, { 
+        responseType: 'arraybuffer', 
+        headers: headers, 
+        timeout: 10000 
+    });
+    
     const html = iconv.decode(response.data, 'euc-kr');
     const $ = cheerio.load(html);
     const results = [];
 
-    // 테이블 행 분석 (네이버는 보통 외국인/기관 테이블이 섞여있어 정밀 파싱 필요)
+    // 네이버 외국인/기관 페이지 테이블 구조 (table.type_2)
     $('table.type_2 tbody tr').each((i, el) => {
       const nameAnchor = $(el).find('a.tltle');
       if (nameAnchor.length > 0) {
@@ -143,16 +150,28 @@ const fetchInvestorTrends = async (type = 'buy', investor = 'foreign') => {
         const tds = $(el).find('td.number');
         
         if (tds.length >= 4) {
+          // 인덱스: 0(현재가), 2(등락률), 3(순매수량)
           const price = parseFloat(cleanNum(tds.eq(0).text()));
           const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
-          // 3번 인덱스가 순매수/순매도량
           const volume = Math.abs(parseInt(cleanNum(tds.eq(3).text())) || 0);
-          results.push({ code, name, price, changeRate, tradeValue: price * volume });
+          
+          if (name && code && !isNaN(price)) {
+            results.push({ 
+                code, 
+                name, 
+                price, 
+                changeRate, 
+                tradeValue: price * volume 
+            });
+          }
         }
       }
     });
     return results.slice(0, 50);
-  } catch (e) { return []; }
+  } catch (e) { 
+    console.error(`❌ InvestorTrends Fetch Error (${investor}_${type}):`, e.message);
+    return []; 
+  }
 };
 
 /**

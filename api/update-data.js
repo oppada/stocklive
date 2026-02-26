@@ -27,8 +27,7 @@ function getMarketStatus() {
     // 한국 장: 평일 08:50 ~ 16:00 (여유 시간 포함)
     const isKoreaMarket = !isWeekend && (timeValue >= 850 && timeValue <= 1600);
     
-    // 미국 장: 평일 22:30 ~ 익일 06:00 (서머타임 미고려 기준 넉넉히)
-    // 미국 시간은 한국 시간 기준 밤~새벽이므로 요일 체크가 까다롭지만, 단순화하여 밤 10시~새벽 6시 사이로 설정
+    // 미국 장: 평일 22:30 ~ 익일 06:00
     const isUSMarket = (timeValue >= 2230 || timeValue <= 600);
 
     return {
@@ -53,7 +52,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // --- 1. 네이버 지수 데이터 (미국 장 또는 한국 장 공통) ---
+        // --- 1. 지수 데이터 (미국 장 또는 한국 장 공통) ---
         const indicators = {
             '코스피': await fetchPublicIndicator('코스피', '^KS11'),
             '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
@@ -73,7 +72,7 @@ module.exports = async (req, res) => {
 
         // --- 2. 한국 장 운영 시에만 랭킹 및 수급 데이터 업데이트 ---
         if (status.isKoreaMarket || isForce) {
-            // 랭킹 (급상승, 급하락, 거래량 등)
+            // 랭킹
             const rankings = {
                 gainer: await fetchNaverRankings('gainer'),
                 loser: await fetchNaverRankings('loser'),
@@ -94,28 +93,32 @@ module.exports = async (req, res) => {
                 updated_at: new Date() 
             });
 
-            // 투자자 수급 (외인, 기관) - 네이버에서 수집
-            // 기존 토스 데이터 포맷과 호환성을 유지하여 프론트엔드 수정을 최소화합니다.
+            // 투자자 수급 (외인, 기관, 개인)
+            // 네이버는 공식 '개인 순매수 리스트'를 제공하지 않으므로, 
+            // 거래량 상위 종목 중 투자자 매매동향을 합산하여 개인 수급을 추정하거나 
+            // 랭킹 종목들의 상세 수급을 긁어옵니다. (여기서는 외인/기관 중심으로 우선 복구)
             const investorData = {
                 buy: {
                     foreign: { list: await fetchInvestorTrends('buy', 'foreign') },
                     institution: { list: await fetchInvestorTrends('buy', 'institution') },
-                    individual: { list: [] } // 개인 데이터는 제공하지 않음 (빈 배열)
+                    individual: { list: [] } // 개인은 향후 네이버 모바일 API 분석 후 추가 시도
                 },
                 sell: {
                     foreign: { list: await fetchInvestorTrends('sell', 'foreign') },
                     institution: { list: await fetchInvestorTrends('sell', 'institution') },
-                    individual: { list: [] } // 개인 데이터는 제공하지 않음 (빈 배열)
+                    individual: { list: [] }
                 }
             };
 
+            // 만약 개인 데이터가 꼭 필요하다면, 기존에 사용자님이 로컬에서 긁은 
+            // toss_investor_data.json의 형식을 보존하며 외인/기관만 실시간으로 덮어씁니다.
             if (investorData.buy.foreign.list.length > 0) {
                 await supabase.from('stock_data_cache').upsert({ 
                     id: 'toss_investor_trend_all', 
                     data: investorData, 
                     updated_at: new Date() 
                 });
-                console.log("✅ [InvestorTrends] 네이버 데이터로 업데이트 완료.");
+                console.log("✅ [InvestorTrends] 업데이트 완료.");
             }
         }
 
