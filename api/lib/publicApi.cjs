@@ -127,32 +127,55 @@ const fetchNaverRankingsByScraping = async (type) => {
 };
 
 /**
- * 투자자별 매매 동향 수집 (네이버 모바일 API 활용 - 404 방지 및 안정성 극대화)
+ * 투자자별 매매 동향 수집 (네이버 PC 버전 안정 경로 - 외국인/기관 전용)
  */
 const fetchInvestorTrends = async (type = 'buy', investor = 'foreign') => {
   try {
-    // 네이버 모바일 증권의 외국인/기관 순매수 상위 데이터 API
-    // type: 1(외국인), 2(기관), 3(개인 - 단, 개인은 상위 노출이 제한적일 수 있음)
-    const investorCode = investor === 'foreign' ? '1' : '2';
+    // 9000: 외국인, 1000: 기관
+    const investorCode = investor === 'foreign' ? '9000' : '1000';
     const isBuy = type === 'buy';
     
-    // 네이버 실시간 순매수/순매도 상위 API (모바일용)
-    const url = `https://m.stock.naver.com/api/stock/ranking/netBuying?rankingType=${isBuy ? 'NET_BUY' : 'NET_SELL'}&investorType=${investorCode}&page=1&pageSize=50`;
+    // 네이버 PC 웹의 가장 안정적인 수급 순위 페이지
+    const url = `https://finance.naver.com/sise/sise_deal_rank.naver?investor_gubun=${investorCode}&type=${isBuy ? 'buy' : 'sell'}`;
 
-    const response = await axios.get(url, { headers: NAVER_HEADERS, timeout: 10000 });
-    const data = response.data;
+    const response = await axios.get(url, { 
+      responseType: 'arraybuffer', 
+      headers: NAVER_HEADERS, 
+      timeout: 10000 
+    });
     
-    if (!data || !Array.isArray(data)) return [];
+    const html = iconv.decode(response.data, 'euc-kr');
+    const $ = cheerio.load(html);
+    const results = [];
 
-    return data.map(item => ({
-      code: item.stockCode,
-      name: item.stockName,
-      price: parseFloat(cleanNum(item.closePrice)),
-      changeRate: parseFloat(cleanNum(item.fluctuationRate)),
-      tradeValue: parseFloat(cleanNum(item.netBuyingVolume)) * parseFloat(cleanNum(item.closePrice)) // 거래대금 추산
-    }));
+    $('table.type_2 tbody tr').each((i, el) => {
+      const nameAnchor = $(el).find('a.tltle');
+      if (nameAnchor.length > 0) {
+        const name = nameAnchor.text().trim();
+        const code = nameAnchor.attr('href').split('code=')[1];
+        const tds = $(el).find('td.number');
+        
+        if (tds.length >= 4) {
+          // 0: 현재가, 2: 등락률, 3: 순매수/매도량
+          const price = parseFloat(cleanNum(tds.eq(0).text()));
+          const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
+          const volume = Math.abs(parseInt(cleanNum(tds.eq(3).text())) || 0);
+          
+          if (name && code && !isNaN(price)) {
+            results.push({ 
+              code, 
+              name, 
+              price, 
+              changeRate, 
+              tradeValue: price * volume // 거래대금 추산
+            });
+          }
+        }
+      }
+    });
+    return results.slice(0, 50);
   } catch (e) { 
-    console.error(`❌ InvestorTrends API Error (${investor}_${type}):`, e.message);
+    console.error(`❌ InvestorTrends Fetch Error (${investor}_${type}):`, e.message);
     return []; 
   }
 };

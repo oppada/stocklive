@@ -15,11 +15,13 @@ app.get('/api/investor-trend/:type', async (req, res) => {
     const investor = req.query.investor || 'foreign';
     try {
         const { data } = await supabase.from('stock_data_cache').select('data').eq('id', 'toss_investor_trend_all').single();
-        if (data?.data?.[type]?.[investor]) {
-            const section = data.data[type][investor];
+        const rootData = data?.data;
+        if (rootData?.[type]?.[investor]) {
+            const section = rootData[type][investor];
             return res.json({
                 list: section.list || [],
-                updated_at_text: section.time || ""
+                // 개별 섹션의 time 대신 최상위의 updated_at_text(날짜)를 사용
+                updated_at_text: rootData.updated_at_text || section.time || ""
             });
         }
         res.json({ list: [], updated_at_text: "" });
