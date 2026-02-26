@@ -12,8 +12,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [investorTab, setInvestorTab] = useState('buy'); // 'buy' or 'sell'
   const [foreignStocks, setForeignStocks] = useState<any[]>([]);
   const [institutionStocks, setInstitutionStocks] = useState<any[]>([]);
-  const [individualStocks, setIndividualStocks] = useState<any[]>([]);
-  const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '', individual: '' });
+  const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '' });
   const [isLoadingInvestor, setIsLoadingInvestor] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
@@ -92,24 +91,20 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
       const fetchInvestorData = async () => {
         setIsLoadingInvestor(true);
         try {
-          const [resF, resI, resP] = await Promise.all([
+          const [resF, resI] = await Promise.all([
             fetch(`/api/investor-trend/${investorTab}?investor=foreign`),
-            fetch(`/api/investor-trend/${investorTab}?investor=institution`),
-            fetch(`/api/investor-trend/${investorTab}?investor=individual`)
+            fetch(`/api/investor-trend/${investorTab}?investor=institution`)
           ]);
           
           const dataF = await resF.json();
           const dataI = await resI.json();
-          const dataP = await resP.json();
 
           setForeignStocks(dataF.list || dataF);
           setInstitutionStocks(dataI.list || dataI);
-          setIndividualStocks(dataP.list || dataP);
           
           setInvestorUpdateTimes({
             foreign: dataF.updated_at_text || '',
-            institution: dataI.updated_at_text || '',
-            individual: dataP.updated_at_text || ''
+            institution: dataI.updated_at_text || ''
           });
         } catch (error) {
           console.error("Failed to fetch investor data:", error);
@@ -137,9 +132,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   else if (['급상승', '급하락', '거래량', '거래대금'].includes(activeTab)) displayStocks = rankingStocks;
 
   const renderInvestorColumn = (title: string, stocks: any[]) => {
-    let timeKey: 'foreign' | 'institution' | 'individual' = 'foreign';
+    let timeKey: 'foreign' | 'institution' = 'foreign';
     if (title === '기관') timeKey = 'institution';
-    if (title === '개인') timeKey = 'individual';
     const currentTime = investorUpdateTimes[timeKey];
 
     return (
@@ -234,14 +228,13 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
         <main className="flex-1 overflow-y-auto hide-scrollbar pb-16">
           <div className="min-h-full">
             {activeTab === '투자자별' ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
                 {isLoadingInvestor && foreignStocks.length === 0 ? (
-                  <div className="col-span-1 md:col-span-3 text-center text-slate-400 py-20">투자자별 데이터 로딩 중...</div>
+                  <div className="col-span-1 md:col-span-2 text-center text-slate-400 py-20">투자자별 데이터 로딩 중...</div>
                 ) : (
                   <>
                     {renderInvestorColumn('외국인', foreignStocks)}
                     {renderInvestorColumn('기관', institutionStocks)}
-                    {renderInvestorColumn('개인', individualStocks)}
                   </>
                 )}
               </div>

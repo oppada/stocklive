@@ -1,19 +1,59 @@
 const { createClient } = require('@supabase/supabase-js');
-const { fetchPublicIndicator, fetchNaverRankings, fetchNaverThemes } = require('./lib/publicApi.cjs');
+const { 
+    fetchPublicIndicator, 
+    fetchNaverRankings, 
+    fetchNaverThemes, 
+    fetchInvestorTrends 
+} = require('./lib/publicApi.cjs');
 
-// 로컬 환경과 Vercel 환경을 구분하여 서로 다른 권한(Service Key 등)을 쓸 수도 있지만, 
-// 여기서는 로직으로 철저히 분리합니다.
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+/**
+ * 현재 시간이 시장 운영 시간인지 확인 (KST 기준)
+ */
+function getMarketStatus() {
+    const now = new Date();
+    // UTC -> KST (9시간 차이)
+    const kstOffset = 9 * 60 * 60 * 1000;
+    const kstDate = new Date(now.getTime() + kstOffset);
+    
+    const day = kstDate.getUTCDay(); // 0: 일, 1: 월, ..., 6: 토
+    const hours = kstDate.getUTCHours();
+    const minutes = kstDate.getUTCMinutes();
+    const timeValue = hours * 100 + minutes;
+
+    const isWeekend = (day === 0 || day === 6);
+    
+    // 한국 장: 평일 08:50 ~ 16:00 (여유 시간 포함)
+    const isKoreaMarket = !isWeekend && (timeValue >= 850 && timeValue <= 1600);
+    
+    // 미국 장: 평일 22:30 ~ 익일 06:00 (서머타임 미고려 기준 넉넉히)
+    // 미국 시간은 한국 시간 기준 밤~새벽이므로 요일 체크가 까다롭지만, 단순화하여 밤 10시~새벽 6시 사이로 설정
+    const isUSMarket = (timeValue >= 2230 || timeValue <= 600);
+
+    return {
+        isKoreaMarket,
+        isUSMarket,
+        isWeekend,
+        currentTime: timeValue,
+        day
+    };
+}
 
 module.exports = async (req, res) => {
     const isForce = req.query && (req.query.force === 'true' || req.query.force === '1');
-    const isVercel = !!process.env.VERCEL;
+    const status = getMarketStatus();
 
-    console.log(`⏰ [Smart Update] Mode: ${isVercel ? 'Vercel Server' : 'Local'}, Force: ${isForce}`);
+    console.log(`⏰ [Smart Update] KST Time: ${status.currentTime}, KR Market: ${status.isKoreaMarket}, US Market: ${status.isUSMarket}`);
+
+    // 장 운영 시간이 아니고 강제 실행도 아니면 종료
+    if (!status.isKoreaMarket && !status.isUSMarket && !isForce) {
+        console.log("😴 [Market Closed] 수집을 건너뜁니다.");
+        return res.status(200).json({ success: true, message: "Market closed" });
+    }
 
     try {
-        // --- 1. 네이버 데이터 (공통) ---
-        // 지수 및 랭킹 업데이트는 서버/로컬 모두 수행
+        // --- 1. 네이버 지수 데이터 (미국 장 또는 한국 장 공통) ---
         const indicators = {
             '코스피': await fetchPublicIndicator('코스피', '^KS11'),
             '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
@@ -21,35 +61,67 @@ module.exports = async (req, res) => {
             '나스닥': await fetchPublicIndicator('나스닥', '^IXIC'),
             'S&P500': await fetchPublicIndicator('S&P500', '^GSPC')
         };
-        if (indicators['코스피']?.price > 0) {
-            await supabase.from('stock_data_cache').upsert({ id: 'market_indicators', data: indicators, updated_at: new Date() });
+        
+        if (indicators['나스닥']?.price > 0 || indicators['코스피']?.price > 0) {
+            await supabase.from('stock_data_cache').upsert({ 
+                id: 'market_indicators', 
+                data: indicators, 
+                updated_at: new Date() 
+            });
+            console.log("✅ [Indicators] 업데이트 완료.");
         }
 
-        // --- 2. 토스 데이터 (오직 로컬 또는 강제 실행 시에만) ---
-        // Vercel 서버 자동 업데이트 시에는 이 블록이 아예 실행되지 않도록 물리적 차단!
-        if (!isVercel || isForce) {
-            console.log("🚀 [Toss] 수집 권한 승인. 작업을 시작합니다.");
-            try {
-                const collectInvestorTrend = require('./toss_investor_trend.js');
-                const investorData = await collectInvestorTrend(); 
-                
-                if (investorData && investorData.buy?.foreign?.list?.length > 50) {
-                    await supabase.from('stock_data_cache').upsert({ 
-                        id: 'toss_investor_trend_all', 
-                        data: investorData, 
-                        updated_at: new Date() 
-                    });
-                    console.log("✅ [Toss] 업데이트 완료.");
+        // --- 2. 한국 장 운영 시에만 랭킹 및 수급 데이터 업데이트 ---
+        if (status.isKoreaMarket || isForce) {
+            // 랭킹 (급상승, 급하락, 거래량 등)
+            const rankings = {
+                gainer: await fetchNaverRankings('gainer'),
+                loser: await fetchNaverRankings('loser'),
+                volume: await fetchNaverRankings('volume'),
+                value: await fetchNaverRankings('value')
+            };
+            await supabase.from('stock_data_cache').upsert({ 
+                id: 'naver_rankings', 
+                data: rankings, 
+                updated_at: new Date() 
+            });
+
+            // 테마
+            const themes = await fetchNaverThemes();
+            await supabase.from('stock_data_cache').upsert({ 
+                id: 'naver_themes', 
+                data: themes, 
+                updated_at: new Date() 
+            });
+
+            // 투자자 수급 (외인, 기관) - 네이버에서 수집
+            // 기존 토스 데이터 포맷과 호환성을 유지하여 프론트엔드 수정을 최소화합니다.
+            const investorData = {
+                buy: {
+                    foreign: { list: await fetchInvestorTrends('buy', 'foreign') },
+                    institution: { list: await fetchInvestorTrends('buy', 'institution') },
+                    individual: { list: [] } // 개인 데이터는 제공하지 않음 (빈 배열)
+                },
+                sell: {
+                    foreign: { list: await fetchInvestorTrends('sell', 'foreign') },
+                    institution: { list: await fetchInvestorTrends('sell', 'institution') },
+                    individual: { list: [] } // 개인 데이터는 제공하지 않음 (빈 배열)
                 }
-            } catch (err) {
-                console.error("❌ [Toss] 로컬 엔진 에러:", err.message);
+            };
+
+            if (investorData.buy.foreign.list.length > 0) {
+                await supabase.from('stock_data_cache').upsert({ 
+                    id: 'toss_investor_trend_all', 
+                    data: investorData, 
+                    updated_at: new Date() 
+                });
+                console.log("✅ [InvestorTrends] 네이버 데이터로 업데이트 완료.");
             }
-        } else {
-            console.log("⏭️ [Toss] 서버 환경입니다. 수집을 건너뜁니다 (기존 데이터 보존).");
         }
 
         res.status(200).json({ success: true });
     } catch (error) {
+        console.error("❌ [Update Error]:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
