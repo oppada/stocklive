@@ -2,9 +2,9 @@ const { createClient } = require('@supabase/supabase-js');
 const { 
     fetchPublicIndicator, 
     fetchNaverRankings, 
-    fetchNaverThemes,
-    fetchTossInvestorTrends // 초경량 API 수집 엔진
+    fetchNaverThemes 
 } = require('./lib/publicApi.cjs');
+const collectInvestorTrend = require('./toss_investor_trend.js'); // Puppeteer 방식 원복
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -99,17 +99,23 @@ module.exports = async (req, res) => {
                 console.log("✅ [Themes] 업데이트 완료.");
             }
 
-            // 🚀 토스 수급 데이터 수집 (5분 주기, 초경량 API 방식)
+            // 🚀 토스 수급 데이터 수집 (5분 주기로 제한하여 서버 부하 방지)
             const kstOffset = 9 * 60 * 60 * 1000;
             const kstDate = new Date(new Date().getTime() + kstOffset);
             const isTossTime = (kstDate.getUTCMinutes() % 5 === 0);
             
             if (isTossTime || isForce) {
-                console.log(`🚀 [Toss API] ${isForce ? '강제' : '5분 주기'} 수집 시도...`);
+                console.log(`🚀 [Toss] ${isForce ? '강제' : '5분 주기'} 수집 엔진 가동...`);
                 try {
-                    const investorData = await fetchTossInvestorTrends();
+                    const investorData = await collectInvestorTrend();
                     
                     if (investorData && investorData.buy?.foreign?.list?.length > 0) {
+                        // 프론트엔드 표시용 시간 추가
+                        const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
+                        const dateStr = `${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
+                        const formattedTime = `${nowKST.getUTCHours().toString().padStart(2, '0')}:${nowKST.getUTCMinutes().toString().padStart(2, '0')}`;
+                        investorData.updated_at_text = `${dateStr} ${formattedTime} 기준`;
+
                         await supabase.from('stock_data_cache').upsert({ 
                             id: 'toss_investor_trend_all', 
                             data: investorData, 
@@ -120,6 +126,8 @@ module.exports = async (req, res) => {
                 } catch (err) {
                     console.error("❌ [Toss Error]:", err.message);
                 }
+            } else {
+                console.log("⏭️ [Toss] 5분 주기가 아닙니다. 수집을 건너뜁니다.");
             }
         }
 
