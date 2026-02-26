@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
