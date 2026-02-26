@@ -99,26 +99,33 @@ module.exports = async (req, res) => {
                 console.log("✅ [Themes] toss_themes ID로 업데이트 완료.");
             }
 
-            // 🚀 토스 수급 데이터 수집 (Puppeteer 실행)
-            console.log("🚀 [Toss] 수집 엔진 가동...");
-            try {
-                const investorData = await collectInvestorTrend();
-                
-                if (investorData && investorData.buy?.foreign?.list?.length > 0) {
-                    // 프론트엔드 표시용 시간 추가
-                    const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
-                    const dateStr = `${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
-                    investorData.updated_at_text = `${dateStr} ${status.formattedTime} 기준`;
+            // 🚀 토스 수급 데이터 수집 (5분 주기로 제한하여 서버 부하 방지)
+            const isTossTime = (kstDate.getUTCMinutes() % 5 === 0);
+            
+            if (isTossTime || isForce) {
+                console.log(`🚀 [Toss] ${isForce ? '강제' : '5분 주기'} 수집 엔진 가동...`);
+                try {
+                    const investorData = await collectInvestorTrend();
+                    
+                    if (investorData && investorData.buy?.foreign?.list?.length > 0) {
+                        // 프론트엔드 표시용 시간 추가
+                        const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
+                        const dateStr = `${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
+                        const formattedTime = `${nowKST.getUTCHours().toString().padStart(2, '0')}:${nowKST.getUTCMinutes().toString().padStart(2, '0')}`;
+                        investorData.updated_at_text = `${dateStr} ${formattedTime} 기준`;
 
-                    await supabase.from('stock_data_cache').upsert({ 
-                        id: 'toss_investor_trend_all', 
-                        data: investorData, 
-                        updated_at: new Date() 
-                    });
-                    console.log(`✅ [Toss] ${investorData.updated_at_text} 업데이트 성공.`);
+                        await supabase.from('stock_data_cache').upsert({ 
+                            id: 'toss_investor_trend_all', 
+                            data: investorData, 
+                            updated_at: new Date() 
+                        });
+                        console.log(`✅ [Toss] ${investorData.updated_at_text} 업데이트 성공.`);
+                    }
+                } catch (err) {
+                    console.error("❌ [Toss Error]:", err.message);
                 }
-            } catch (err) {
-                console.error("❌ [Toss Error]:", err.message);
+            } else {
+                console.log("⏭️ [Toss] 5분 주기가 아닙니다. 수집을 건너뜁니다.");
             }
         }
 
