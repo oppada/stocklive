@@ -2,9 +2,9 @@ const { createClient } = require('@supabase/supabase-js');
 const { 
     fetchPublicIndicator, 
     fetchNaverRankings, 
-    fetchNaverThemes, 
-    fetchInvestorTrends 
+    fetchNaverThemes 
 } = require('./lib/publicApi.cjs');
+const collectInvestorTrend = require('./toss_investor_trend.js');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -13,18 +13,17 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
  */
 function getMarketStatus() {
     const now = new Date();
-    // UTC -> KST (9시간 차이)
     const kstOffset = 9 * 60 * 60 * 1000;
     const kstDate = new Date(now.getTime() + kstOffset);
     
-    const day = kstDate.getUTCDay(); // 0: 일, 1: 월, ..., 6: 토
+    const day = kstDate.getUTCDay(); 
     const hours = kstDate.getUTCHours();
     const minutes = kstDate.getUTCMinutes();
     const timeValue = hours * 100 + minutes;
 
     const isWeekend = (day === 0 || day === 6);
     
-    // 한국 장: 평일 08:50 ~ 16:00 (여유 시간 포함)
+    // 한국 장: 평일 08:50 ~ 16:00
     const isKoreaMarket = !isWeekend && (timeValue >= 850 && timeValue <= 1600);
     
     // 미국 장: 평일 22:30 ~ 익일 06:00
@@ -35,7 +34,8 @@ function getMarketStatus() {
         isUSMarket,
         isWeekend,
         currentTime: timeValue,
-        day
+        day,
+        formattedTime: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
     };
 }
 
@@ -47,12 +47,12 @@ module.exports = async (req, res) => {
 
     // 장 운영 시간이 아니고 강제 실행도 아니면 종료
     if (!status.isKoreaMarket && !status.isUSMarket && !isForce) {
-        console.log("😴 [Market Closed] 수집을 건너뜁니다.");
+        console.log("😴 [Market Closed] 작업을 건너뜁니다.");
         return res.status(200).json({ success: true, message: "Market closed" });
     }
 
     try {
-        // --- 1. 지수 데이터 (미국 장 또는 한국 장 공통) ---
+        // --- 1. 네이버 지수 데이터 (한국/미국 공통) ---
         const indicators = {
             '코스피': await fetchPublicIndicator('코스피', '^KS11'),
             '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
@@ -61,70 +61,70 @@ module.exports = async (req, res) => {
             'S&P500': await fetchPublicIndicator('S&P500', '^GSPC')
         };
         
-        if (indicators['나스닥']?.price > 0 || indicators['코스피']?.price > 0) {
+        if (indicators['코스피']?.price > 0 || indicators['나스닥']?.price > 0) {
             await supabase.from('stock_data_cache').upsert({ 
                 id: 'market_indicators', 
                 data: indicators, 
                 updated_at: new Date() 
             });
-            console.log("✅ [Indicators] 업데이트 완료.");
+            console.log("✅ [Indicators] 지수 업데이트 완료.");
         }
 
-        // --- 2. 한국 장 운영 시에만 랭킹 및 수급 데이터 업데이트 ---
+        // --- 2. 한국 장 운영 시에만 랭킹 및 토스 수급 데이터 업데이트 ---
         if (status.isKoreaMarket || isForce) {
-            // 랭킹
-            const rankings = {
-                gainer: await fetchNaverRankings('gainer'),
-                loser: await fetchNaverRankings('loser'),
-                volume: await fetchNaverRankings('volume'),
-                value: await fetchNaverRankings('value')
-            };
-            await supabase.from('stock_data_cache').upsert({ 
-                id: 'naver_rankings', 
-                data: rankings, 
-                updated_at: new Date() 
-            });
+            // 네이버 랭킹 (개별 ID로 분리하여 저장 - 서버 호환성)
+            const gainer = await fetchNaverRankings('gainer');
+            const loser = await fetchNaverRankings('loser');
+            const volume = await fetchNaverRankings('volume');
+            const value = await fetchNaverRankings('value');
 
-            // 테마
+            if (gainer.length > 0) {
+                await Promise.all([
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_gainer', data: gainer, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_loser', data: loser, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_volume', data: volume, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_value', data: value, updated_at: new Date() })
+                ]);
+                console.log("✅ [Rankings] 4개 카테고리 개별 업데이트 완료.");
+            }
+
+            // 네이버 테마 (toss_themes ID로 저장 - 서버 호환성)
             const themes = await fetchNaverThemes();
-            await supabase.from('stock_data_cache').upsert({ 
-                id: 'naver_themes', 
-                data: themes, 
-                updated_at: new Date() 
-            });
-
-            // 투자자 수급 (외인, 기관, 개인)
-            // 네이버는 공식 '개인 순매수 리스트'를 제공하지 않으므로, 
-            // 거래량 상위 종목 중 투자자 매매동향을 합산하여 개인 수급을 추정하거나 
-            // 랭킹 종목들의 상세 수급을 긁어옵니다. (여기서는 외인/기관 중심으로 우선 복구)
-            const investorData = {
-                buy: {
-                    foreign: { list: await fetchInvestorTrends('buy', 'foreign') },
-                    institution: { list: await fetchInvestorTrends('buy', 'institution') },
-                    individual: { list: [] } // 개인은 향후 네이버 모바일 API 분석 후 추가 시도
-                },
-                sell: {
-                    foreign: { list: await fetchInvestorTrends('sell', 'foreign') },
-                    institution: { list: await fetchInvestorTrends('sell', 'institution') },
-                    individual: { list: [] }
-                }
-            };
-
-            // 만약 개인 데이터가 꼭 필요하다면, 기존에 사용자님이 로컬에서 긁은 
-            // toss_investor_data.json의 형식을 보존하며 외인/기관만 실시간으로 덮어씁니다.
-            if (investorData.buy.foreign.list.length > 0) {
+            if (themes.length > 0) {
                 await supabase.from('stock_data_cache').upsert({ 
-                    id: 'toss_investor_trend_all', 
-                    data: investorData, 
+                    id: 'toss_themes', 
+                    data: themes, 
                     updated_at: new Date() 
                 });
-                console.log("✅ [InvestorTrends] 업데이트 완료.");
+                console.log("✅ [Themes] toss_themes ID로 업데이트 완료.");
+            }
+
+            // 🚀 토스 수급 데이터 수집 (Puppeteer 실행)
+            console.log("🚀 [Toss] 수집 엔진 가동...");
+            try {
+                const investorData = await collectInvestorTrend();
+                
+                if (investorData && investorData.buy?.foreign?.list?.length > 0) {
+                    // 프론트엔드 표시용 시간 추가
+                    const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
+                    const dateStr = `${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
+                    investorData.updated_at_text = `${dateStr} ${status.formattedTime} 기준`;
+
+                    await supabase.from('stock_data_cache').upsert({ 
+                        id: 'toss_investor_trend_all', 
+                        data: investorData, 
+                        updated_at: new Date() 
+                    });
+                    console.log(`✅ [Toss] ${investorData.updated_at_text} 업데이트 성공.`);
+                }
+            } catch (err) {
+                console.error("❌ [Toss Error]:", err.message);
             }
         }
 
         res.status(200).json({ success: true });
     } catch (error) {
-        console.error("❌ [Update Error]:", error.message);
+        console.error("❌ [Global Update Error]:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
