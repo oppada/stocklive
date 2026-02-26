@@ -88,11 +88,13 @@ const fetchNaverRankingsByScraping = async (type) => {
           let rowData = { code, name, market: market.name };
           if (type === 'gainer' || type === 'loser') {
             rowData.price = parseFloat(cleanNum(tds.eq(2).text()));
+            rowData.change = parseFloat(cleanNum(tds.eq(3).text()));
             rowData.changeRate = parseFloat(cleanNum(tds.eq(4).text()));
             rowData.volume = parseInt(cleanNum(tds.eq(5).text())) || 0;
             rowData.tradeValue = rowData.price * rowData.volume;
           } else {
             rowData.price = parseFloat(cleanNum(tds.eq(2).text()));
+            rowData.change = parseFloat(cleanNum(tds.eq(3).text()));
             rowData.changeRate = parseFloat(cleanNum(tds.eq(4).text()));
             rowData.volume = parseInt(cleanNum(tds.eq(5).text())) || 0;
             rowData.tradeValue = parseInt(cleanNum(tds.eq(6).text())) * 1000000 || 0;
@@ -185,10 +187,11 @@ const fetchNaverThemeStocks = async (themeNo) => {
         const tds = $(el).find('td.number');
         if (tds.length >= 7) {
           const price = parseFloat(cleanNum(tds.eq(0).text()));
+          const change = parseFloat(cleanNum(tds.eq(1).text()));
           const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
           const volume = parseInt(cleanNum(tds.eq(5).text())) || 0;
           const tradeValue = (parseInt(cleanNum(tds.eq(6).text())) || 0) * 1000000;
-          stocks.push({ code, name, price, changeRate, volume, tradeValue });
+          stocks.push({ code, name, price, change, changeRate, volume, tradeValue });
         }
       }
     });

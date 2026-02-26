@@ -100,6 +100,8 @@ module.exports = async (req, res) => {
             }
 
             // 🚀 토스 수급 데이터 수집 (5분 주기로 제한하여 서버 부하 방지)
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const kstDate = new Date(new Date().getTime() + kstOffset);
             const isTossTime = (kstDate.getUTCMinutes() % 5 === 0);
             
             if (isTossTime || isForce) {

@@ -130,7 +130,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
     '투자자별': <Users size={16} className="text-[#3498DB]" />,
   };
 
-  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_100px_90px_120px] items-center gap-1";
+  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_50px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_90px_100px_90px] items-center gap-1";
 
   let displayStocks: any[] = [];
   if (activeTab === '테마') displayStocks = selectedThemeStocks;
@@ -262,10 +262,10 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                   <div className="text-center"></div>
                   <div>종목명</div>
                   <div className="text-right">현재가</div>
+                  <div className="text-right">전일비</div>
                   <div className="text-right">등락률</div>
                   <div className="text-right">거래대금</div>
                   <div className="text-right">거래량</div>
-                  <div className="hidden md:block text-center">차트</div>
                 </div>
                 
                 <div className="min-h-[600px] mt-0.5">
@@ -275,6 +275,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                     <div className="space-y-0">
                       {(displayStocks || []).map((stock: any, idx: number) => {
                         const isUp = (stock.changeRate || 0) > 0;
+                        const changeValue = stock.change || 0;
                         return (
                           <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group h-9`}>
                              <div className="text-center text-[13px] font-bold text-slate-500">{idx + 1}</div>
@@ -283,17 +284,18 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                             </div>
                             <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[15px] text-slate-100 truncate px-0 group-hover:text-white">{stock.name}</Link>
                             <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
+                            <div className={`text-right text-[10px] md:text-[13px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                              <span className="mr-0.5">{isUp ? '▲' : '▼'}</span>
+                              {Number(Math.abs(changeValue)).toLocaleString()}
+                            </div>
                             <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>
                             <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono truncate">{(parseInt(stock.tradeValue || '0') / 100000000).toFixed(0)}억</div>
                             <div className="text-right text-[10px] md:text-[14px] font-bold text-slate-500 font-mono whitespace-nowrap">
-                              {stock.volume >= 1000000 
+                              {stock.volume >= 100000000 
                                 ? `${(stock.volume / 100000000).toFixed(1)}억` 
-                                : `${(stock.volume / 10000).toFixed(0)}만`}
-                            </div>
-                            <div className="hidden md:flex justify-center items-center h-full w-full">
-                              <ResponsiveContainer width={100} height={28}>
-                                <LineChart data={stock.chart || []}><YAxis hide domain={['dataMin', 'dataMax']} /><Line type="monotone" dataKey="v" stroke={isUp ? '#F04452' : '#3182F6'} strokeWidth={1.5} dot={false} isAnimationActive={false} /></LineChart>
-                              </ResponsiveContainer>
+                                : stock.volume >= 10000 
+                                  ? `${(stock.volume / 10000).toFixed(0)}만`
+                                  : Number(stock.volume).toLocaleString()}
                             </div>
                           </div>
                         );
