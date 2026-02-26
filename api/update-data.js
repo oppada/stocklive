@@ -99,13 +99,13 @@ module.exports = async (req, res) => {
                 console.log("✅ [Themes] 업데이트 완료.");
             }
 
-            // 🚀 토스 수급 데이터 수집 (5분 주기로 제한하여 서버 부하 방지)
+            // 🚀 토스 수급 데이터 수집 (안정성을 위해 10분 주기로 조정)
             const kstOffset = 9 * 60 * 60 * 1000;
             const kstDate = new Date(new Date().getTime() + kstOffset);
-            const isTossTime = (kstDate.getUTCMinutes() % 5 === 0);
+            const isTossTime = (kstDate.getUTCMinutes() % 10 === 0);
             
             if (isTossTime || isForce) {
-                console.log(`🚀 [Toss] ${isForce ? '강제' : '5분 주기'} 수집 엔진 가동...`);
+                console.log(`🚀 [Toss] ${isForce ? '강제' : '10분 주기'} 수집 엔진 가동...`);
                 try {
                     const investorData = await collectInvestorTrend();
                     
