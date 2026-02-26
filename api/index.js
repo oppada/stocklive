@@ -20,8 +20,8 @@ app.get('/api/investor-trend/:type', async (req, res) => {
             const section = rootData[type][investor];
             return res.json({
                 list: section.list || [],
-                // 개별 섹션의 time 대신 최상위의 updated_at_text(날짜)를 사용
-                updated_at_text: rootData.updated_at_text || section.time || ""
+                // 개별 섹션의 원본 시간(예: 오늘 13:57 기준)을 우선 사용
+                updated_at_text: section.time || rootData.updated_at_text || ""
             });
         }
         res.json({ list: [], updated_at_text: "" });

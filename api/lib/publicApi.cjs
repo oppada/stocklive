@@ -127,55 +127,54 @@ const fetchNaverRankingsByScraping = async (type) => {
 };
 
 /**
- * 투자자별 매매 동향 수집 (네이버 PC 버전 안정 경로 - 외국인/기관 전용)
+ * 투자자별 매매 동향 수집 (네이버 모바일 API - 완벽 위장 및 404 방지 버전)
  */
 const fetchInvestorTrends = async (type = 'buy', investor = 'foreign') => {
   try {
-    // 9000: 외국인, 1000: 기관
-    const investorCode = investor === 'foreign' ? '9000' : '1000';
-    const isBuy = type === 'buy';
+    const investorCode = investor === 'foreign' ? 'FOREIGN' : 'INSTITUTION';
+    const typeCode = type === 'buy' ? 'BUY' : 'SELL';
     
-    // 네이버 PC 웹의 가장 안정적인 수급 순위 페이지
-    const url = `https://finance.naver.com/sise/sise_deal_rank.naver?investor_gubun=${investorCode}&type=${isBuy ? 'buy' : 'sell'}`;
+    // 코스피와 코스닥 두 시장 모두 수집하여 통합
+    const markets = ['KOSPI', 'KOSDAQ'];
+    let combinedList = [];
 
-    const response = await axios.get(url, { 
-      responseType: 'arraybuffer', 
-      headers: NAVER_HEADERS, 
-      timeout: 10000 
-    });
-    
-    const html = iconv.decode(response.data, 'euc-kr');
-    const $ = cheerio.load(html);
-    const results = [];
+    // 🚀 모바일 브라우저 완벽 위장 헤더
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+      'Accept': 'application/json, text/plain, */*',
+      'Origin': 'https://m.stock.naver.com',
+      'Referer': 'https://m.stock.naver.com/',
+      'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+    };
 
-    $('table.type_2 tbody tr').each((i, el) => {
-      const nameAnchor = $(el).find('a.tltle');
-      if (nameAnchor.length > 0) {
-        const name = nameAnchor.text().trim();
-        const code = nameAnchor.attr('href').split('code=')[1];
-        const tds = $(el).find('td.number');
-        
-        if (tds.length >= 4) {
-          // 0: 현재가, 2: 등락률, 3: 순매수/매도량
-          const price = parseFloat(cleanNum(tds.eq(0).text()));
-          const changeRate = parseFloat(cleanNum(tds.eq(2).text()));
-          const volume = Math.abs(parseInt(cleanNum(tds.eq(3).text())) || 0);
-          
-          if (name && code && !isNaN(price)) {
-            results.push({ 
-              code, 
-              name, 
-              price, 
-              changeRate, 
-              tradeValue: price * volume // 거래대금 추산
-            });
-          }
+    for (const market of markets) {
+      const url = `https://m.stock.naver.com/api/stock/exchange/${market}/investor/${market}_${investorCode}/${typeCode}?pageSize=30`;
+      
+      try {
+        const response = await axios.get(url, { headers, timeout: 10000 });
+        if (response.data && response.data.list) {
+          const mapped = response.data.list.map(item => ({
+            code: item.itemCode,
+            name: item.stockName,
+            price: parseFloat(cleanNum(item.closePrice)),
+            change: parseFloat(cleanNum(item.compareToPreviousClosePrice)),
+            changeRate: parseFloat(cleanNum(item.fluctuationRate)),
+            // 거래대금 추산 (현재가 * 순매수량)
+            tradeValue: parseFloat(cleanNum(item.closePrice)) * Math.abs(parseInt(cleanNum(item.accumulatedNetPurchaseQuantity)) || 0),
+            isUpperLimit: false,
+            isLowerLimit: false
+          }));
+          combinedList = [...combinedList, ...mapped];
         }
+      } catch (err) {
+        console.error(`⚠️ [InvestorTrends] ${market} 수집 실패:`, err.message);
       }
-    });
-    return results.slice(0, 50);
+    }
+
+    // 등락률 순으로 정렬하여 상위 50개 반환
+    return combinedList.sort((a, b) => b.changeRate - a.changeRate).slice(0, 50);
   } catch (e) { 
-    console.error(`❌ InvestorTrends Fetch Error (${investor}_${type}):`, e.message);
+    console.error(`❌ InvestorTrends Final Error (${investor}_${type}):`, e.message);
     return []; 
   }
 };

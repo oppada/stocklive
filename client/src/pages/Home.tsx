@@ -11,7 +11,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [investorTab, setInvestorTab] = useState('buy'); // 'buy' or 'sell'
   const [foreignStocks, setForeignStocks] = useState<any[]>([]);
   const [institutionStocks, setInstitutionStocks] = useState<any[]>([]);
-  const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '' });
+  const [individualStocks, setIndividualStocks] = useState<any[]>([]);
+  const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '', individual: '' });
   const [isLoadingInvestor, setIsLoadingInvestor] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
   const [allThemes, setAllThemes] = useState<any[]>([]);
@@ -90,20 +91,24 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
       const fetchInvestorData = async () => {
         setIsLoadingInvestor(true);
         try {
-          const [resF, resI] = await Promise.all([
+          const [resF, resI, resP] = await Promise.all([
             fetch(`/api/investor-trend/${investorTab}?investor=foreign`),
-            fetch(`/api/investor-trend/${investorTab}?investor=institution`)
+            fetch(`/api/investor-trend/${investorTab}?investor=institution`),
+            fetch(`/api/investor-trend/${investorTab}?investor=individual`)
           ]);
           
           const dataF = await resF.json();
           const dataI = await resI.json();
+          const dataP = await resP.json();
 
           setForeignStocks(dataF.list || dataF);
           setInstitutionStocks(dataI.list || dataI);
+          setIndividualStocks(dataP.list || dataP);
           
           setInvestorUpdateTimes({
             foreign: dataF.updated_at_text || '',
-            institution: dataI.updated_at_text || ''
+            institution: dataI.updated_at_text || '',
+            individual: dataP.updated_at_text || ''
           });
         } catch (error) {
           console.error("Failed to fetch investor data:", error);
@@ -131,15 +136,16 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   else if (['급상승', '급하락', '거래량', '거래대금'].includes(activeTab)) displayStocks = rankingStocks;
 
   const renderInvestorColumn = (title: string, stocks: any[]) => {
-    let timeKey: 'foreign' | 'institution' = 'foreign';
+    let timeKey: 'foreign' | 'institution' | 'individual' = 'foreign';
     if (title === '기관') timeKey = 'institution';
-    const currentDate = investorUpdateTimes[timeKey];
+    if (title === '개인') timeKey = 'individual';
+    const currentTime = investorUpdateTimes[timeKey];
 
     return (
       <div className="flex flex-col space-y-1 min-h-[500px]">
         <div className="sticky top-0 z-20 px-3 py-1.5 bg-[#1C1E23] rounded-xl text-center font-bold text-[13px] text-slate-300 border border-white/5 flex flex-col items-center justify-center gap-0">
           <span>{title}</span>
-          {currentDate && <span className="text-[10px] text-slate-500 font-normal">{currentDate}</span>}
+          {currentTime && <span className="text-[9px] text-slate-500 font-normal mt-[-2px]">{currentTime}</span>}
         </div>
         <div className="sticky top-[42px] z-10 grid grid-cols-[25px_1fr_55px_65px] px-2 py-1 text-[10px] font-bold text-slate-600 uppercase border-b border-white/5 bg-[#0E1013] h-8 items-center">
           <div>#</div>
@@ -227,13 +233,14 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
         <main className="flex-1 overflow-y-auto hide-scrollbar pb-16">
           <div className="min-h-full">
             {activeTab === '투자자별' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
                 {isLoadingInvestor && foreignStocks.length === 0 ? (
-                  <div className="col-span-1 md:col-span-2 text-center text-slate-400 py-20">투자자별 데이터 로딩 중...</div>
+                  <div className="col-span-1 md:col-span-3 text-center text-slate-400 py-20">투자자별 데이터 로딩 중...</div>
                 ) : (
                   <>
                     {renderInvestorColumn('외국인', foreignStocks)}
                     {renderInvestorColumn('기관', institutionStocks)}
+                    {renderInvestorColumn('개인', individualStocks)}
                   </>
                 )}
               </div>

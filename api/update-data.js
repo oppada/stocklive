@@ -2,9 +2,9 @@ const { createClient } = require('@supabase/supabase-js');
 const { 
     fetchPublicIndicator, 
     fetchNaverRankings, 
-    fetchNaverThemes,
-    fetchInvestorTrends // 네이버 안정 경로 사용
+    fetchNaverThemes 
 } = require('./lib/publicApi.cjs');
+const collectInvestorTrend = require('./toss_investor_trend.js'); // Puppeteer 복구
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -22,14 +22,14 @@ function getMarketStatus() {
     const timeValue = hours * 100 + minutes;
 
     const isWeekend = (day === 0 || day === 6);
-    const isKoreaMarket = !isWeekend && (timeValue >= 850 && timeValue <= 1600);
+    const isKoreaMarket = !isWeekend && (timeValue >= 850 && timeValue <= 1605);
     const isUSMarket = (timeValue >= 2230 || timeValue <= 600);
 
     return {
         isKoreaMarket,
         isUSMarket,
-        formattedTime: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
-        dateStr: `${(kstDate.getUTCMonth() + 1).toString().padStart(2, '0')}.${kstDate.getUTCDate().toString().padStart(2, '0')}`
+        minutes: kstDate.getUTCMinutes(),
+        formattedDate: `${kstDate.getUTCFullYear()}.${(kstDate.getUTCMonth() + 1).toString().padStart(2, '0')}.${now.getUTCDate().toString().padStart(2, '0')}`
     };
 }
 
@@ -37,67 +37,70 @@ module.exports = async (req, res) => {
     const isForce = req.query && (req.query.force === 'true' || req.query.force === '1');
     const status = getMarketStatus();
 
+    console.log(`⏰ [Smart Update] Market Check... KR: ${status.isKoreaMarket}, Force: ${isForce}`);
+
     if (!status.isKoreaMarket && !status.isUSMarket && !isForce) {
         return res.status(200).json({ success: true, message: "Market closed" });
     }
 
     try {
-        // --- 1. 지수 데이터 (1분 주기) ---
-        const indicators = {
-            '코스피': await fetchPublicIndicator('코스피', '^KS11'),
-            '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
-            '다우산업': await fetchPublicIndicator('다우산업', 'DJI@DJI'),
-            '나스닥': await fetchPublicIndicator('나스닥', '^IXIC'),
-            'S&P500': await fetchPublicIndicator('S&P500', '^GSPC')
+        // --- 1. 네이버 지수 데이터 (1분 주기) ---
+        const indicators = await Promise.all([
+            fetchPublicIndicator('코스피', '^KS11'),
+            fetchPublicIndicator('코스닥', '^KQ11'),
+            fetchPublicIndicator('다우산업', 'DJI@DJI'),
+            fetchPublicIndicator('나스닥', '^IXIC'),
+            fetchPublicIndicator('S&P500', '^GSPC')
+        ]);
+        
+        const indicatorData = {
+            '코스피': indicators[0], '코스닥': indicators[1],
+            '다우산업': indicators[2], '나스닥': indicators[3], 'S&P500': indicators[4]
         };
-        await supabase.from('stock_data_cache').upsert({ id: 'market_indicators', data: indicators, updated_at: new Date() });
+        await supabase.from('stock_data_cache').upsert({ id: 'market_indicators', data: indicatorData, updated_at: new Date() });
 
-        // --- 2. 한국 장 데이터 (1분 주기 완전 자동화) ---
+        // --- 2. 한국 장 데이터 업데이트 ---
         if (status.isKoreaMarket || isForce) {
-            // 랭킹 & 테마
+            // 랭킹 & 테마 (네이버 기반 - 매분)
             const [gainer, loser, volume, value, themes] = await Promise.all([
                 fetchNaverRankings('gainer'), fetchNaverRankings('loser'),
                 fetchNaverRankings('volume'), fetchNaverRankings('value'),
                 fetchNaverThemes()
             ]);
 
-            await Promise.all([
-                supabase.from('stock_data_cache').upsert({ id: 'ranking_gainer', data: gainer, updated_at: new Date() }),
-                supabase.from('stock_data_cache').upsert({ id: 'ranking_loser', data: loser, updated_at: new Date() }),
-                supabase.from('stock_data_cache').upsert({ id: 'ranking_volume', data: volume, updated_at: new Date() }),
-                supabase.from('stock_data_cache').upsert({ id: 'ranking_value', data: value, updated_at: new Date() }),
-                supabase.from('stock_data_cache').upsert({ id: 'toss_themes', data: themes, updated_at: new Date() })
-            ]);
+            if (gainer.length > 0) {
+                await Promise.all([
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_gainer', data: gainer, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_loser', data: loser, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_volume', data: volume, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'ranking_value', data: value, updated_at: new Date() }),
+                    supabase.from('stock_data_cache').upsert({ id: 'toss_themes', data: themes, updated_at: new Date() })
+                ]);
+            }
 
-            // 수급 데이터 (네이버 기반 1분 자동화)
-            const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
-            const fullDateStr = `${nowKST.getUTCFullYear()}.${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
-            const updatedAtText = fullDateStr; // 시간 제거, 날짜만 표시
+            // 🚀 토스 수급 데이터 (Puppeteer 기반 - 10분 주기)
+            const isTossTime = (status.minutes % 10 === 0);
+            if (isTossTime || isForce) {
+                console.log("🚀 [Toss] 수집 엔진 가동 (개인/외인/기관)...");
+                const investorData = await collectInvestorTrend();
+                
+                if (investorData && investorData.buy?.foreign?.list?.length > 0) {
+                    // 날짜 표시 일원화
+                    investorData.updated_at_text = status.formattedDate;
 
-            const investorData = {
-                updated_at_text: updatedAtText,
-                buy: {
-                    foreign: { list: await fetchInvestorTrends('buy', 'foreign') },
-                    institution: { list: await fetchInvestorTrends('buy', 'institution') },
-                    individual: { list: [] } 
-                },
-                sell: {
-                    foreign: { list: await fetchInvestorTrends('sell', 'foreign') },
-                    institution: { list: await fetchInvestorTrends('sell', 'institution') },
-                    individual: { list: [] }
+                    await supabase.from('stock_data_cache').upsert({ 
+                        id: 'toss_investor_trend_all', 
+                        data: investorData, 
+                        updated_at: new Date() 
+                    });
+                    console.log(`✅ [Toss Update Success] ${status.formattedDate}`);
                 }
-            };
-
-            await supabase.from('stock_data_cache').upsert({ 
-                id: 'toss_investor_trend_all', 
-                data: investorData, 
-                updated_at: new Date() 
-            });
-            console.log(`✅ [All Updated] ${updatedAtText}`);
+            }
         }
 
         res.status(200).json({ success: true });
     } catch (error) {
+        console.error("❌ [Update Error]:", error.message);
         res.status(500).json({ error: error.message });
     }
 };
