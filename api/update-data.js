@@ -2,9 +2,9 @@ const { createClient } = require('@supabase/supabase-js');
 const { 
     fetchPublicIndicator, 
     fetchNaverRankings, 
-    fetchNaverThemes 
+    fetchNaverThemes,
+    fetchTossInvestorTrends // 초경량 API 수집 엔진
 } = require('./lib/publicApi.cjs');
-const collectInvestorTrend = require('./toss_investor_trend.js');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
@@ -52,7 +52,7 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // --- 1. 네이버 지수 데이터 (한국/미국 공통) ---
+        // --- 1. 네이버 지수 데이터 ---
         const indicators = {
             '코스피': await fetchPublicIndicator('코스피', '^KS11'),
             '코스닥': await fetchPublicIndicator('코스닥', '^KQ11'),
@@ -70,9 +70,9 @@ module.exports = async (req, res) => {
             console.log("✅ [Indicators] 지수 업데이트 완료.");
         }
 
-        // --- 2. 한국 장 운영 시에만 랭킹 및 토스 수급 데이터 업데이트 ---
+        // --- 2. 한국 장 운영 시에만 랭킹 및 수급 데이터 업데이트 ---
         if (status.isKoreaMarket || isForce) {
-            // 네이버 랭킹 (개별 ID로 분리하여 저장 - 서버 호환성)
+            // 네이버 랭킹
             const gainer = await fetchNaverRankings('gainer');
             const loser = await fetchNaverRankings('loser');
             const volume = await fetchNaverRankings('volume');
@@ -85,10 +85,10 @@ module.exports = async (req, res) => {
                     supabase.from('stock_data_cache').upsert({ id: 'ranking_volume', data: volume, updated_at: new Date() }),
                     supabase.from('stock_data_cache').upsert({ id: 'ranking_value', data: value, updated_at: new Date() })
                 ]);
-                console.log("✅ [Rankings] 4개 카테고리 개별 업데이트 완료.");
+                console.log("✅ [Rankings] 4개 카테고리 업데이트 완료.");
             }
 
-            // 네이버 테마 (toss_themes ID로 저장 - 서버 호환성)
+            // 네이버 테마
             const themes = await fetchNaverThemes();
             if (themes.length > 0) {
                 await supabase.from('stock_data_cache').upsert({ 
@@ -96,26 +96,20 @@ module.exports = async (req, res) => {
                     data: themes, 
                     updated_at: new Date() 
                 });
-                console.log("✅ [Themes] toss_themes ID로 업데이트 완료.");
+                console.log("✅ [Themes] 업데이트 완료.");
             }
 
-            // 🚀 토스 수급 데이터 수집 (5분 주기로 제한하여 서버 부하 방지)
+            // 🚀 토스 수급 데이터 수집 (5분 주기, 초경량 API 방식)
             const kstOffset = 9 * 60 * 60 * 1000;
             const kstDate = new Date(new Date().getTime() + kstOffset);
             const isTossTime = (kstDate.getUTCMinutes() % 5 === 0);
             
             if (isTossTime || isForce) {
-                console.log(`🚀 [Toss] ${isForce ? '강제' : '5분 주기'} 수집 엔진 가동...`);
+                console.log(`🚀 [Toss API] ${isForce ? '강제' : '5분 주기'} 수집 시도...`);
                 try {
-                    const investorData = await collectInvestorTrend();
+                    const investorData = await fetchTossInvestorTrends();
                     
                     if (investorData && investorData.buy?.foreign?.list?.length > 0) {
-                        // 프론트엔드 표시용 시간 추가
-                        const nowKST = new Date(new Date().getTime() + (9 * 60 * 60 * 1000));
-                        const dateStr = `${(nowKST.getUTCMonth() + 1).toString().padStart(2, '0')}.${nowKST.getUTCDate().toString().padStart(2, '0')}`;
-                        const formattedTime = `${nowKST.getUTCHours().toString().padStart(2, '0')}:${nowKST.getUTCMinutes().toString().padStart(2, '0')}`;
-                        investorData.updated_at_text = `${dateStr} ${formattedTime} 기준`;
-
                         await supabase.from('stock_data_cache').upsert({ 
                             id: 'toss_investor_trend_all', 
                             data: investorData, 
@@ -126,8 +120,6 @@ module.exports = async (req, res) => {
                 } catch (err) {
                     console.error("❌ [Toss Error]:", err.message);
                 }
-            } else {
-                console.log("⏭️ [Toss] 5분 주기가 아닙니다. 수집을 건너뜁니다.");
             }
         }
 

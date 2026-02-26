@@ -274,7 +274,12 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                     <div className="space-y-0">
                       {(displayStocks || []).map((stock: any, idx: number) => {
                         const isUp = (stock.changeRate || 0) > 0;
-                        const changeValue = stock.change || 0;
+                        const isUpper = !!stock.isUpperLimit;
+                        const isLower = !!stock.isLowerLimit;
+                        
+                        // 전일비가 0일 경우 등락률 기반 추산 (네이버가 값을 안 줄 경우 대비)
+                        const changeValue = stock.change || (Math.round(stock.price * (Math.abs(stock.changeRate) / 100)));
+                        
                         return (
                           <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group h-9`}>
                              <div className="text-center text-[13px] font-bold text-slate-500">{idx + 1}</div>
@@ -284,7 +289,13 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                             <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[15px] text-slate-100 truncate px-0 group-hover:text-white">{stock.name}</Link>
                             <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
                             <div className={`text-right text-[10px] md:text-[13px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
-                              <span className="mr-0.5">{isUp ? '▲' : '▼'}</span>
+                              {isUpper ? (
+                                <span className="bg-[#F04452] text-white text-[9px] px-1 py-0.5 rounded-sm mr-1">상</span>
+                              ) : isLower ? (
+                                <span className="bg-[#3182F6] text-white text-[9px] px-1 py-0.5 rounded-sm mr-1">하</span>
+                              ) : (
+                                <span className="mr-0.5">{isUp ? '▲' : '▼'}</span>
+                              )}
                               {Number(Math.abs(changeValue)).toLocaleString()}
                             </div>
                             <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>

@@ -85,7 +85,19 @@ const fetchNaverRankingsByScraping = async (type) => {
           const name = nameAnchor.text().trim();
           const code = nameAnchor.attr('href').split('code=')[1];
           const tds = $(el).find('td');
-          let rowData = { code, name, market: market.name };
+          
+          // 상한가/하한가 감지 (네이버 아이콘 기준)
+          const isUpperLimit = $(el).find('img[src*="ico_up7.gif"]').length > 0;
+          const isLowerLimit = $(el).find('img[src*="ico_down7.gif"]').length > 0;
+
+          let rowData = { 
+            code, 
+            name, 
+            market: market.name,
+            isUpperLimit,
+            isLowerLimit
+          };
+          
           if (type === 'gainer' || type === 'loser') {
             rowData.price = parseFloat(cleanNum(tds.eq(2).text()));
             rowData.change = parseFloat(cleanNum(tds.eq(3).text()));
@@ -218,12 +230,60 @@ const fetchNaverPrices = async (codes) => {
   return [];
 };
 
+/**
+ * 토스증권 투자자별 매매 동향 수집 (순수 API 방식 - Vercel 최적화)
+ */
+const fetchTossInvestorTrends = async () => {
+  try {
+    // 토스증권 실시간 수급 데이터 API (모바일/웹 공용)
+    const url = 'https://wapi.tossinvest.com/v1/charts/investor-trend/domestic';
+    const response = await axios.get(url, { 
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        'Origin': 'https://tossinvest.com',
+        'Referer': 'https://tossinvest.com/'
+      },
+      timeout: 10000 
+    });
+
+    const data = response.data;
+    if (!data || !data.buy || !data.sell) return null;
+
+    // 토스 API 데이터 구조를 기존 앱 호환 형식으로 변환
+    const mapList = (list) => (list || []).map(item => ({
+      code: item.stockCode,
+      name: item.stockName,
+      price: item.closePrice,
+      changeRate: item.fluctuationRate,
+      tradeValue: item.netBuyingPriceText // "121억" 등 텍스트 그대로 사용
+    }));
+
+    return {
+      updated_at_text: data.baseTimeText || '', // "오늘 11:45 기준" 등
+      buy: {
+        foreign: { list: mapList(data.buy.foreign) },
+        institution: { list: mapList(data.buy.institution) },
+        individual: { list: mapList(data.buy.retail) } // 토스는 retail이 개인입니다.
+      },
+      sell: {
+        foreign: { list: mapList(data.sell.foreign) },
+        institution: { list: mapList(data.sell.institution) },
+        individual: { list: mapList(data.sell.retail) }
+      }
+    };
+  } catch (e) {
+    console.error("❌ Toss API Fetch Error:", e.message);
+    return null;
+  }
+};
+
 module.exports = { 
   fetchPublicIndicator, 
   fetchNaverRankings: fetchNaverRankingsByScraping, 
   fetchNaverThemes, 
   fetchNaverThemeStocks,
   fetchInvestorTrends,
+  fetchTossInvestorTrends, // 추가
   fetchNaverPrices,
   cleanNum
 };
