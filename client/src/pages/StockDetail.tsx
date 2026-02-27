@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, RefreshCw, TrendingUp, TrendingDown } from 'lucide-react';
+import { ChevronLeft, RefreshCw } from 'lucide-react';
 import { 
   ResponsiveContainer, 
   AreaChart, 
