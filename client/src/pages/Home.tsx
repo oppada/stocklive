@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users } from 'lucide-react';
+import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
@@ -15,6 +15,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '', individual: '' });
   const [isLoadingInvestor, setIsLoadingInvestor] = useState(false);
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // 드롭다운 상태 추가
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]);
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
@@ -245,27 +246,56 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                 )}
               </div>
             ) : (
-              <div className="w-full">
+            <div className="w-full">
                 {activeTab === '테마' && (
-                  <div className="md:hidden p-2 mb-1">
-                    <select value={selectedThemeId || ''} onChange={(e) => setSelectedThemeId(e.target.value)} className="w-full bg-[#1C1E23] border border-white/10 rounded-lg px-3 py-1 text-white text-sm">
-                      {(allThemes || []).map((t: any) => (
-                        <option key={t.name} value={t.name}>{t.name} ({parseFloat(t.avgChangeRate || 0).toFixed(2)}%)</option>
-                      ))}
-                    </select>
+                  <div className="md:hidden p-2 mb-1 relative">
+                    {/* 커스텀 드롭다운 버튼 */}
+                    <button 
+                      onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                      className="w-full bg-[#1C1E23] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm flex justify-between items-center"
+                    >
+                      <span className="font-bold">
+                        {selectedThemeId} ({parseFloat(allThemes.find(t => t.name === selectedThemeId)?.avgChangeRate || 0).toFixed(2)}%)
+                      </span>
+                      <ChevronRight size={16} className={`transform transition-transform ${isThemeMenuOpen ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    {/* 커스텀 드롭다운 리스트 */}
+                    {isThemeMenuOpen && (
+                      <div 
+                        className="absolute top-full left-2 right-2 mt-1 bg-[#1A1D21] border border-white/10 rounded-xl shadow-2xl z-50 max-h-[300px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100"
+                      >
+                        {(allThemes || []).map((t: any) => (
+                          <div 
+                            key={t.name}
+                            onClick={() => {
+                              setSelectedThemeId(t.name);
+                              setIsThemeMenuOpen(false);
+                            }}
+                            className={`px-4 py-3 border-b border-white/5 last:border-0 flex justify-between items-center active:bg-white/5 ${selectedThemeId === t.name ? 'bg-blue-600/20' : ''}`}
+                          >
+                            <span className={`text-sm ${selectedThemeId === t.name ? 'text-blue-400 font-bold' : 'text-slate-300'}`}>{t.name}</span>
+                            <span className={`text-xs font-bold ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                              {parseFloat(t.avgChangeRate || 0).toFixed(2)}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
-              <div className="px-2 py-2">
-                <div className={`${gridLayout} pb-2 border-b border-white/5 text-[11px] font-bold text-slate-600 uppercase h-8 items-center`}>
-                  <div className="text-center">#</div>
-                  <div className="text-center"></div>
-                  <div>종목명</div>
-                  <div className="text-right">현재가</div>
-                  <div className="text-right">전일비</div>
-                  <div className="text-right">등락률</div>
-                  <div className="text-right">거래대금</div>
-                  <div className="text-right">거래량</div>
-                </div>
+                
+                <div className="px-2 py-2">
+                  <div className={`${gridLayout} pb-2 border-b border-white/5 text-[11px] font-bold text-slate-600 uppercase h-8 items-center`}>
+                    <div className="text-center">#</div>
+                    <div className="text-center"></div>
+                    <div>종목명</div>
+                    <div className="text-right">현재가</div>
+                    <div className="text-right">전일비</div>
+                    <div className="text-right">등락률</div>
+                    <div className="text-right">거래대금</div>
+                    <div className="text-right">거래량</div>
+                  </div>
                 
                 <div className="min-h-[600px] mt-0.5">
                   {((isLoadingStocks && activeTab !== '테마') || (isLoadingThemeStocks && activeTab === '테마')) && rankingStocks.length === 0 ? (
