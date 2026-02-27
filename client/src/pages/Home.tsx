@@ -152,7 +152,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
     '투자자별': <Users size={16} className="text-[#3498DB]" />,
   };
 
-  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_50px_53px_50px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_90px_100px_90px] items-center gap-1";
+  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_50px_53px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_90px_100px_90px] items-center gap-1";
 
   let displayStocks: any[] = [];
   if (activeTab === '테마') displayStocks = selectedThemeStocks;
@@ -184,7 +184,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
             // 거래대금 표시 최적화 (조, 억, 만 단위 모두 대응)
             const rawValue = stock.tradeValue || '';
             const displayValue = (typeof rawValue === 'string' && (rawValue.includes('조') || rawValue.includes('억') || rawValue.includes('만'))) 
-              ? rawValue 
+              ? rawValue.replace(/원/g, '') 
               : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
 
             return (
@@ -315,7 +315,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                     <div className="text-right">현재가</div>
                     <div className="text-right">전일비</div>
                     <div className="text-right">등락률</div>
-                    <div className="text-right">거래대금</div>
+                    <div className="text-right hidden md:block">거래대금</div>
                     <div className="text-right">거래량</div>
                   </div>
                 
@@ -351,7 +351,15 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                               {Number(Math.abs(changeValue)).toLocaleString()}
                             </div>
                             <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono truncate">{(parseInt(stock.tradeValue || '0') / 100000000).toFixed(0)}억</div>
+                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono truncate hidden md:block">
+                              {(() => {
+                                const val = parseInt(stock.tradeValue || '0');
+                                if (val >= 1000000000000) {
+                                  return `${(val / 1000000000000).toFixed(1)}조`;
+                                }
+                                return `${(val / 100000000).toFixed(0)}억`;
+                              })()}
+                            </div>
                             <div className="text-right text-[10px] md:text-[14px] font-bold text-slate-500 font-mono whitespace-nowrap">
                               {stock.volume >= 100000000 
                                 ? `${(stock.volume / 100000000).toFixed(1)}억` 

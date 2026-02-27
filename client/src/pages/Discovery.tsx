@@ -46,7 +46,7 @@ const Discovery = () => {
 
   return (
     <div className="flex-1 bg-[#0E1013] overflow-y-auto scroll-smooth hide-scrollbar">
-      <div className="max-w-2xl mx-auto px-4 md:px-10 pb-32">
+      <div className="max-w-2xl px-4 md:px-10 pb-32">
         {/* 검색 섹션 (상단 고정) */}
         <div className="sticky top-0 z-50 bg-[#0E1013] pt-4 md:pt-10 pb-2">
           <div className="relative">
@@ -91,7 +91,7 @@ const Discovery = () => {
         {searchTerm.length === 0 ? (
           <>
             {/* 스토리 섹션 */}
-            <div className="flex gap-4 md:gap-6 justify-center overflow-x-auto py-6 md:py-10 scrollbar-hide">
+            <div className="flex gap-4 md:gap-6 justify-start overflow-x-auto py-6 md:py-10 scrollbar-hide">
               {CATEGORIES.map((cat, i) => (
                 <div key={i} className="flex flex-col items-center gap-2 md:gap-3 shrink-0 group cursor-pointer">
                   <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full p-[2px] bg-gradient-to-tr ${cat.color} group-hover:scale-110 transition-transform shadow-lg`}>
