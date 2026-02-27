@@ -26,7 +26,11 @@
       "destination": "/client/dist/assets/$1"
     },
     {
-      "source": "/((?!api/|assets/).*)",
+      "source": "/favicon.ico",
+      "destination": "/client/dist/favicon.ico"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/client/dist/index.html"
     }
   ]

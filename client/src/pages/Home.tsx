@@ -4,17 +4,23 @@ import { Link } from 'react-router-dom';
 
 const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [activeTab, setActiveTab] = useState(() => {
-    const savedTab = localStorage.getItem('activeTab');
+    // sessionStorage는 브라우저 탭을 닫으면 초기화되므로 '접속 시' 기준에 적합함
+    const savedTab = sessionStorage.getItem('activeTab');
     return savedTab || '급상승'; 
   });
 
-  const [investorTab, setInvestorTab] = useState('buy'); // 'buy' or 'sell'
+  const [investorTab, setInvestorTab] = useState(() => {
+    return sessionStorage.getItem('investorTab') || 'buy';
+  });
+
   const [foreignStocks, setForeignStocks] = useState<any[]>([]);
   const [institutionStocks, setInstitutionStocks] = useState<any[]>([]);
   const [individualStocks, setIndividualStocks] = useState<any[]>([]);
   const [investorUpdateTimes, setInvestorUpdateTimes] = useState({ foreign: '', institution: '', individual: '' });
   const [isLoadingInvestor, setIsLoadingInvestor] = useState(false);
-  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(null);
+  const [selectedThemeId, setSelectedThemeId] = useState<string | null>(() => {
+    return sessionStorage.getItem('selectedThemeId');
+  });
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // 드롭다운 상태 추가
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]);
@@ -24,8 +30,18 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [isLoadingThemeStocks, setIsLoadingThemeStocks] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('activeTab', activeTab);
+    sessionStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('investorTab', investorTab);
+  }, [investorTab]);
+
+  useEffect(() => {
+    if (selectedThemeId) {
+      sessionStorage.setItem('selectedThemeId', selectedThemeId);
+    }
+  }, [selectedThemeId]);
 
   useEffect(() => {
     const fetchThemes = async () => {
@@ -34,7 +50,13 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
         const data = await response.json();
         if (Array.isArray(data)) {
           setAllThemes(data);
-          if (data.length > 0) setSelectedThemeId(data[0].name);
+          // 저장된 테마가 없거나 목록에 없는 경우 첫 번째 테마 선택
+          const savedTheme = sessionStorage.getItem('selectedThemeId');
+          if (savedTheme && data.find(t => t.name === savedTheme)) {
+            setSelectedThemeId(savedTheme);
+          } else if (data.length > 0) {
+            setSelectedThemeId(data[0].name);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch themes:", error);
