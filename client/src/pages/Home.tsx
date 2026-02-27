@@ -166,14 +166,14 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
 
             return (
               <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-2 py-0 hover:bg-[#1C1E23] rounded-lg transition-all group h-8">
-                <div className="text-[11px] font-bold text-slate-500">{idx + 1}</div>
-                <Link to={`/stock/${stock.code}`} className="text-[12px] font-bold text-slate-200 truncate group-hover:text-white">
+                <div className="text-[13px] font-bold text-slate-500">{idx + 1}</div>
+                <Link to={`/stock/${stock.code}`} className="text-xs md:text-[14px] font-bold text-slate-200 truncate group-hover:text-white">
                   {stock.name}
                 </Link>
-                <div className={`text-right text-[11px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                <div className={`text-right text-xs md:text-[13px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
                   {isUp ? '+' : ''}{rate.toFixed(2)}%
                 </div>
-                <div className="text-right text-[11px] font-bold text-slate-500 font-mono">
+                <div className="text-right text-xs md:text-[13px] font-bold text-slate-500 font-mono">
                   {displayValue}
                 </div>
               </div>

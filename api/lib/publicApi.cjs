@@ -299,13 +299,245 @@ const fetchTossInvestorTrends = async () => {
   }
 };
 
+/**
+ * 종목 상세 정보 수집 (네이버 모바일 API 활용)
+ */
+const fetchNaverStockDetail = async (code) => {
+  if (!code) return null;
+  try {
+    // 1. 기본 정보 (시세, 차트 이미지 등)
+    const basicUrl = `https://m.stock.naver.com/api/stock/${code}/basic`;
+    // 2. 통합 정보 (시가총액, PER, PBR, 외인비율, 거래현황 등)
+    const integrationUrl = `https://m.stock.naver.com/api/stock/${code}/integration`;
+    
+    const [basicRes, integrationRes] = await Promise.all([
+      axios.get(basicUrl, { headers: NAVER_HEADERS, timeout: 5000 }),
+      axios.get(integrationUrl, { headers: NAVER_HEADERS, timeout: 5000 })
+    ]);
+
+    const basic = basicRes.data;
+    const integration = integrationRes.data;
+
+    if (!basic || !integration) return null;
+
+    // totalInfos 배열을 객체로 변환하여 접근하기 쉽게 만듦
+    const infoMap = {};
+    if (integration.totalInfos) {
+      integration.totalInfos.forEach(item => {
+        infoMap[item.code] = item.value;
+      });
+    }
+
+    return {
+      code: basic.itemCode,
+      name: basic.stockName,
+      price: parseFloat(cleanNum(basic.closePrice)),
+      change: parseFloat(cleanNum(basic.compareToPreviousClosePrice)),
+      changeRate: parseFloat(basic.fluctuationsRatio),
+      changeType: basic.compareToPreviousPrice?.name, // RISING, FALLING, etc.
+      market: basic.stockExchangeName,
+      
+      // 상세 지표
+      marketCap: infoMap['marketValue'] || '0',
+      per: infoMap['per'] || '0',
+      pbr: infoMap['pbr'] || '0',
+      eps: infoMap['eps'] || '0',
+      bps: infoMap['bps'] || '0',
+      dividendYield: infoMap['dividendYieldRatio'] || '0',
+      foreignRate: infoMap['foreignRate'] || '0',
+      
+      // 시세 정보
+      open: parseFloat(cleanNum(infoMap['openPrice'])),
+      high: parseFloat(cleanNum(infoMap['highPrice'])),
+      low: parseFloat(cleanNum(infoMap['lowPrice'])),
+      volume: parseFloat(cleanNum(infoMap['accumulatedTradingVolume'])),
+      tradeValue: infoMap['accumulatedTradingValue'] || '0',
+      high52: infoMap['highPriceOf52Weeks'] || '0',
+      low52: infoMap['lowPriceOf52Weeks'] || '0',
+
+      // 차트 이미지
+      chartImages: basic.imageCharts,
+      
+      // 투자자 동향 (최근 5일)
+      investorTrends: integration.dealTrendInfos || []
+    };
+  } catch (e) {
+    console.error(`❌ Stock Detail Fetch Error (${code}):`, e.message);
+    return null;
+  }
+};
+
+/**
+ * 종목 시세 차트 데이터 수집 (일봉, 주봉, 월봉)
+ * timeframe: day, week, month
+ */
+const fetchNaverStockCharts = async (code, timeframe = 'day', count = 100) => {
+  if (!code) return [];
+  try {
+    const url = `https://fchart.stock.naver.com/sise.nhn?symbol=${code}&timeframe=${timeframe}&count=${count}&requestType=0`;
+    const response = await axios.get(url, { headers: NAVER_HEADERS, timeout: 5000 });
+    const $ = cheerio.load(response.data, { xmlMode: true });
+    const chartData = [];
+    
+    $('item').each((i, el) => {
+      const data = $(el).attr('data').split('|');
+      // data: 날짜|시가|고가|저가|종가|거래량
+      chartData.push({
+        date: data[0],
+        open: parseFloat(data[1]),
+        high: parseFloat(data[2]),
+        low: parseFloat(data[3]),
+        close: parseFloat(data[4]),
+        volume: parseFloat(data[5])
+      });
+    });
+    
+    return chartData;
+  } catch (e) {
+    console.error(`❌ Stock Chart Fetch Error (${code}, ${timeframe}):`, e.message);
+    return [];
+  }
+};
+
+/**
+ * 당일 1일 차트 (분봉) 데이터 수집
+ */
+const fetchNaverStockDayChart = async (code) => {
+  if (!code) return [];
+  try {
+    // 404 오류 방지를 위해 더 안정적인 폴링 API 사용
+    const url = `https://polling.finance.naver.com/api/realtime/chart/${code}?type=area&isActualTime=true&returnLatestMSTime=true`;
+    const response = await axios.get(url, { headers: NAVER_HEADERS, timeout: 5000 });
+    
+    if (response.data && response.data.result && response.data.result.datas) {
+      return response.data.result.datas.map(item => ({
+        // item: [시간(HHmm), 현재가, 거래량] 또는 유사 구조
+        time: item.dt.slice(8, 10) + ':' + item.dt.slice(10, 12),
+        price: parseFloat(item.nv),
+        volume: parseFloat(item.aq)
+      }));
+    }
+    return [];
+  } catch (e) {
+    console.error(`❌ Stock Day Chart Fetch Error (${code}):`, e.message);
+    return [];
+  }
+};
+
+const MOBILE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+  'Accept': 'application/json, text/plain, */*',
+  'Referer': 'https://m.stock.naver.com/',
+  'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+};
+
+/**
+ * 실시간 호가 데이터 수집 (최종 안정화 버전)
+ */
+const fetchNaverStockHoga = async (code) => {
+  if (!code) return null;
+  try {
+    // SERVICE_HOGA만 호출하면 가끔 빈 데이터가 오므로 구조를 명확히 함
+    const url = `https://polling.finance.naver.com/api/realtime?query=SERVICE_HOGA:${code}`;
+    const response = await axios.get(url, { 
+      headers: {
+        ...NAVER_HEADERS,
+        'Referer': `https://finance.naver.com/item/main.naver?code=${code}`
+      }, 
+      timeout: 5000 
+    });
+    
+    const data = response.data?.result?.areas?.[0]?.datas?.[0];
+    
+    // 데이터가 없으면 최소한의 기본 구조라도 반환하여 프론트엔드 크래시 방지
+    if (!data) {
+      return { sellTotalQty: 0, buyTotalQty: 0, hoga: [] };
+    }
+
+    // 매도 호가 (as: Ask) - 네이버는 가격 내림차순으로 줌
+    const sellHoga = (data.as || []).map(a => ({ 
+      price: parseInt(cleanNum(String(a.p))), 
+      sellQty: parseInt(cleanNum(String(a.q))), 
+      buyQty: 0 
+    }));
+    
+    // 매수 호가 (bs: Bid)
+    const buyHoga = (data.bs || []).map(b => ({ 
+      price: parseInt(cleanNum(String(b.p))), 
+      sellQty: 0, 
+      buyQty: parseInt(cleanNum(String(b.q))) 
+    }));
+
+    const result = {
+      sellTotalQty: parseInt(cleanNum(String(data.at || "0"))),
+      buyTotalQty: parseInt(cleanNum(String(data.bt || "0"))),
+      hoga: [...sellHoga, ...buyHoga].sort((a, b) => b.price - a.price)
+    };
+
+    // 만약 hoga 배열이 비어있다면 다시 시도하거나 null 반환
+    return result.hoga.length > 0 ? result : { sellTotalQty: 0, buyTotalQty: 0, hoga: [] };
+  } catch (e) {
+    console.error(`❌ Stock Hoga Fetch Error (${code}):`, e.message);
+    return { sellTotalQty: 0, buyTotalQty: 0, hoga: [] };
+  }
+};
+
+/**
+ * 일자별 투자자 매매동향 수집 (PC 웹 크롤링 방식으로 전환 - 404 절대 방지)
+ */
+const fetchNaverInvestorTrend = async (code) => {
+  if (!code) return [];
+  try {
+    const url = `https://finance.naver.com/item/frgn.naver?code=${code}`;
+    const response = await axios.get(url, { 
+      headers: NAVER_HEADERS, 
+      responseType: 'arraybuffer', 
+      timeout: 10000 
+    });
+    
+    const html = iconv.decode(response.data, 'euc-kr');
+    const $ = cheerio.load(html);
+    const trendData = [];
+
+    // 데이터가 있는 테이블의 행들을 순회 (날짜가 적힌 행 위주)
+    $('table.type2 tr').each((i, el) => {
+      const tds = $(el).find('td');
+      if (tds.length >= 9) {
+        const date = tds.eq(0).text().trim().replace(/\./g, ''); // 2024.05.24 -> 20240524
+        if (!/^\d{8}$/.test(date)) return; // 날짜 형식이 아니면 스킵
+
+        const foreignNet = parseInt(cleanNum(tds.eq(6).text())); // 외국인 순매수
+        const institutionNet = parseInt(cleanNum(tds.eq(5).text())); // 기관 순매수
+        const foreignRate = tds.eq(8).text().trim(); // 외국인 보유율
+
+        trendData.push({
+          bizdate: date,
+          foreignNetPurchaseQuantity: foreignNet,
+          institutionNetPurchaseQuantity: institutionNet,
+          foreignOwnershipRatio: foreignRate
+        });
+      }
+    });
+
+    return trendData.slice(0, 20); // 최근 20일 데이터만 반환
+  } catch (e) {
+    console.error(`❌ Stock InvestorTrend Fetch Error (${code}):`, e.message);
+    return [];
+  }
+};
+
 module.exports = { 
   fetchPublicIndicator, 
   fetchNaverRankings: fetchNaverRankingsByScraping, 
   fetchNaverThemes, 
   fetchNaverThemeStocks,
   fetchInvestorTrends,
-  fetchTossInvestorTrends, // 추가
+  fetchTossInvestorTrends,
   fetchNaverPrices,
+  fetchNaverStockDetail,
+  fetchNaverStockCharts,
+  fetchNaverStockDayChart,
+  fetchNaverStockHoga,
+  fetchNaverInvestorTrend,
   cleanNum
 };
