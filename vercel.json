@@ -23,15 +23,35 @@
     },
     {
       "source": "/assets/(.*)",
-      "destination": "/client/dist/assets/$1"
+      "destination": "/assets/$1"
     },
     {
       "source": "/favicon.ico",
-      "destination": "/client/dist/favicon.ico"
+      "destination": "/favicon.ico"
+    },
+    {
+      "source": "/recommendation",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/news",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/discovery",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/stock/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/chat",
+      "destination": "/index.html"
     },
     {
       "source": "/(.*)",
-      "destination": "/client/dist/index.html"
+      "destination": "/index.html"
     }
   ]
 }
