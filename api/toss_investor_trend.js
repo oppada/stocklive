@@ -61,7 +61,7 @@ async function collectInvestorTrend() {
                         let p = headerEl.parentElement;
                         for(let i=0; i<5; i++) {
                             if(!p) break;
-                            const timeMatch = p.innerText.match(/(\d+:\d+|오늘|어제).*기준/);
+                            const timeMatch = p.innerText.match(/((\d+월\s+\d+일)|오늘|어제|\d+:\d+).*기준/);
                             if(timeMatch) {
                                 sections[type].time = timeMatch[0];
                                 break;
