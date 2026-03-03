@@ -251,9 +251,9 @@ const fetchNaverPrices = async (codes) => {
       timeout: 8000,
       responseType: 'arraybuffer' // 인코딩 제어를 위해 버퍼로 받음
     });
-    
-    // 버퍼를 utf-8 문자열로 변환 (한글 깨짐 방지)
-    const jsonString = Buffer.from(response.data).toString('utf8');
+
+    // 네이버 폴링 API는 euc-kr을 사용하므로 정확하게 디코딩 (한글 깨짐 해결)
+    const jsonString = iconv.decode(response.data, 'euc-kr');
     const data = JSON.parse(jsonString);
     
     if (data?.result?.areas?.[0]?.datas) {
