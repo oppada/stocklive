@@ -26,10 +26,8 @@ async function updateTossOnly() {
         const investorData = await collectInvestorTrend();
 
         if (investorData && investorData.buy?.foreign?.list?.length > 0) {
-            // 날짜 표시용 텍스트 추가 (YYYY.MM.DD)
-            const kstOffset = 9 * 60 * 60 * 1000;
-            const kstDate = new Date(now.getTime() + kstOffset);
-            investorData.updated_at_text = `${kstDate.getUTCFullYear()}.${(kstDate.getUTCMonth() + 1).toString().padStart(2, '0')}.${kstDate.getUTCDate().toString().padStart(2, '0')}`;
+            // 개별 섹션의 시간이 수집되었으므로, 대표 업데이트 텍스트를 수집된 값 중 하나로 설정
+            investorData.updated_at_text = investorData.buy.foreign.time || investorData.buy.institution.time || "";
 
             // 2. Supabase DB 업데이트
             const { error } = await supabase.from('stock_data_cache').upsert({ 

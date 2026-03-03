@@ -234,21 +234,43 @@ const fetchNaverThemeStocks = async (themeNo) => {
 };
 
 /**
- * 실시간 가격 수집
+ * 실시간 가격 수집 (네이버 모바일 정식 API - 가장 안정적)
  */
 const fetchNaverPrices = async (codes) => {
   if (!codes || codes.length === 0) return [];
   try {
-    const query = codes.map(c => `SERVICE_ITEM:${c}`).join(',');
-    const url = `https://polling.finance.naver.com/api/realtime?query=${query}`;
-    const response = await axios.get(url, { headers: NAVER_HEADERS, timeout: 5000 });
-    if (response.data?.result?.areas) {
-      return response.data.result.areas[0].datas.map(d => ({
-        code: d.cd, price: parseFloat(d.nv), change: parseFloat(d.cv), changeRate: parseFloat(d.cr),
-        volume: parseFloat(d.aq), tradeValue: parseFloat(d.aa), name: d.nm
-      }));
+    const codesString = codes.join(',');
+    const url = `https://m.stock.naver.com/api/stock/etc/realtime?itemCodes=${codesString}`;
+    
+    const response = await axios.get(url, { 
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+        'Referer': 'https://m.stock.naver.com/'
+      },
+      timeout: 5000 
+    });
+    
+    if (response.data && response.data.result) {
+      return response.data.result.map(d => {
+        const price = parseFloat(cleanNum(d.closePrice)) || 0;
+        const change = parseFloat(cleanNum(d.compareToPreviousClosePrice)) || 0;
+        const rate = parseFloat(d.fluctuationsRatio) || 0;
+        
+        return {
+          code: d.itemCode,
+          name: d.stockName, // 모바일 API는 한글이 깨지지 않음
+          price: price,
+          change: Math.abs(change),
+          changeRate: rate,
+          status: d.compareToPreviousPrice?.name === 'RISING' ? 'up' : (d.compareToPreviousPrice?.name === 'FALLING' ? 'down' : 'stable'),
+          volume: parseInt(cleanNum(d.accumulatedTradingVolume)) || 0,
+          tradeValue: 0 // 필요 시 계산
+        };
+      });
     }
-  } catch (e) { console.error("❌ Naver Prices Fetch Error:", e.message); }
+  } catch (e) { 
+    console.error("❌ Naver Mobile Prices Fetch Error:", e.message); 
+  }
   return [];
 };
 
