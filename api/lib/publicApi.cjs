@@ -234,42 +234,55 @@ const fetchNaverThemeStocks = async (themeNo) => {
 };
 
 /**
- * 실시간 가격 수집 (네이버 모바일 정식 API - 가장 안정적)
+ * 실시간 가격 수집 (표준 폴링 API - 404 에러 해결 버전)
  */
 const fetchNaverPrices = async (codes) => {
   if (!codes || codes.length === 0) return [];
   try {
-    const codesString = codes.join(',');
-    const url = `https://m.stock.naver.com/api/stock/etc/realtime?itemCodes=${codesString}`;
+    // 쿼리 형식: SERVICE_ITEM:005930,SERVICE_ITEM:000660
+    const query = codes.map(c => `SERVICE_ITEM:${c}`).join(',');
+    const url = `https://polling.finance.naver.com/api/realtime?query=${query}`;
     
     const response = await axios.get(url, { 
       headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
-        'Referer': 'https://m.stock.naver.com/'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Referer': 'https://finance.naver.com/'
       },
-      timeout: 5000 
+      timeout: 8000,
+      responseType: 'arraybuffer' // 인코딩 제어를 위해 버퍼로 받음
     });
+
+    // 네이버 폴링 API는 euc-kr을 사용하므로 정확하게 디코딩 (한글 깨짐 해결)
+    const jsonString = iconv.decode(response.data, 'euc-kr');
+    const data = JSON.parse(jsonString);
     
-    if (response.data && response.data.result) {
-      return response.data.result.map(d => {
-        const price = parseFloat(cleanNum(d.closePrice)) || 0;
-        const change = parseFloat(cleanNum(d.compareToPreviousClosePrice)) || 0;
-        const rate = parseFloat(d.fluctuationsRatio) || 0;
+    if (data?.result?.areas?.[0]?.datas) {
+      return data.result.areas[0].datas.map(d => {
+        const price = parseFloat(d.nv) || 0;
+        const change = parseFloat(d.cv) || 0;
+        const rawRate = parseFloat(d.cr) || 0;
         
+        // 등락률 보정: 100%가 넘는 말도 안 되는 수치는 직접 계산
+        let changeRate = rawRate;
+        if (Math.abs(rawRate) > 100 || isNaN(rawRate)) {
+          const isDown = d.rf === '4' || d.rf === '5';
+          const prevPrice = price - (isDown ? -change : change);
+          changeRate = prevPrice > 0 ? (change / prevPrice) * 100 : 0;
+        }
+
         return {
-          code: d.itemCode,
-          name: d.stockName, // 모바일 API는 한글이 깨지지 않음
-          price: price,
-          change: Math.abs(change),
-          changeRate: rate,
-          status: d.compareToPreviousPrice?.name === 'RISING' ? 'up' : (d.compareToPreviousPrice?.name === 'FALLING' ? 'down' : 'stable'),
-          volume: parseInt(cleanNum(d.accumulatedTradingVolume)) || 0,
-          tradeValue: 0 // 필요 시 계산
+          code: d.cd, 
+          name: d.nm ? String(d.nm).trim() : d.cd,
+          price: price, 
+          change: Math.abs(change), 
+          changeRate: changeRate,
+          status: d.rf === '4' || d.rf === '5' ? 'down' : (d.rf === '1' || d.rf === '2' ? 'up' : 'stable'),
+          volume: parseFloat(d.aq) || 0
         };
       });
     }
   } catch (e) { 
-    console.error("❌ Naver Mobile Prices Fetch Error:", e.message); 
+    console.error("❌ Naver API Standard Fetch Error:", e.message); 
   }
   return [];
 };

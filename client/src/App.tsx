@@ -140,7 +140,7 @@ const App = () => {
       try {
         const response = await fetch(`/api/stocks/prices?codes=${codesString}`);
         const data = await response.json();
-        
+
         if (data && Object.keys(data).length > 0) {
           // 기존 데이터와 새 데이터를 병합하여 이름 누락 방지
           setStockPrices(prev => ({ 
@@ -262,7 +262,7 @@ const App = () => {
               <Route path="/recommendation" element={<Recommendation />} />
               <Route path="/news" element={<News />} />
               <Route path="/discovery" element={<Discovery />} />
-              <Route path="/stock/:symbol" element={<StockDetail />} />
+              <Route path="/stock/:symbol" element={<StockDetail favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} />} />
               {/* Add a route for chat on mobile if needed, or handle it within existing structure */}
               <Route path="/chat" element={
                 <div className="flex flex-col h-full bg-[#0a0c10] text-slate-100 font-sans">

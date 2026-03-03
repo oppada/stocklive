@@ -61,7 +61,15 @@ async function collectInvestorTrend() {
                         let p = headerEl.parentElement;
                         for(let i=0; i<5; i++) {
                             if(!p) break;
+<<<<<<< HEAD
                             const timeMatch = p.innerText.match(/(\d+월\s?\d+일|\d+:\d+|오늘|어제).*기준/);
+=======
+<<<<<<< HEAD
+                            const timeMatch = p.innerText.match(/((\d+월\s+\d+일)|오늘|어제|\d+:\d+).*기준/);
+=======
+                            const timeMatch = p.innerText.match(/(\d+월\s?\d+일|\d+:\d+|오늘|어제).*기준/);
+>>>>>>> 2c873df (260303 1013)
+>>>>>>> fix-final
                             if(timeMatch) {
                                 sections[type].time = timeMatch[0];
                                 break;

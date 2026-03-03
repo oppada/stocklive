@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, RefreshCw } from 'lucide-react';
+import { ChevronLeft, RefreshCw, Heart } from 'lucide-react';
 import { 
   ResponsiveContainer, 
   AreaChart, 
@@ -41,12 +41,20 @@ interface StockDetailData {
   investorTrends: any[];
 }
 
-const StockDetail = () => {
+interface StockDetailProps {
+  favoritedStocks: string[];
+  onFavoriteToggle: (code: string) => void;
+}
+
+const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) => {
   const { symbol } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('차트·호가');
   const [data, setData] = useState<StockDetailData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 관심종목 여부 판단
+  const isFavorited = favoritedStocks.includes(symbol || '');
 
   const fetchDetail = async () => {
     try {
@@ -103,8 +111,14 @@ const StockDetail = () => {
           <ChevronLeft size={24} />
         </button>
         <div className="ml-4 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <h1 className="text-lg sm:text-xl font-bold">{data.name}</h1>
+            <button 
+              onClick={() => onFavoriteToggle(data.code)}
+              className={`p-1.5 rounded-full transition-all ${isFavorited ? 'bg-rose-500/10 text-rose-500' : 'bg-white/5 text-slate-500 hover:text-white'}`}
+            >
+              <Heart size={18} fill={isFavorited ? "currentColor" : "none"} />
+            </button>
             <span className="text-xs text-slate-500">{data.code} · {data.market}</span>
           </div>
           <div className="flex items-center gap-2 mt-0.5">
