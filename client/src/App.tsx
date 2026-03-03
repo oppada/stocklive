@@ -141,15 +141,24 @@ const App = () => {
         const response = await fetch(`/api/stocks/prices?codes=${codesString}`);
         const data = await response.json();
 
-        if (data && Object.keys(data).length > 0) {
-          // 기존 데이터와 새 데이터를 병합하여 이름 누락 방지
-          setStockPrices(prev => ({ 
-            ...prev, 
-            ...data 
-          }));
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+          setStockPrices(prev => {
+            const newState = { ...prev };
+            Object.keys(data).forEach(code => {
+              const newInfo = data[code];
+              if (newInfo) {
+                const existingName = newState[code]?.name;
+                newState[code] = {
+                  ...newInfo,
+                  name: newInfo.name || existingName || code
+                };
+              }
+            });
+            return newState;
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch watchlist stock prices:", error);
+        console.error("❌ [Watchlist] Failed to fetch prices:", error);
       }
     };
 
@@ -307,7 +316,7 @@ const App = () => {
         </main>
         {/* Watchlist Sidebar */}
         <aside className="hidden md:flex w-[280px] border-l border-white/5 bg-[#0a0c10] shrink-0">
-          <WatchlistSidebar favoritedStocks={favoritedStocks} stockPrices={stockPrices} />
+          <WatchlistSidebar favoritedStocks={[...favoritedStocks].reverse()} stockPrices={stockPrices} onFavoriteToggle={handleFavoriteClick} />
         </aside>
       </div>
 

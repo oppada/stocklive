@@ -234,13 +234,13 @@ const fetchNaverThemeStocks = async (themeNo) => {
 };
 
 /**
- * 실시간 가격 수집 (표준 폴링 API - 404 에러 해결 버전)
+ * 실시간 가격 수집 (표준 폴링 API - 멀티 종목 쿼리 형식 수정 버전)
  */
 const fetchNaverPrices = async (codes) => {
   if (!codes || codes.length === 0) return [];
   try {
-    // 쿼리 형식: SERVICE_ITEM:005930,SERVICE_ITEM:000660
-    const query = codes.map(c => `SERVICE_ITEM:${c}`).join(',');
+    // 🚀 수정된 쿼리 형식: SERVICE_ITEM:005930,000660,005380
+    const query = `SERVICE_ITEM:${codes.join(',')}`;
     const url = `https://polling.finance.naver.com/api/realtime?query=${query}`;
     
     const response = await axios.get(url, { 
@@ -249,20 +249,27 @@ const fetchNaverPrices = async (codes) => {
         'Referer': 'https://finance.naver.com/'
       },
       timeout: 8000,
-      responseType: 'arraybuffer' // 인코딩 제어를 위해 버퍼로 받음
+      responseType: 'arraybuffer'
     });
 
-    // 네이버 폴링 API는 euc-kr을 사용하므로 정확하게 디코딩 (한글 깨짐 해결)
     const jsonString = iconv.decode(response.data, 'euc-kr');
     const data = JSON.parse(jsonString);
     
-    if (data?.result?.areas?.[0]?.datas) {
-      return data.result.areas[0].datas.map(d => {
+    let allItems = [];
+    if (data?.result?.areas) {
+      data.result.areas.forEach(area => {
+        if (area.datas) {
+          allItems = [...allItems, ...area.datas];
+        }
+      });
+    }
+    
+    if (allItems.length > 0) {
+      return allItems.map(d => {
         const price = parseFloat(d.nv) || 0;
         const change = parseFloat(d.cv) || 0;
         const rawRate = parseFloat(d.cr) || 0;
         
-        // 등락률 보정: 100%가 넘는 말도 안 되는 수치는 직접 계산
         let changeRate = rawRate;
         if (Math.abs(rawRate) > 100 || isNaN(rawRate)) {
           const isDown = d.rf === '4' || d.rf === '5';
