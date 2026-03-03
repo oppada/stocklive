@@ -1,4 +1,4 @@
-
+import { Link } from 'react-router-dom';
 
 interface WatchlistSidebarProps {
   favoritedStocks: string[];
@@ -6,48 +6,67 @@ interface WatchlistSidebarProps {
 }
 
 const WatchlistSidebar = ({ favoritedStocks, stockPrices }: WatchlistSidebarProps) => {
-
-  const formatChange = (change: string, status: string) => {
-    const numericChange = parseFloat(change);
-    if (isNaN(numericChange)) return change;
-    const sign = status === 'up' ? '+' : (status === 'down' ? '-' : '');
-    return `${sign}${Math.abs(numericChange)}%`;
-  };
-
   return (
-    <aside className="w-full md:w-max shrink-0 bg-[#0E1013] md:border-l md:border-white/5 p-4 overflow-hidden">
-      <div className="md:sticky md:top-4">
-        <h2 className="text-lg font-bold text-slate-100 mb-3">관심 종목</h2>
-        <div className="md:h-[calc(100vh-12rem)] overflow-y-auto hide-scrollbar p-2 border border-white/10 rounded-lg bg-[#121418]">
-          {favoritedStocks.length === 0 ? (
-            <p className="text-sm text-slate-500 text-center py-4">관심 종목을 추가해보세요.</p>
-          ) : (
-            favoritedStocks.map((code) => {
-              const stock = stockPrices[code];
-              // Assuming stock.name is available in stockPrices[code] or passed directly in favoritedStocks
-              if (!stock || !stock.name) return null; // Only render if stock data and name is available
-              return (
-                <div
-                  key={code}
-                  className="flex justify-between items-center cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 group hover:bg-white/[0.03]"
-                >
-                  <span className="text-sm font-bold text-slate-300 group-hover:text-slate-100">
-                    {stock.name}
+    <div className="w-full flex flex-col bg-[#0a0c10] h-full">
+      <div className="p-4 border-b border-white/5 shrink-0 flex justify-between items-center bg-[#0a0c10]">
+        <h2 className="text-sm font-bold text-white">관심 종목</h2>
+        <span className="text-[10px] text-slate-500 font-mono font-bold bg-white/5 px-2 py-0.5 rounded-full">
+          {favoritedStocks.length}
+        </span>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto hide-scrollbar p-2 space-y-1">
+        {favoritedStocks.length === 0 ? (
+          <div className="py-20 text-center flex flex-col items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-700 text-lg">❤</div>
+            <p className="text-[12px] text-slate-600 font-medium">관심 종목이 없습니다.</p>
+          </div>
+        ) : (
+          favoritedStocks.map((code) => {
+            const stock = stockPrices[code];
+            
+            // 등락률 안전 계산
+            const changeRate = stock ? (parseFloat(String(stock.changeRate)) || 0) : 0;
+            const price = stock ? (parseFloat(String(stock.price)) || 0) : 0;
+            const change = stock ? (parseFloat(String(stock.change)) || 0) : 0;
+
+            const isUp = changeRate > 0;
+            const isDown = changeRate < 0;
+            const colorClass = isUp ? 'text-[#F04452]' : (isDown ? 'text-[#3182F6]' : 'text-slate-400');
+            const sign = isUp ? '+' : '';
+
+            return (
+              <Link 
+                key={code} 
+                to={`/stock/${code}`}
+                className="flex flex-col gap-1.5 p-3 rounded-xl hover:bg-white/[0.04] transition-all group border border-transparent hover:border-white/10"
+              >
+                <div className="flex justify-between items-start gap-2">
+                  <span className="text-[14px] font-bold text-slate-200 group-hover:text-white truncate flex-1 leading-tight">
+                    {stock?.name || '로딩 중...'}
                   </span>
-                  <span
-                    className={`text-xs font-medium whitespace-nowrap pl-4 ${
-                      stock.status === 'up' ? 'text-rose-500' : stock.status === 'down' ? 'text-blue-500' : 'text-slate-500'
-                    }`}
-                  >
-                    {stock.status === 'up' ? '▲' : stock.status === 'down' ? '▼' : ''} {formatChange(stock.change, stock.status)}
+                  <span className="text-[14px] font-bold text-white font-mono leading-tight">
+                    {price > 0 ? price.toLocaleString() : '---'}
                   </span>
                 </div>
-              );
-            })
-          )}
-        </div>
+                
+                <div className="flex justify-between items-center mt-0.5">
+                  <span className="text-[10px] text-slate-500 font-bold tracking-wider">
+                    {code}
+                  </span>
+                  <div className={`flex items-center gap-2 text-[12px] font-bold ${colorClass}`}>
+                    <span className="font-mono">{sign}{change.toLocaleString()}</span>
+                    <span className="bg-white/5 px-1.5 py-0.5 rounded-md font-mono min-w-[55px] text-right">
+                      {sign}{changeRate.toFixed(2)}%
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })
+        )}
       </div>
-    </aside>
+    </div>
   );
 };
 

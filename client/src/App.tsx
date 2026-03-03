@@ -12,18 +12,15 @@ import News from './pages/News';
 import Discovery from './pages/Discovery';
 import StockDetail from './pages/StockDetail';
 import WatchlistSidebar from './components/WatchlistSidebar';
+import LoginModal from './components/LoginModal';
 
 import { supabase } from './supabaseClient'; // Import supabase from the new client
-
-
 
 const generateNickname = () => {
   const animals = ['사자', '호랑이', '독수리', '상어', '부엉이', '치타'];
   const adjs = ['용감한', '영리한', '빠른', '침착한', '날카로운', '강력한'];
   return `${adjs[Math.floor(Math.random() * adjs.length)]} ${animals[Math.floor(Math.random() * adjs.length)]}`;
 };
-
-
 
 const App = () => {
   const navigate = useNavigate();
@@ -36,31 +33,79 @@ const App = () => {
   const [marketIndicators, setMarketIndicators] = useState<Record<string, any>>({});
   const [favoritedStocks, setFavoritedStocks] = useState<string[]>([]); // New state for favorited stocks
   const [showLoginMessage, setShowLoginMessage] = useState(false); // New state for login message
+  const [showLoginModal, setShowLoginModal] = useState(false); // New state for login modal
+  const [user, setUser] = useState<any>(null); // New state for logged in user
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Auth check and listen
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchFavorites(session.user.id);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchFavorites(session.user.id);
+      else setFavoritedStocks([]);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchFavorites = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('stock_code')
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      if (data) setFavoritedStocks(data.map(f => f.stock_code));
+    } catch (e) {
+      console.error("Failed to fetch favorites:", e);
+    }
+  };
 
   // Function to handle favorite click
   const handleFavoriteClick = async (stockCode: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) {
-      setShowLoginMessage(true);
+      setShowLoginModal(true);
       return;
     }
 
-    setFavoritedStocks(prevFavorites => {
-      if (prevFavorites.includes(stockCode)) {
-        return prevFavorites.filter(code => code !== stockCode); // Remove if already favorited
-      } else {
-        return [...prevFavorites, stockCode]; // Add if not favorited
-      }
+    const isAlreadyFavorited = favoritedStocks.includes(stockCode);
+
+    // 즉시 UI 반영 (Optimistic Update)
+    setFavoritedStocks(prev => {
+      const next = isAlreadyFavorited 
+        ? prev.filter(code => code !== stockCode) 
+        : Array.from(new Set([...prev, stockCode])); // 중복 제거 보장
+      return next;
     });
+
+    try {
+      if (isAlreadyFavorited) {
+        await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('stock_code', stockCode);
+      } else {
+        await supabase
+          .from('favorites')
+          .insert([{ user_id: user.id, stock_code: stockCode }]);
+      }
+    } catch (e) {
+      console.error("Favorite toggle failed:", e);
+    }
   };
 
   useEffect(() => {
     if (showLoginMessage) {
       const timer = setTimeout(() => {
         setShowLoginMessage(false);
-      }, 3000); // Hide message after 3 seconds
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [showLoginMessage]);
@@ -72,30 +117,36 @@ const App = () => {
         const response = await fetch('/api/market/indicators');
         if (!response.ok) return;
         const data = await response.json();
-        // 데이터가 유효할 때만 상태 업데이트
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
           setMarketIndicators(data);
         }
-      } catch (error) {
-        // 에러 시 무시 (기존 데이터 유지)
-      }
+      } catch (error) {}
     };
 
     fetchMarketIndicators();
-    const intervalId = setInterval(fetchMarketIndicators, 60000); // 1분마다 갱신
+    const intervalId = setInterval(fetchMarketIndicators, 60000);
     return () => clearInterval(intervalId);
   }, []);
 
-  // Fetch prices for tickerStocks and favoritedStocks from new backend endpoint
+  // Fetch prices for favoritedStocks
   useEffect(() => {
-    const fetchWatchlistPrices = async () => {
-      if (favoritedStocks.length === 0) return;
+    const codesString = favoritedStocks.join(',');
+    if (!codesString) {
+      setStockPrices({});
+      return;
+    }
 
+    const fetchWatchlistPrices = async () => {
       try {
-        const response = await fetch(`/api/stocks/prices?codes=${favoritedStocks.join(',')}`);
+        const response = await fetch(`/api/stocks/prices?codes=${codesString}`);
         const data = await response.json();
-        if (Object.keys(data).length > 0) {
-          setStockPrices(data);
+        
+        if (data && Object.keys(data).length > 0) {
+          // 기존 데이터와 새 데이터를 병합하여 이름 누락 방지
+          setStockPrices(prev => ({ 
+            ...prev, 
+            ...data 
+          }));
         }
       } catch (error) {
         console.error("Failed to fetch watchlist stock prices:", error);
@@ -103,9 +154,9 @@ const App = () => {
     };
 
     fetchWatchlistPrices();
-    const intervalId = setInterval(fetchWatchlistPrices, 30000); // 30초마다 갱신
+    const intervalId = setInterval(fetchWatchlistPrices, 30000);
     return () => clearInterval(intervalId);
-  }, [favoritedStocks]); // Re-run if favorited stocks change
+  }, [favoritedStocks.join(',')]); // 배열 내용을 문자열로 변환하여 내용 변화 감지
 
   // Supabase realtime messages setup (KIS token logic removed from here)
   useEffect(() => {
@@ -116,8 +167,6 @@ const App = () => {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-
-
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -126,12 +175,14 @@ const App = () => {
     const text = inputText;
     setInputText(''); 
     try {
-      await supabase.from('messages').insert([{ user: myNickname, text, time: new Date() }]);
+      await supabase.from('messages').insert([{ user: user?.email?.split('@')[0] || myNickname, text, time: new Date() }]);
     } catch (e) { console.error("전송 실패", e); }
   };
 
   return (
     <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
+      {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
+      
       <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 bg-[#0a0c10] shrink-0 z-50">
         <div className="flex items-center gap-8">
           <h1 className="text-xl font-black text-white cursor-pointer" onClick={() => navigate('/')}>STOCK<span className="text-blue-500 italic">MATE</span></h1>
@@ -152,7 +203,13 @@ const App = () => {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-4"><Bell className="w-5 h-5 text-slate-400" /><User className="w-5 h-5 text-slate-400" /></div>
+        <div className="flex items-center gap-4">
+          <Bell className="w-5 h-5 text-slate-400" />
+          <div onClick={() => user ? supabase.auth.signOut() : setShowLoginModal(true)} className="flex items-center gap-2 cursor-pointer group">
+            <User className={`w-5 h-5 ${user ? 'text-blue-500' : 'text-slate-400'}`} />
+            {user && <span className="text-xs text-slate-500 hidden md:block group-hover:text-rose-500">로그아웃</span>}
+          </div>
+        </div>
       </header>
 
       <div className="h-9 bg-blue-600/5 border-b border-white/5 flex items-center overflow-hidden shrink-0 z-40">
