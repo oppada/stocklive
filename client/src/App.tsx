@@ -179,6 +179,24 @@ const App = () => {
     } catch (e) { console.error("전송 실패", e); }
   };
 
+  // 로그아웃 핸들러 보강
+  const handleLogout = async () => {
+    try {
+      // 1. Supabase 서버 로그아웃 시도
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (e) {
+      console.error("Logout error:", e);
+      // 2. 403 에러 등이 발생해도 로컬 스토리지를 비워 로그아웃 상태 강제 유도
+      localStorage.removeItem('supabase.auth.token'); 
+    } finally {
+      // 3. 무조건 사용자 상태 초기화 및 홈으로 이동
+      setUser(null);
+      setFavoritedStocks([]);
+      window.location.href = '/'; 
+    }
+  };
+
   return (
     <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#0a0c10] text-slate-100 font-sans">
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
@@ -205,7 +223,7 @@ const App = () => {
         </div>
         <div className="flex items-center gap-4">
           <Bell className="w-5 h-5 text-slate-400" />
-          <div onClick={() => user ? supabase.auth.signOut() : setShowLoginModal(true)} className="flex items-center gap-2 cursor-pointer group">
+          <div onClick={() => user ? handleLogout() : setShowLoginModal(true)} className="flex items-center gap-2 cursor-pointer group">
             <User className={`w-5 h-5 ${user ? 'text-blue-500' : 'text-slate-400'}`} />
             {user && <span className="text-xs text-slate-500 hidden md:block group-hover:text-rose-500">로그아웃</span>}
           </div>
