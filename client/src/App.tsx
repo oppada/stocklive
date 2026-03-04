@@ -202,9 +202,10 @@ const App = () => {
             <Bell className="w-4 h-4" />
           </button>
           
+          {/* Desktop Only User/Login Button */}
           <div 
             onClick={() => user ? navigate('/mypage') : setShowLoginModal(true)} 
-            className={`flex items-center justify-center cursor-pointer w-10 h-10 rounded-xl transition-all active:scale-95 shadow-md ${user ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
+            className={`hidden md:flex items-center justify-center cursor-pointer w-10 h-10 rounded-xl transition-all active:scale-95 shadow-md ${user ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
           >
             <User className="w-5 h-5" />
           </div>
