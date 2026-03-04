@@ -82,19 +82,24 @@ module.exports = async (req, res) => {
             // 🚀 토스 수급 데이터 (Puppeteer 기반 - 10분 주기)
             const isTossTime = (status.minutes % 10 === 0);
             if (isTossTime || isForce) {
-                console.log("🚀 [Toss] 수집 엔진 가동 (개인/외인/기관)...");
-                const investorData = await collectInvestorTrend();
-                
-                if (investorData && investorData.buy?.foreign?.list?.length > 0) {
-                    // 날짜 표시 일원화
-                    investorData.updated_at_text = status.formattedDate;
+                console.log("🚀 [Toss] 수집 엔진 가동 시도...");
+                try {
+                    const investorData = await collectInvestorTrend();
+                    
+                    if (investorData && investorData.buy?.foreign?.list?.length > 0) {
+                        // 날짜 표시 일원화
+                        investorData.updated_at_text = status.formattedDate;
 
-                    await supabase.from('stock_data_cache').upsert({ 
-                        id: 'toss_investor_trend_all', 
-                        data: investorData, 
-                        updated_at: new Date() 
-                    });
-                    console.log(`✅ [Toss Update Success] ${status.formattedDate}`);
+                        await supabase.from('stock_data_cache').upsert({ 
+                            id: 'toss_investor_trend_all', 
+                            data: investorData, 
+                            updated_at: new Date() 
+                        });
+                        console.log(`✅ [Toss Update Success] ${status.formattedDate}`);
+                    }
+                } catch (tossError) {
+                    console.error("⚠️ [Toss Error] 수집 실패 (환경 이슈):", tossError.message);
+                    // 토스 수집에 실패해도 네이버 데이터는 보존하기 위해 에러를 던지지 않음
                 }
             }
         }
