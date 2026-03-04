@@ -1,4 +1,3 @@
-import React from 'react';
 import { Newspaper, Bell, ChevronRight } from 'lucide-react';
 
 const NEWS_DATA = [
