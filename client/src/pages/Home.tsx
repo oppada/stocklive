@@ -185,18 +185,18 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
 
     return (
       <div className="flex flex-col space-y-1">
-        <div className="px-4 py-2.5 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-between mx-1">
+        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-between mx-1">
           <span className="font-black text-slate-800 text-[13px] uppercase tracking-tighter">{title}</span>
           {currentTime && <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">{currentTime}</span>}
         </div>
-        <div className="bg-[#fcfdfe] border-y border-slate-200 overflow-hidden">
-          <div className="grid grid-cols-[25px_1fr_55px_65px] px-4 py-2 bg-slate-100/50 text-[9px] font-black text-slate-400 uppercase tracking-tighter border-b border-slate-100">
+        <div className="bg-[#f1f4f9] border-y border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-[25px_1fr_55px_65px] px-4 py-2 bg-slate-200/50 text-[9px] font-black text-slate-500 uppercase tracking-tighter border-b border-slate-200">
             <div>#</div>
             <div>종목명</div>
             <div className="text-right">등락</div>
             <div className="text-right">금액</div>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-200/50">
             {(stocks || []).map((stock: any, idx: number) => {
               const rate = parseFloat(String(stock.changeRate)) || 0;
               const isUp = rate > 0;
@@ -206,7 +206,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                 : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
 
               return (
-                <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-4 h-9 hover:bg-white transition-all group">
+                <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-4 h-9 hover:bg-white transition-all group bg-[#fdfdfe]">
                   <div className="text-[10px] font-black text-slate-400">{idx + 1}</div>
                   <Link to={`/stock/${stock.code}`} className="text-[12px] font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors">
                     {stock.name}
@@ -252,7 +252,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
             <div className="space-y-0.5">
                 {(allThemes || []).map((t: any) => (
                   <div key={t.name} onClick={() => setSelectedThemeId(t.name)}
-                    className={`cursor-pointer px-4 py-1.5 rounded-xl transition-all border-2 ${selectedThemeId === t.name ? 'bg-white border-violet-500 shadow-sm scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white hover:border-slate-100'}`}>
+                    className={`cursor-pointer px-4 py-1.5 rounded-xl transition-all border-2 ${selectedThemeId === t.name ? 'bg-white border-violet-500 shadow-md scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white hover:border-slate-100'}`}>
                     <div className="flex justify-between items-center gap-2">
                       <span className={`font-black text-[13px] truncate ${selectedThemeId === t.name ? 'text-violet-600' : 'text-slate-600'}`}>{t.name}</span>
                       <span className={`text-[11px] font-black font-mono ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-rose-500' : 'text-indigo-600'}`}>{parseFloat(t.avgChangeRate || 0).toFixed(1)}%</span>
@@ -278,7 +278,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                 )}
               </div>
             ) : (
-              <div className="w-full bg-[#fcfdfe] min-h-[600px]">
+              <div className="w-full bg-[#f1f4f9] min-h-[600px]">
                 {activeTab === '테마' && (
                   <div className="md:hidden p-3 bg-slate-100/50 border-b border-slate-200 relative">
                     <button 
@@ -306,7 +306,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                   </div>
                 )}
                 
-                <div className={`${gridLayout} px-4 md:px-8 py-2.5 bg-slate-100/50 border-b border-slate-200 text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest`}>
+                <div className={`${gridLayout} px-4 md:px-8 py-2.5 bg-slate-200/50 border-b border-slate-200 text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest`}>
                     <div className="text-center">#</div>
                     <div className="text-center"></div>
                     <div>Stock</div>
@@ -317,7 +317,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                     <div className="text-right hidden md:block">Vol</div>
                 </div>
                 
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-200/60">
                   {activeTab === '관심' && !user ? (
                     <div className="py-40 text-center flex flex-col items-center gap-6 px-6">
                        <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner"><Heart size={32} /></div>
@@ -340,8 +340,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                         const changeValue = stock.change || (Math.round(stock.price * (Math.abs(rate) / 100)));
                         
                         return (
-                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} px-4 md:px-8 h-[38px] md:h-[44px] hover:bg-white transition-all group cursor-pointer relative active:bg-blue-50/30 border-b border-slate-50/50`} onClick={() => navigate(`/stock/${stock.code}`)}>
-                             <div className="text-[10px] md:text-[12px] font-black text-slate-400/60 font-mono tracking-tighter">{idx + 1}</div>
+                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} px-4 md:px-8 h-[38px] md:h-[44px] hover:bg-white transition-all group cursor-pointer relative active:bg-blue-50/30 border-b border-slate-200/30 bg-[#fdfdfe]`} onClick={() => navigate(`/stock/${stock.code}`)}>
+                             <div className="text-[10px] md:text-[12px] font-black text-slate-400 font-mono tracking-tighter">{idx + 1}</div>
                              <div className="flex justify-center" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(stock.code); }}>
                               <Heart size={14} className={`transition-all duration-300 ${favoritedStocks.includes(stock.code) ? 'text-rose-500 fill-rose-500' : 'text-slate-200 hover:text-rose-300'}`} />
                             </div>

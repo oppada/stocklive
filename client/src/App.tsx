@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { 
-  Search, Bell, User, MessageCircle, Home as HomeIcon, PieChart, Newspaper, Zap, TrendingUp, BarChart3
+  Search, Bell, User, MessageCircle, Home as HomeIcon, PieChart, Newspaper, Zap
 } from 'lucide-react'; 
 
 // Page component imports
@@ -169,15 +169,12 @@ const App = () => {
     <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#f4f7fa] text-slate-900 font-sans selection:bg-indigo-100">
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
       
-      {/* Header - Refined Sophistication */}
+      {/* Header */}
       <header className="h-16 border-b border-slate-200/80 flex items-center justify-between px-4 md:px-6 bg-white shrink-0 z-50 sticky top-0 shadow-sm">
         <div className="flex items-center gap-10">
-          <div className="flex items-center cursor-pointer group" onClick={() => navigate('/')}>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none">
-              STOCK<span className="text-indigo-600 transition-colors group-hover:text-indigo-500">MATE</span>
-            </h1>
+          <div className="flex flex-col cursor-pointer group" onClick={() => navigate('/')}>
+            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none">STOCK<span className="text-indigo-600 transition-colors group-hover:text-indigo-500">MATE</span></h1>
           </div>
-          {/* PC Nav - No more light blue background, clean bold text with indicator */}
           <nav className="hidden md:flex items-center gap-6 text-[14px] font-bold text-slate-400">
             {[
               { name: '홈', path: '/' },
@@ -205,19 +202,18 @@ const App = () => {
             <Bell className="w-4 h-4" />
           </button>
           
-          {/* Desktop Only User/Login Button */}
           <div 
             onClick={() => user ? navigate('/mypage') : setShowLoginModal(true)} 
-            className={`hidden md:flex items-center justify-center cursor-pointer w-10 h-10 rounded-xl transition-all active:scale-95 shadow-md ${user ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
+            className={`flex items-center justify-center cursor-pointer w-10 h-10 rounded-xl transition-all active:scale-95 shadow-md ${user ? 'bg-indigo-600 text-white shadow-indigo-600/20' : 'bg-slate-900 text-white shadow-slate-900/20'}`}
           >
             <User className="w-5 h-5" />
           </div>
         </div>
       </header>
 
-      {/* Ticker */}
-      <div className="h-10 bg-[#0f172a] border-b border-white/5 flex items-center overflow-hidden shrink-0 z-40 relative">
-        <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold">
+      {/* Ticker - Brightened text for labels */}
+      <div className="h-10 bg-[#0f172a] border-b border-white/5 flex items-center overflow-hidden shrink-0 z-40 relative shadow-inner">
+        <div className="animate-marquee whitespace-nowrap flex text-[11px] font-bold items-center">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex gap-14 pr-14">
               {Object.entries(marketIndicators)
@@ -229,9 +225,10 @@ const App = () => {
                   const sign = isUp ? '+' : '';
                   return (
                     <span key={name} className="flex items-center gap-3">
-                      <span className="text-slate-500 font-black tracking-widest">{name}</span>
-                      <span className="font-mono text-white text-[13px]">{Number(data?.price || 0).toLocaleString()}</span>
-                      <span className={`${colorClass} font-mono bg-white/5 px-2 py-0.5 rounded-md`}>
+                      {/* Brightened label */}
+                      <span className="text-slate-200 font-black tracking-widest uppercase leading-none">{name}</span>
+                      <span className="font-mono text-white text-[13px] leading-none">{Number(data?.price || 0).toLocaleString()}</span>
+                      <span className={`${colorClass} font-mono bg-white/5 px-2 py-0.5 rounded-md border border-white/5 leading-none flex items-center`}>
                         {sign}{(data?.change || 0).toLocaleString()} ({sign}{(data?.changeRate || 0).toFixed(2)}%)
                       </span>
                     </span>
@@ -243,20 +240,19 @@ const App = () => {
       </div>
 
       <div className="flex flex-1 overflow-hidden bg-[#f4f7fa]">
-        {/* Chat Sidebar - Indigo point colors */}
         <aside className={`border-r border-slate-200/80 flex-col bg-white shrink-0 ${isChatRoute ? 'hidden' : 'hidden md:flex w-[360px]'}`}>
           <div className="p-5 border-b border-slate-200/80 flex justify-between items-center bg-slate-50/50">
             <h3 className="font-black text-[13px] text-slate-800 flex items-center gap-2 uppercase">
-              <MessageCircle size={14} className="text-indigo-600" /> 실시간 톡
+              <MessageCircle size={14} className="text-indigo-600" /> 실시간 종목 톡
             </h3>
-            <div className="flex items-center bg-indigo-50 px-2 py-1 rounded-lg gap-1.5 border border-indigo-100">
-              <div className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></div>
-              <span className="text-[9px] font-black text-indigo-600 uppercase">Live</span>
+            <div className="flex items-center bg-blue-50 px-2 py-1 rounded-lg gap-1.5 border border-blue-100">
+              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse"></div>
+              <span className="text-[9px] font-black text-blue-600 uppercase">Live</span>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-gradient-to-b from-white to-slate-50/50">
             {messages.map((m, i) => (
-              <div key={i} className="text-[13px] leading-relaxed py-0.5 px-1 group">
+              <div key={i} className="text-[13px] leading-relaxed py-0.5 px-1 hover:bg-slate-50 transition-colors rounded">
                 <span className="font-black text-slate-400 mr-2">{m.user}:</span> 
                 <span className="text-slate-700 font-medium">{m.text}</span>
               </div>
@@ -266,13 +262,12 @@ const App = () => {
           <form onSubmit={handleSendMessage} className="p-5 border-t border-slate-200/80 bg-white shadow-sm">
             <div className="flex items-center gap-2">
               <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full bg-slate-100 rounded-2xl px-5 py-3.5 text-xs outline-none flex-1 border-2 border-transparent focus:border-indigo-500 focus:bg-white transition-all" placeholder="함께 대화해보세요" />
-              {/* Send Button - Changed to Indigo-600 */}
               <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-12 h-12 flex items-center justify-center bg-indigo-600 rounded-2xl text-white hover:bg-indigo-700 active:scale-90 transition-all shrink-0 shadow-lg shadow-indigo-600/20"><Zap size={18} fill="currentColor" /></button>
             </div>
           </form>
         </aside>
 
-        <main className="flex-1 overflow-hidden p-0 relative">
+        <main className="flex-1 overflow-hidden p-0 relative shadow-[inset_0px_0px_60px_rgba(0,0,0,0.02)]">
           <Routes>
             <Route path="/" element={<HomePage stockPrices={stockPrices} favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} onLoginClick={() => setShowLoginModal(true)} user={user} />} />
             <Route path="/recommendation" element={<Recommendation />} />

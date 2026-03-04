@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, LogOut, ChevronRight, Settings, Shield, Bell, HelpCircle, MessageCircle, Edit2, Check, X, Star, ShieldCheck } from 'lucide-react';
+import { User, LogOut, ChevronRight, Settings, Bell, HelpCircle, MessageCircle, Edit2, Check, X, Star, ShieldCheck } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 interface MyPageProps {

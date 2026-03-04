@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Zap, Globe, BarChart3, Trophy, Activity, ChevronRight, TrendingUp, Cpu, Coins } from 'lucide-react';
+import { Search, Zap, Globe, BarChart3, Activity, ChevronRight, TrendingUp, Cpu, Coins } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CATEGORIES = [

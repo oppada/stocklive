@@ -1,4 +1,4 @@
-import { Flame, ChevronRight, Star, TrendingUp, Zap, BarChart3 } from 'lucide-react';
+import { Flame, ChevronRight, TrendingUp, Zap, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const RECOMMEND_DATA = [
@@ -55,7 +55,7 @@ const Recommendation = () => {
                   </div>
                   
                   {/* Mobile Price */}
-                  <div className="flex items-baseline gap-2.5 mt-1 md:hidden">
+                  <div className="flex items-baseline gap-2.5 mt-1.5 md:hidden">
                     <span className="text-base font-black text-slate-900 font-mono tracking-tighter">{item.price.toLocaleString()}</span>
                     <span className={`text-[11px] font-black font-mono ${item.change > 0 ? 'text-rose-500' : 'text-blue-600'}`}>
                       {item.change > 0 ? '▲' : '▼'}{Math.abs(item.change)}%
@@ -75,7 +75,7 @@ const Recommendation = () => {
 
               {/* Arrow */}
               <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-inner shrink-0">
-                <ChevronRight size={20} md:size={24} strokeWidth={3} />
+                <ChevronRight size={20} strokeWidth={3} />
               </div>
             </div>
           ))}
