@@ -63,25 +63,25 @@ const LoginModal = ({ onClose }: LoginModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 px-4">
-      <div className="w-full max-w-sm bg-[#1A1D21] rounded-2xl border border-white/10 p-6 shadow-2xl relative">
-        <button onClick={onClose} className="absolute right-4 top-4 text-slate-500 hover:text-white">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm px-4">
+      <div className="w-full max-w-sm bg-white rounded-3xl border border-slate-200 p-8 shadow-2xl relative">
+        <button onClick={onClose} className="absolute right-6 top-6 text-slate-400 hover:text-slate-600 transition-colors">
           <X size={20} />
         </button>
-        <h2 className="text-xl font-bold mb-6">Login to StockMate</h2>
-        <form className="space-y-4">
+        <h2 className="text-2xl font-black mb-8 text-slate-900">로그인</h2>
+        <form className="space-y-5">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Email</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-[#0E1013] border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none" placeholder="Enter your email" />
+            <label className="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider px-1">이메일</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all" placeholder="email@example.com" />
           </div>
           <div>
-            <label className="block text-xs text-slate-500 mb-1">Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-[#0E1013] border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none" placeholder="Enter your password" />
+            <label className="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider px-1">비밀번호</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all" placeholder="••••••••" />
           </div>
-          {message && <p className="text-xs text-rose-500">{message}</p>}
-          <div className="flex gap-2 pt-2">
-            <button onClick={handleLogin} disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-xl font-bold text-sm transition-colors">Login</button>
-            <button onClick={handleSignUp} disabled={isLoading} className="flex-1 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold text-sm transition-colors">Sign Up</button>
+          {message && <p className="text-xs text-rose-500 font-bold px-1">{message}</p>}
+          <div className="flex flex-col gap-3 pt-4">
+            <button onClick={handleLogin} disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-bold text-white shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all">로그인</button>
+            <button onClick={handleSignUp} disabled={isLoading} className="w-full bg-slate-100 hover:bg-slate-200 py-4 rounded-2xl font-bold text-slate-600 active:scale-[0.98] transition-all">회원가입</button>
           </div>
         </form>
       </div>

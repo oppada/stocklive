@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Heart, Flame, ArrowDownCircle, BarChart3, Coins, LayoutGrid, Users, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
+const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginClick }: any) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(() => {
-    // sessionStorage는 브라우저 탭을 닫으면 초기화되므로 '접속 시' 기준에 적합함
     const savedTab = sessionStorage.getItem('activeTab');
     return savedTab || '급상승'; 
   });
@@ -21,7 +21,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   const [selectedThemeId, setSelectedThemeId] = useState<string | null>(() => {
     return sessionStorage.getItem('selectedThemeId');
   });
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // 드롭다운 상태 추가
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); 
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]);
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
@@ -50,7 +50,6 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
         const data = await response.json();
         if (Array.isArray(data)) {
           setAllThemes(data);
-          // 저장된 테마가 없거나 목록에 없는 경우 첫 번째 테마 선택
           const savedTheme = sessionStorage.getItem('selectedThemeId');
           if (savedTheme && data.find(t => t.name === savedTheme)) {
             setSelectedThemeId(savedTheme);
@@ -144,18 +143,38 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
   }, [activeTab, investorTab]);
 
   const categoryIcons: Record<string, any> = {
-    '급상승': <Flame size={16} className="text-[#F04452]" />,
-    '급하락': <ArrowDownCircle size={16} className="text-[#3182F6]" />,
-    '거래량': <BarChart3 size={16} className="text-[#2ECC71]" />,
-    '거래대금': <Coins size={16} className="text-[#F1C40F]" />,
-    '테마': <LayoutGrid size={16} className="text-[#9B59B6]" />,
-    '투자자별': <Users size={16} className="text-[#3498DB]" />,
+    '관심': <Heart size={14} fill="currentColor" />,
+    '급상승': <Flame size={14} fill="currentColor" />,
+    '급하락': <ArrowDownCircle size={14} fill="currentColor" />,
+    '거래량': <BarChart3 size={14} fill="currentColor" />,
+    '거래대금': <Coins size={14} fill="currentColor" />,
+    '테마': <LayoutGrid size={14} fill="currentColor" />,
+    '투자자별': <Users size={14} fill="currentColor" />,
   };
 
-  const gridLayout = "grid grid-cols-[16px_20px_104px_53px_50px_53px_50px] md:grid-cols-[45px_60px_0.5fr_110px_90px_90px_100px_90px] items-center gap-1";
+  const getTabColor = (tab: string) => {
+    if (activeTab !== tab) return 'text-slate-400 bg-transparent hover:text-slate-600 hover:bg-slate-100';
+    switch (tab) {
+      case '급상승': return 'text-white bg-rose-500 shadow-md shadow-rose-500/20';
+      case '급하락': return 'text-white bg-indigo-600 shadow-md shadow-indigo-600/20';
+      case '거래대금': return 'text-white bg-amber-600 shadow-md shadow-amber-600/20';
+      case '테마': return 'text-white bg-violet-600 shadow-md shadow-violet-600/20';
+      case '투자자별': return 'text-white bg-emerald-600 shadow-md shadow-emerald-600/20';
+      case '관심': return 'text-white bg-rose-500 shadow-md shadow-rose-500/20';
+      default: return 'text-white bg-slate-900 shadow-md shadow-slate-900/20';
+    }
+  };
+
+  const gridLayout = "grid grid-cols-[20px_25px_1fr_80px_65px] md:grid-cols-[45px_45px_1fr_110px_90px_90px_110px_100px] items-center gap-1.5 md:gap-3";
 
   let displayStocks: any[] = [];
-  if (activeTab === '테마') displayStocks = selectedThemeStocks;
+  if (activeTab === '관심') {
+    displayStocks = favoritedStocks.map((code: string) => {
+      const info = stockPrices[code];
+      return info ? { ...info, code } : { code, name: '로딩 중...', price: 0, changeRate: 0 };
+    });
+  }
+  else if (activeTab === '테마') displayStocks = selectedThemeStocks;
   else if (['급상승', '급하락', '거래량', '거래대금'].includes(activeTab)) displayStocks = rankingStocks;
 
   const renderInvestorColumn = (title: string, stocks: any[]) => {
@@ -165,100 +184,91 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
     const currentTime = investorUpdateTimes[timeKey];
 
     return (
-      <div className="flex flex-col space-y-1 min-h-[500px]">
-        <div className="sticky top-0 z-20 px-3 py-1.5 bg-[#1C1E23] rounded-xl text-center font-bold text-[13px] text-slate-300 border border-white/5 flex flex-col items-center justify-center gap-0">
-          <span>{title}</span>
-          {currentTime && <span className="text-[9px] text-slate-500 font-normal mt-[-2px]">{currentTime}</span>}
+      <div className="flex flex-col space-y-1">
+        <div className="px-4 py-2.5 bg-white rounded-xl shadow-sm border border-slate-200 flex items-center justify-between mx-1">
+          <span className="font-black text-slate-800 text-[13px] uppercase tracking-tighter">{title}</span>
+          {currentTime && <span className="text-[9px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded-full border border-slate-100">{currentTime}</span>}
         </div>
-        <div className="sticky top-[42px] z-10 grid grid-cols-[25px_1fr_55px_65px] px-2 py-1 text-[10px] font-bold text-slate-600 uppercase border-b border-white/5 bg-[#0E1013] h-8 items-center">
-          <div>#</div>
-          <div>종목명</div>
-          <div className="text-right">등락률</div>
-          <div className="text-right">대금</div>
-        </div>
-        <div className="space-y-0">
-          {(stocks || []).map((stock: any, idx: number) => {
-            const rawRate = typeof stock.changeRate === 'string' ? parseFloat(stock.changeRate.replace('%', '')) : stock.changeRate;
-            const rate = isNaN(rawRate) ? 0 : rawRate;
-            const isUp = rate > 0;
-            // 거래대금 표시 최적화 (조, 억, 만 단위 모두 대응)
-            const rawValue = stock.tradeValue || '';
-            const displayValue = (typeof rawValue === 'string' && (rawValue.includes('조') || rawValue.includes('억') || rawValue.includes('만'))) 
-              ? rawValue.replace(/원/g, '') 
-              : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
+        <div className="bg-[#fcfdfe] border-y border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-[25px_1fr_55px_65px] px-4 py-2 bg-slate-100/50 text-[9px] font-black text-slate-400 uppercase tracking-tighter border-b border-slate-100">
+            <div>#</div>
+            <div>종목명</div>
+            <div className="text-right">등락</div>
+            <div className="text-right">금액</div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {(stocks || []).map((stock: any, idx: number) => {
+              const rate = parseFloat(String(stock.changeRate)) || 0;
+              const isUp = rate > 0;
+              const rawValue = stock.tradeValue || '';
+              const displayValue = (typeof rawValue === 'string' && (rawValue.includes('조') || rawValue.includes('억') || rawValue.includes('만'))) 
+                ? rawValue.replace(/원/g, '') 
+                : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
 
-            return (
-              <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-2 py-0 hover:bg-[#1C1E23] rounded-lg transition-all group h-8">
-                <div className="text-[13px] font-bold text-slate-500">{idx + 1}</div>
-                <Link to={`/stock/${stock.code}`} className="text-xs md:text-[14px] font-bold text-slate-200 truncate group-hover:text-white">
-                  {stock.name}
-                </Link>
-                <div className={`text-right text-xs md:text-[13px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
-                  {isUp ? '+' : ''}{rate.toFixed(2)}%
+              return (
+                <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-4 h-9 hover:bg-white transition-all group">
+                  <div className="text-[10px] font-black text-slate-400">{idx + 1}</div>
+                  <Link to={`/stock/${stock.code}`} className="text-[12px] font-bold text-slate-700 truncate group-hover:text-indigo-600 transition-colors">
+                    {stock.name}
+                  </Link>
+                  <div className={`text-right text-[11px] font-black font-mono ${isUp ? 'text-rose-500' : 'text-indigo-600'}`}>
+                    {isUp ? '+' : ''}{rate.toFixed(1)}%
+                  </div>
+                  <div className="text-right text-[11px] font-black text-slate-500 font-mono tracking-tighter opacity-80">
+                    {displayValue}
+                  </div>
                 </div>
-                <div className="text-right text-xs md:text-[13px] font-bold text-slate-500 font-mono">
-                  {displayValue}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#0E1013] text-white">
-      <div className="sticky top-0 z-30 bg-[#0E1013] border-b border-white/5">
-        <nav className="flex items-center justify-around gap-1 px-2 py-2 hide-scrollbar md:justify-start md:gap-5 md:px-4">
-          {['급상승', '급하락', '거래량', '거래대금', '테마', '투자자별'].map((tab) => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex items-center justify-center gap-1 px-0 py-2 rounded-xl text-xs md:text-[14px] md:flex-none md:justify-start md:gap-2 md:px-1 font-bold transition-all whitespace-nowrap
-                ${activeTab === tab ? 'text-white bg-[#1C1E23]' : 'text-slate-500 hover:text-slate-300'}`}>
-              <span className="hidden md:block">{categoryIcons[tab]}</span> {tab}
+    <div className="flex flex-col h-full w-full bg-[#f4f7fa]">
+      <div className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+        <nav className="flex items-center justify-between md:justify-start gap-1 px-1.5 md:px-4 py-2 md:py-3 overflow-x-auto no-scrollbar">
+          {['급상승', '급하락', '거래량', '거래대금', '테마', '투자자별', '관심'].map((tab) => (
+            <button 
+              key={tab} 
+              onClick={() => setActiveTab(tab)}
+              className={`flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-2 px-1 md:px-5 py-1.5 md:py-2.5 rounded-xl md:rounded-2xl transition-all whitespace-nowrap flex-1 md:flex-none font-black text-[10px] md:text-[13px]
+                ${getTabColor(tab)}
+                ${tab === '관심' ? 'md:hidden' : ''}`}
+            >
+              <span className={`md:block scale-75 md:scale-100 hidden`}>{categoryIcons[tab]}</span>
+              <span>{tab}</span>
             </button>
           ))}
         </nav>
       </div>
 
-      {activeTab === '투자자별' && (
-        <div className="px-4 py-2 bg-[#0E1013] border-b border-white/5 flex gap-2">
-          <button onClick={() => setInvestorTab('buy')}
-            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${investorTab === 'buy' ? 'bg-[#F04452] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
-            순매수
-          </button>
-          <button onClick={() => setInvestorTab('sell')}
-            className={`px-4 py-1.5 rounded-full text-[12px] font-bold transition-all ${investorTab === 'sell' ? 'bg-[#3182F6] text-white' : 'bg-[#1C1E23] text-slate-400'}`}>
-            순매도
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-1 overflow-hidden">
         {activeTab === '테마' && (
-          <aside className="hidden md:block w-52 border-r border-white/5 overflow-y-auto shrink-0 p-2 hide-scrollbar">
-            {isLoadingThemes ? (
-              <div className="p-2 text-slate-500 text-sm">테마 불러오는 중...</div>
-            ) : (
-              (allThemes || []).map((t: any) => (
-                <div key={t.name} onClick={() => setSelectedThemeId(t.name)}
-                  className={`cursor-pointer px-3 py-1.5 rounded-xl transition-all mb-1 ${selectedThemeId === t.name ? 'bg-[#1C1E23]' : 'hover:bg-white/5'}`}>
-                  <div className="flex justify-between items-center">
-                    <span className={`font-bold text-[13px] truncate max-w-[110px] ${selectedThemeId === t.name ? 'text-white' : 'text-slate-400'}`}>{t.name}</span>
-                    <span className={`text-[12px] font-bold ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{parseFloat(t.avgChangeRate || 0).toFixed(2)}%</span>
+          <aside className="hidden md:block w-64 border-r border-slate-200/60 overflow-y-auto shrink-0 p-3 no-scrollbar bg-[#f8fafc]">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 px-2">Market Themes</h3>
+            <div className="space-y-0.5">
+                {(allThemes || []).map((t: any) => (
+                  <div key={t.name} onClick={() => setSelectedThemeId(t.name)}
+                    className={`cursor-pointer px-4 py-1.5 rounded-xl transition-all border-2 ${selectedThemeId === t.name ? 'bg-white border-violet-500 shadow-sm scale-[1.01]' : 'bg-transparent border-transparent hover:bg-white hover:border-slate-100'}`}>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className={`font-black text-[13px] truncate ${selectedThemeId === t.name ? 'text-violet-600' : 'text-slate-600'}`}>{t.name}</span>
+                      <span className={`text-[11px] font-black font-mono ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-rose-500' : 'text-indigo-600'}`}>{parseFloat(t.avgChangeRate || 0).toFixed(1)}%</span>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))}
+            </div>
           </aside>
         )}
 
-        <main className="flex-1 overflow-y-auto hide-scrollbar pb-16">
-          <div className="min-h-full">
+        <main className="flex-1 overflow-y-auto no-scrollbar pb-24">
+          <div className="w-full">
             {activeTab === '투자자별' ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-0 md:gap-4 py-2 md:p-4 bg-[#f8fafc]">
                 {isLoadingInvestor && foreignStocks.length === 0 ? (
-                  <div className="col-span-1 md:col-span-3 text-center text-slate-400 py-20">투자자별 데이터 로딩 중...</div>
+                  <div className="col-span-3 py-40 text-center text-slate-300 font-black uppercase animate-pulse italic">Synchronizing Data...</div>
                 ) : (
                   <>
                     {renderInvestorColumn('외국인', foreignStocks)}
@@ -268,38 +278,27 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                 )}
               </div>
             ) : (
-            <div className="w-full">
+              <div className="w-full bg-[#fcfdfe] min-h-[600px]">
                 {activeTab === '테마' && (
-                  <div className="md:hidden p-2 mb-1 relative">
-                    {/* 커스텀 드롭다운 버튼 */}
+                  <div className="md:hidden p-3 bg-slate-100/50 border-b border-slate-200 relative">
                     <button 
                       onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                      className="w-full bg-[#1C1E23] border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm flex justify-between items-center"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-slate-900 text-sm flex justify-between items-center shadow-sm active:scale-[0.98] transition-all"
                     >
-                      <span className="font-bold">
-                        {selectedThemeId} ({parseFloat(allThemes.find(t => t.name === selectedThemeId)?.avgChangeRate || 0).toFixed(2)}%)
+                      <span className="font-black tracking-tight flex items-center gap-2 text-violet-600">
+                        <LayoutGrid size={14} /> {selectedThemeId}
                       </span>
                       <ChevronRight size={16} className={`transform transition-transform ${isThemeMenuOpen ? 'rotate-90' : ''}`} />
                     </button>
 
-                    {/* 커스텀 드롭다운 리스트 */}
                     {isThemeMenuOpen && (
-                      <div 
-                        className="absolute top-full left-2 right-2 mt-1 bg-[#1A1D21] border border-white/10 rounded-xl shadow-2xl z-50 max-h-[300px] overflow-y-auto animate-in fade-in zoom-in-95 duration-100"
-                      >
+                      <div className="absolute top-full left-3 right-3 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-[350px] overflow-y-auto p-1 space-y-0.5 animate-in zoom-in-95 fade-in duration-200">
                         {(allThemes || []).map((t: any) => (
-                          <div 
-                            key={t.name}
-                            onClick={() => {
-                              setSelectedThemeId(t.name);
-                              setIsThemeMenuOpen(false);
-                            }}
-                            className={`px-4 py-3 border-b border-white/5 last:border-0 flex justify-between items-center active:bg-white/5 ${selectedThemeId === t.name ? 'bg-blue-600/20' : ''}`}
+                          <div key={t.name} onClick={() => { setSelectedThemeId(t.name); setIsThemeMenuOpen(false); }}
+                            className={`px-4 py-2.5 rounded-lg flex justify-between items-center active:bg-blue-50 ${selectedThemeId === t.name ? 'bg-blue-50 text-violet-600 font-black' : 'text-slate-600'}`}
                           >
-                            <span className={`text-sm ${selectedThemeId === t.name ? 'text-blue-400 font-bold' : 'text-slate-300'}`}>{t.name}</span>
-                            <span className={`text-xs font-bold ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
-                              {parseFloat(t.avgChangeRate || 0).toFixed(2)}%
-                            </span>
+                            <span className="text-xs font-bold">{t.name}</span>
+                            <span className={`text-[10px] font-black font-mono ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-rose-500' : 'text-indigo-600'}`}>{parseFloat(t.avgChangeRate || 0).toFixed(1)}%</span>
                           </div>
                         ))}
                       </div>
@@ -307,73 +306,84 @@ const Home = ({ favoritedStocks, onFavoriteToggle }: any) => {
                   </div>
                 )}
                 
-                <div className="px-2 py-2">
-                  <div className={`${gridLayout} pb-2 border-b border-white/5 text-[11px] font-bold text-slate-600 uppercase h-8 items-center`}>
+                <div className={`${gridLayout} px-4 md:px-8 py-2.5 bg-slate-100/50 border-b border-slate-200 text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest`}>
                     <div className="text-center">#</div>
                     <div className="text-center"></div>
-                    <div>종목명</div>
-                    <div className="text-right">현재가</div>
-                    <div className="text-right">전일비</div>
-                    <div className="text-right">등락률</div>
-                    <div className="text-right hidden md:block">거래대금</div>
-                    <div className="text-right">거래량</div>
-                  </div>
+                    <div>Stock</div>
+                    <div className="text-right">Price</div>
+                    <div className="text-right hidden md:block">Chg</div>
+                    <div className="text-right">Rate</div>
+                    <div className="text-right hidden md:block">Value</div>
+                    <div className="text-right hidden md:block">Vol</div>
+                </div>
                 
-                <div className="min-h-[600px] mt-0.5">
-                  {((isLoadingStocks && activeTab !== '테마') || (isLoadingThemeStocks && activeTab === '테마')) && rankingStocks.length === 0 ? (
-                    <div className="text-center text-slate-400 py-20">데이터 로딩 중...</div>
+                <div className="divide-y divide-slate-100">
+                  {activeTab === '관심' && !user ? (
+                    <div className="py-40 text-center flex flex-col items-center gap-6 px-6">
+                       <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner"><Heart size={32} /></div>
+                       <button onClick={onLoginClick} className="px-8 py-3 bg-slate-900 rounded-xl text-[12px] font-black text-white shadow-lg active:scale-95 uppercase tracking-widest">Sign In</button>
+                    </div>
+                  ) : activeTab === '관심' && displayStocks.length === 0 ? (
+                    <div className="py-40 text-center flex flex-col items-center gap-6 px-6">
+                       <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 border border-slate-100 shadow-inner"><Heart size={32} /></div>
+                       <p className="text-xs text-slate-400 font-bold tracking-widest uppercase">Portfolio Empty</p>
+                    </div>
                   ) : (
-                    <div className="space-y-0">
-                      {(displayStocks || []).map((stock: any, idx: number) => {
-                        const isUp = (stock.changeRate || 0) > 0;
+                    ((isLoadingStocks && !['테마', '관심'].includes(activeTab)) || (isLoadingThemeStocks && activeTab === '테마')) && rankingStocks.length === 0 ? (
+                      <div className="py-40 text-center font-black text-slate-200 text-xl uppercase animate-pulse italic">Loading...</div>
+                    ) : (
+                      (displayStocks || []).map((stock: any, idx: number) => {
+                        const rate = parseFloat(String(stock.changeRate)) || 0;
+                        const isUp = rate > 0;
                         const isUpper = !!stock.isUpperLimit;
                         const isLower = !!stock.isLowerLimit;
-                        
-                        // 전일비가 0일 경우 등락률 기반 추산 (네이버가 값을 안 줄 경우 대비)
-                        const changeValue = stock.change || (Math.round(stock.price * (Math.abs(stock.changeRate) / 100)));
+                        const changeValue = stock.change || (Math.round(stock.price * (Math.abs(rate) / 100)));
                         
                         return (
-                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} py-0 rounded-2xl hover:bg-[#1C1E23] transition-all group h-9`}>
-                             <div className="text-center text-[13px] font-bold text-slate-500">{idx + 1}</div>
-                             <div className="flex justify-center">
-                              <Heart size={14} onClick={() => onFavoriteToggle(stock.code)} className={`cursor-pointer ${favoritedStocks.includes(stock.code) ? 'text-[#F04452]' : 'text-slate-800'}`} />
+                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} px-4 md:px-8 h-[38px] md:h-[44px] hover:bg-white transition-all group cursor-pointer relative active:bg-blue-50/30 border-b border-slate-50/50`} onClick={() => navigate(`/stock/${stock.code}`)}>
+                             <div className="text-[10px] md:text-[12px] font-black text-slate-400/60 font-mono tracking-tighter">{idx + 1}</div>
+                             <div className="flex justify-center" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(stock.code); }}>
+                              <Heart size={14} className={`transition-all duration-300 ${favoritedStocks.includes(stock.code) ? 'text-rose-500 fill-rose-500' : 'text-slate-200 hover:text-rose-300'}`} />
                             </div>
-                            <Link to={`/stock/${stock.code}`} className="font-bold text-xs md:text-[15px] text-slate-100 truncate px-0 group-hover:text-white">{stock.name}</Link>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-200 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
-                            <div className={`text-right text-[10px] md:text-[13px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-black text-[13px] md:text-[15px] text-slate-700 truncate tracking-tight group-hover:text-indigo-600 transition-colors">{stock.name}</span>
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400 font-mono uppercase leading-none opacity-70">{stock.code}</span>
+                            </div>
+                            <div className="text-right text-[12px] md:text-[14px] font-black text-slate-800 font-mono tracking-tighter">{Number(stock.price || 0).toLocaleString()}</div>
+                            
+                            <div className={`hidden md:block text-right text-[13px] font-black font-mono tracking-tighter ${isUp ? 'text-rose-500' : 'text-indigo-600'}`}>
                               {isUpper ? (
-                                <span className="bg-[#F04452] text-white text-[9px] px-1 py-0.5 rounded-sm mr-1">상</span>
+                                <span className="bg-rose-500 text-white text-[8px] px-1 rounded-sm mr-0.5">상</span>
                               ) : isLower ? (
-                                <span className="bg-[#3182F6] text-white text-[9px] px-1 py-0.5 rounded-sm mr-1">하</span>
+                                <span className="bg-indigo-600 text-white text-[8px] px-1 rounded-sm mr-0.5">하</span>
                               ) : (
                                 <span className="mr-0.5">{isUp ? '▲' : '▼'}</span>
                               )}
                               {Number(Math.abs(changeValue)).toLocaleString()}
                             </div>
-                            <div className={`text-right text-xs md:text-[14px] font-bold ${isUp ? 'text-[#F04452]' : 'text-[#3182F6]'}`}>{isUp ? '+' : ''}{(stock.changeRate || 0).toFixed(2)}%</div>
-                            <div className="text-right text-xs md:text-[14px] font-bold text-slate-500 font-mono truncate hidden md:block">
+
+                            <div className={`text-right text-[11px] md:text-[14px] font-black font-mono tracking-tighter ${isUp ? 'text-rose-500' : 'text-indigo-600'}`}>{isUp ? '+' : ''}{rate.toFixed(1)}%</div>
+                            
+                            <div className="text-right text-[11px] font-black text-slate-500 font-mono tracking-tighter hidden md:block uppercase opacity-80">
                               {(() => {
                                 const val = parseInt(stock.tradeValue || '0');
-                                if (val >= 1000000000000) {
-                                  return `${(val / 1000000000000).toFixed(1)}조`;
-                                }
-                                return `${(val / 100000000).toFixed(0)}억`;
+                                if (val >= 1000000000000) return `${(val / 1000000000000).toFixed(1)}T`;
+                                return `${(val / 100000000).toFixed(0)}B`;
                               })()}
                             </div>
-                            <div className="text-right text-[10px] md:text-[14px] font-bold text-slate-500 font-mono whitespace-nowrap">
+                            <div className="text-right text-[10px] md:text-[12px] font-black text-slate-400/80 font-mono tracking-tighter hidden md:block uppercase opacity-60">
                               {stock.volume >= 100000000 
-                                ? `${(stock.volume / 100000000).toFixed(1)}억` 
+                                ? `${(stock.volume / 100000000).toFixed(1)}M` 
                                 : stock.volume >= 10000 
-                                  ? `${(stock.volume / 10000).toFixed(0)}만`
+                                  ? `${(stock.volume / 10000).toFixed(0)}K`
                                   : Number(stock.volume).toLocaleString()}
                             </div>
                           </div>
                         );
-                      })}
-                    </div>
+                      })
+                    )
                   )}
                 </div>
-              </div>
               </div>
             )}
           </div>
