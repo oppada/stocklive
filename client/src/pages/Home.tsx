@@ -9,7 +9,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
     return savedTab || '급상승'; 
   });
 
-  const [investorTab, setInvestorTab] = useState(() => {
+  const [investorTab] = useState(() => {
     return sessionStorage.getItem('investorTab') || 'buy';
   });
 
@@ -25,7 +25,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
   const [allThemes, setAllThemes] = useState<any[]>([]);
   const [selectedThemeStocks, setSelectedThemeStocks] = useState<any[]>([]);
   const [rankingStocks, setRankingStocks] = useState<any[]>([]);
-  const [isLoadingThemes, setIsLoadingThemes] = useState(true);
+  const [, setIsLoadingThemes] = useState(true);
   const [isLoadingStocks, setIsLoadingStocks] = useState(false);
   const [isLoadingThemeStocks, setIsLoadingThemeStocks] = useState(false);
 
