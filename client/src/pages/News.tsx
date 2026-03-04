@@ -1,4 +1,5 @@
-import { Newspaper, Bell, Globe, Clock, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Newspaper, Bell, ChevronRight } from 'lucide-react';
 
 const NEWS_DATA = [
   { id: 1, title: '"엔비디아 잡아라" 전 세계 반도체 전쟁 가속화... 삼성의 선택은?', time: '10분 전', category: '경제', isHot: true, source: 'StockMate News' },
