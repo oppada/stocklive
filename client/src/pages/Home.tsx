@@ -144,7 +144,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
     return 'text-slate-900 relative after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-blue-600 after:rounded-full';
   };
 
-  const gridLayout = "grid grid-cols-[20px_25px_1fr_75px_65px] md:grid-cols-[35px_40px_1fr_110px_90px_90px_110px] items-center gap-2 md:gap-3";
+  const gridLayout = "grid grid-cols-[20px_25px_1fr_65px_55px] md:grid-cols-[35px_40px_1fr_110px_90px_90px_110px] items-center gap-1 md:gap-3";
 
   let displayStocks: any[] = [];
   if (activeTab === '관심') {
@@ -336,17 +336,16 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                              <div className={`text-right text-[14px] md:text-[15px] font-bold font-mono ${isUp ? 'text-rose-500' : (isDown ? 'text-blue-600' : 'text-slate-400')}`}>
                                {isUp ? '+' : ''}{rate.toFixed(1)}%
                              </div>
-                             <div className="text-right text-[12px] md:text-[13px] font-bold text-slate-600 font-mono hidden md:block">
+                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-600 font-mono hidden md:block">
                                {(() => {
                                  const val = parseInt(stock.tradeValue || '0');
                                  if (val >= 1000000000000) return `${(val / 1000000000000).toFixed(1)}조`;
                                  return `${(val / 100000000).toFixed(0)}억`;
                                })()}
                              </div>
-                             <div className="text-right text-[12px] md:text-[13px] font-bold text-slate-500 font-mono hidden md:block">
+                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-500 font-mono hidden md:block">
                                {stock.volume >= 10000 ? `${(stock.volume / 10000).toFixed(0)}만` : Number(stock.volume).toLocaleString()}
-                             </div>
-                          </div>
+                             </div>                          </div>
                         );
                       })
                     )}
