@@ -316,9 +316,10 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><Heart size={32} /></div>
                          <button onClick={onLoginClick} className="px-6 py-2 bg-blue-600 rounded-full text-[14px] font-bold text-white shadow-lg">로그인하고 관심종목 보기</button>
                       </div>
+                    ) : ((isLoadingStocks && !['테마', '관심'].includes(activeTab)) || (isLoadingThemeStocks && activeTab === '테마')) && displayStocks.length === 0 ? (
+                      <div className="py-40 text-center text-slate-300 font-bold animate-pulse italic">종목 정보를 불러오는 중...</div>
                     ) : (
-                      (displayStocks || []).map((stock: any, idx: number) => {
-                        const rate = parseFloat(String(stock.changeRate)) || 0;
+                      (displayStocks || []).map((stock: any, idx: number) => {                        const rate = parseFloat(String(stock.changeRate)) || 0;
                         const isUp = rate > 0;
                         const isDown = rate < 0;
                         
