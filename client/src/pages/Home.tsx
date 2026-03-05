@@ -199,14 +199,14 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
 
   return (
     <div className="flex flex-col h-full w-full bg-transparent">
-      {/* Category Tabs - Minimal Toss Style */}
-      <div className="shrink-0 mb-2 px-1">
-        <nav className="flex items-center gap-4 md:gap-8 overflow-x-auto no-scrollbar py-1.5 px-2">
+      {/* Category Tabs - Maximum Density for Mobile */}
+      <div className="shrink-0 mb-2 px-0">
+        <nav className="flex items-center justify-between md:justify-start gap-0 md:gap-8 overflow-x-hidden py-1.5 px-0.5 md:px-2">
           {['급상승', '급하락', '거래량', '거래대금', '테마', '투자자별', '관심'].map((tab) => (
             <button 
               key={tab} 
               onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 whitespace-nowrap font-bold text-[14px] md:text-[16px] py-1 ${getTabColor(tab)} ${tab === '관심' ? 'md:hidden' : ''}`}
+              className={`flex items-center justify-center whitespace-nowrap font-bold text-[12.5px] md:text-[16px] py-1 px-1 md:px-0 transition-all ${getTabColor(tab)} ${tab === '관심' ? 'md:hidden' : ''}`}
             >
               {tab}
             </button>

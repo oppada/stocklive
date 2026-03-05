@@ -241,7 +241,7 @@ const App = () => {
 
       <div className="flex flex-1 overflow-hidden p-3 md:p-4 gap-4 bg-[#f2f4f6]">
         {/* Left Sidebar (Chat) - Floating Card */}
-        <aside className={`flex-col bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-200/40 overflow-hidden ${isChatRoute ? 'flex w-full' : 'hidden md:flex w-[320px]'}`}>
+        <aside className={`flex-col bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-200/40 overflow-hidden ${isChatRoute ? 'hidden' : 'hidden md:flex w-[320px]'}`}>
           <div className="p-5 border-b border-slate-100 flex justify-between items-center">
             <h3 className="font-bold text-[15px] text-slate-900 flex items-center gap-2">
               <MessageCircle size={18} className="text-blue-600" /> 실시간 종목 톡
@@ -252,8 +252,8 @@ const App = () => {
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-0 no-scrollbar bg-white">
             {messages.map((m, i) => (
-              <div key={i} className="text-[14px] leading-relaxed group py-0.5 border-b border-slate-50/50 last:border-0">
-                <span className="font-bold text-slate-400 mr-2">{m.user}</span> 
+              <div key={i} className="text-[14px] leading-snug group py-[1px]">
+                <span className="font-bold text-slate-400 mr-1.5">{m.user}</span> 
                 <span className="text-slate-800">{m.text}</span>
               </div>
             ))}
@@ -277,22 +277,37 @@ const App = () => {
             <Route path="/stock/:symbol" element={<StockDetail favoritedStocks={favoritedStocks} onFavoriteToggle={handleFavoriteClick} />} />
             <Route path="/mypage" element={<MyPage user={user} handleLogout={handleLogout} onLoginClick={() => setShowLoginModal(true)} />} />
             <Route path="/chat" element={
-              <div className="flex flex-col h-full bg-white rounded-[24px] overflow-hidden border border-slate-200/40 shadow-sm">
-                <div className="flex-1 overflow-y-auto p-4 space-y-0.5 no-scrollbar bg-white">
-                  {messages.map((m, i) => (
-                    <div key={i} className="text-[14px] leading-relaxed group py-0.5">
-                      <span className="font-bold text-slate-400 mr-2">{m.user}</span> 
-                      <span className="text-slate-800">{m.text}</span>
+              <div className="flex flex-col h-full pb-16 md:pb-0">
+                <div className="flex flex-col h-full bg-white rounded-[24px] overflow-hidden border border-slate-200/40 shadow-sm">
+                  {/* Chat Header - Slim for Mobile Content Density */}
+                  <div className="p-2.5 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white/50">
+                    <h3 className="font-bold text-[14px] text-slate-800 flex items-center gap-1.5 ml-1">
+                      <MessageCircle size={16} className="text-blue-600" /> 실시간 종목 톡
+                    </h3>
+                    <div className="bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 mr-1 scale-90">
+                      <span className="text-[9px] font-black text-blue-600 uppercase">Live</span>
                     </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-                <form onSubmit={handleSendMessage} className="fixed bottom-20 left-6 right-6 p-4 bg-white rounded-[20px] shadow-xl border border-slate-200 z-40 max-w-2xl mx-auto">
-                  <div className="flex items-center gap-3">
-                    <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full px-4 py-3 text-[15px] outline-none bg-slate-50 rounded-xl" placeholder="메시지를 입력하세요" />
-                    <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="px-6 py-3 bg-blue-600 rounded-xl text-[14px] font-bold text-white hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">전송</button>
                   </div>
-                </form>
+
+                  {/* Chat Messages - Unified Ultra Density */}
+                  <div className="flex-1 overflow-y-auto p-4 space-y-0 no-scrollbar bg-white">
+                    {messages.map((m, i) => (
+                      <div key={i} className="text-[14px] leading-snug group py-0">
+                        <span className="font-bold text-slate-400 mr-1.5">{m.user}</span> 
+                        <span className="text-slate-800">{m.text}</span>
+                      </div>
+                    ))}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  {/* Chat Input */}
+                  <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-100 shrink-0">
+                    <div className="flex items-center gap-2 bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+                      <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full px-4 py-2 text-sm outline-none bg-transparent" placeholder="메시지 입력" />
+                      <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all shrink-0"><Zap size={16} fill="currentColor" /></button>
+                    </div>
+                  </form>
+                </div>
               </div>
             } />
           </Routes>
@@ -304,7 +319,7 @@ const App = () => {
         </aside>
       </div>
 
-      <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-2xl border-t border-slate-200 flex items-center justify-around z-50 shadow-lg">
+      <footer className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-2xl border-t border-slate-200 flex items-center justify-around z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.06)]">
         {[
           { name: '홈', path: '/', icon: <HomeIcon className="w-5 h-5" /> }, 
           { name: '추천', path: '/recommendation', icon: <PieChart className="w-5 h-5" /> }, 
