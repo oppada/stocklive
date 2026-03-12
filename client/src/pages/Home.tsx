@@ -68,7 +68,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
       if (activeTab === '테마' && selectedThemeId) {
         setIsLoadingThemeStocks(true);
         try {
-          const response = await fetch(`/api/themes/${selectedThemeId}/stocks`);
+          const response = await fetch(`/api/themes/${encodeURIComponent(selectedThemeId)}/stocks`);
           const data = await response.json();
           if (Array.isArray(data)) setSelectedThemeStocks(data);
         } catch (error) {

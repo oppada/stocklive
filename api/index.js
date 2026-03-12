@@ -79,10 +79,11 @@ app.get('/api/themes/top-performing', async (req, res) => {
     } catch (e) { res.json([]); }
 });
 
-app.get('/api/themes/:themeName/stocks', async (req, res) => {
+app.get('/api/themes/:themeName*/stocks', async (req, res) => {
     try {
+        const themeName = req.params.themeName + (req.params[0] || '');
         const { data: cached } = await supabase.from('stock_data_cache').select('data').eq('id', 'toss_themes').single();
-        const theme = cached?.data?.find(t => (t.name === req.params.themeName || t.theme_name === req.params.themeName));
+        const theme = cached?.data?.find(t => (t.name === themeName || t.theme_name === themeName));
         if (theme?.no) {
             const { fetchNaverThemeStocks } = require('./lib/publicApi.cjs');
             return res.json(await fetchNaverThemeStocks(theme.no));
