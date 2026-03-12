@@ -13,14 +13,14 @@
                     "rank": "2",
                     "name": "한화에어로스페이스",
                     "code": "012450",
-                    "changeRate": "+3.33%",
+                    "changeRate": "+3.54%",
                     "tradeValue": "965억원"
                 },
                 {
                     "rank": "3",
                     "name": "SK이노베이션",
                     "code": "096770",
-                    "changeRate": "+1.67%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "825억원"
                 },
                 {
@@ -34,14 +34,14 @@
                     "rank": "5",
                     "name": "한화오션",
                     "code": "042660",
-                    "changeRate": "+2.02%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "355억원"
                 },
                 {
                     "rank": "6",
                     "name": "HD한국조선해양",
                     "code": "009540",
-                    "changeRate": "+1.07%",
+                    "changeRate": "+1.19%",
                     "tradeValue": "305억원"
                 },
                 {
@@ -76,7 +76,7 @@
                     "rank": "11",
                     "name": "리가켐바이오",
                     "code": "141080",
-                    "changeRate": "+2.89%",
+                    "changeRate": "+3.00%",
                     "tradeValue": "142억원"
                 },
                 {
@@ -97,7 +97,7 @@
                     "rank": "14",
                     "name": "HD현대일렉트릭",
                     "code": "267260",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.63%",
                     "tradeValue": "105억원"
                 },
                 {
@@ -118,7 +118,7 @@
                     "rank": "17",
                     "name": "현대건설",
                     "code": "000720",
-                    "changeRate": "+5.04%",
+                    "changeRate": "+4.70%",
                     "tradeValue": "92억원"
                 },
                 {
@@ -132,35 +132,35 @@
                     "rank": "19",
                     "name": "HD현대중공업",
                     "code": "329180",
-                    "changeRate": "+1.52%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "87억원"
                 },
                 {
                     "rank": "20",
                     "name": "로킷헬스케어",
                     "code": "376900",
-                    "changeRate": "+5.15%",
+                    "changeRate": "+5.67%",
                     "tradeValue": "82억원"
                 },
                 {
                     "rank": "22",
                     "name": "삼성생명",
                     "code": "032830",
-                    "changeRate": "-3.97%",
+                    "changeRate": "-3.31%",
                     "tradeValue": "78억원"
                 },
                 {
                     "rank": "23",
                     "name": "지투지바이오",
                     "code": "456160",
-                    "changeRate": "+6.60%",
+                    "changeRate": "+7.07%",
                     "tradeValue": "77억원"
                 },
                 {
                     "rank": "24",
                     "name": "LG씨엔에스",
                     "code": "064400",
-                    "changeRate": "+3.49%",
+                    "changeRate": "+4.10%",
                     "tradeValue": "74억원"
                 },
                 {
@@ -174,21 +174,21 @@
                     "rank": "26",
                     "name": "LS에코에너지",
                     "code": "229640",
-                    "changeRate": "+12.52%",
+                    "changeRate": "+12.41%",
                     "tradeValue": "66억원"
                 },
                 {
                     "rank": "27",
                     "name": "KT&G",
                     "code": "033780",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.38%",
                     "tradeValue": "64억원"
                 },
                 {
                     "rank": "28",
                     "name": "카카오뱅크",
                     "code": "323410",
-                    "changeRate": "+1.23%",
+                    "changeRate": "+1.44%",
                     "tradeValue": "64억원"
                 },
                 {
@@ -223,14 +223,14 @@
                     "rank": "33",
                     "name": "엔씨소프트",
                     "code": "036570",
-                    "changeRate": "+0.95%",
+                    "changeRate": "+1.19%",
                     "tradeValue": "57억원"
                 },
                 {
                     "rank": "34",
                     "name": "ISC",
                     "code": "095340",
-                    "changeRate": "+2.29%",
+                    "changeRate": "+1.94%",
                     "tradeValue": "57억원"
                 },
                 {
@@ -265,7 +265,7 @@
                     "rank": "39",
                     "name": "알지노믹스",
                     "code": "476830",
-                    "changeRate": "+7.13%",
+                    "changeRate": "+7.01%",
                     "tradeValue": "54억원"
                 },
                 {
@@ -279,14 +279,14 @@
                     "rank": "41",
                     "name": "티에스이",
                     "code": "131290",
-                    "changeRate": "+9.35%",
+                    "changeRate": "+9.45%",
                     "tradeValue": "51억원"
                 },
                 {
                     "rank": "42",
                     "name": "셀트리온",
                     "code": "068270",
-                    "changeRate": "-1.67%",
+                    "changeRate": "-1.43%",
                     "tradeValue": "50억원"
                 },
                 {
@@ -307,7 +307,7 @@
                     "rank": "45",
                     "name": "노타",
                     "code": "486990",
-                    "changeRate": "+18.63%",
+                    "changeRate": "+17.56%",
                     "tradeValue": "45억원"
                 },
                 {
@@ -342,14 +342,14 @@
                     "rank": "50",
                     "name": "오름테라퓨틱",
                     "code": "475830",
-                    "changeRate": "+9.42%",
+                    "changeRate": "+9.75%",
                     "tradeValue": "37억원"
                 },
                 {
                     "rank": "51",
                     "name": "포스코퓨처엠",
                     "code": "003670",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.23%",
                     "tradeValue": "37억원"
                 },
                 {
@@ -363,7 +363,7 @@
                     "rank": "53",
                     "name": "스피어",
                     "code": "347700",
-                    "changeRate": "+4.71%",
+                    "changeRate": "+4.51%",
                     "tradeValue": "35억원"
                 },
                 {
@@ -384,14 +384,14 @@
                     "rank": "56",
                     "name": "메지온",
                     "code": "140410",
-                    "changeRate": "+1.74%",
+                    "changeRate": "+1.57%",
                     "tradeValue": "31억원"
                 },
                 {
                     "rank": "57",
                     "name": "두산퓨얼셀",
                     "code": "336260",
-                    "changeRate": "+12.40%",
+                    "changeRate": "+12.77%",
                     "tradeValue": "31억원"
                 },
                 {
@@ -412,14 +412,14 @@
                     "rank": "60",
                     "name": "씨메스",
                     "code": "475400",
-                    "changeRate": "-0.70%",
+                    "changeRate": "-0.35%",
                     "tradeValue": "30억원"
                 },
                 {
                     "rank": "61",
                     "name": "에프에스티",
                     "code": "036810",
-                    "changeRate": "+20.64%",
+                    "changeRate": "+19.97%",
                     "tradeValue": "29억원"
                 },
                 {
@@ -433,7 +433,7 @@
                     "rank": "63",
                     "name": "KCC",
                     "code": "002380",
-                    "changeRate": "-4.10%",
+                    "changeRate": "-4.28%",
                     "tradeValue": "27억원"
                 },
                 {
@@ -461,7 +461,7 @@
                     "rank": "67",
                     "name": "GS건설",
                     "code": "006360",
-                    "changeRate": "-0.46%",
+                    "changeRate": "-0.23%",
                     "tradeValue": "26억원"
                 },
                 {
@@ -475,7 +475,7 @@
                     "rank": "69",
                     "name": "와이지엔터테인먼트",
                     "code": "122870",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.15%",
                     "tradeValue": "26억원"
                 },
                 {
@@ -510,35 +510,35 @@
                     "rank": "74",
                     "name": "케어젠",
                     "code": "214370",
-                    "changeRate": "+1.37%",
+                    "changeRate": "+1.13%",
                     "tradeValue": "21억원"
                 },
                 {
                     "rank": "75",
                     "name": "LS ELECTRIC",
                     "code": "010120",
-                    "changeRate": "+2.21%",
+                    "changeRate": "+2.63%",
                     "tradeValue": "21억원"
                 },
                 {
                     "rank": "76",
                     "name": "OCI",
                     "code": "456040",
-                    "changeRate": "+5.99%",
+                    "changeRate": "+5.63%",
                     "tradeValue": "21억원"
                 },
                 {
                     "rank": "77",
                     "name": "테스",
                     "code": "095610",
-                    "changeRate": "-2.55%",
+                    "changeRate": "-2.40%",
                     "tradeValue": "20억원"
                 },
                 {
                     "rank": "78",
                     "name": "피에스케이홀딩스",
                     "code": "031980",
-                    "changeRate": "-0.95%",
+                    "changeRate": "-1.24%",
                     "tradeValue": "20억원"
                 },
                 {
@@ -552,7 +552,7 @@
                     "rank": "80",
                     "name": "하이브",
                     "code": "352820",
-                    "changeRate": "+0.14%",
+                    "changeRate": "+0.28%",
                     "tradeValue": "19억원"
                 },
                 {
@@ -566,7 +566,7 @@
                     "rank": "82",
                     "name": "씨엠티엑스",
                     "code": "388210",
-                    "changeRate": "+2.16%",
+                    "changeRate": "+2.23%",
                     "tradeValue": "18억원"
                 },
                 {
@@ -622,7 +622,7 @@
                     "rank": "90",
                     "name": "HLB",
                     "code": "028300",
-                    "changeRate": "+0.72%",
+                    "changeRate": "+2.26%",
                     "tradeValue": "16억원"
                 },
                 {
@@ -643,7 +643,7 @@
                     "rank": "93",
                     "name": "디아이",
                     "code": "003160",
-                    "changeRate": "-2.14%",
+                    "changeRate": "-1.83%",
                     "tradeValue": "15억원"
                 },
                 {
@@ -664,7 +664,7 @@
                     "rank": "96",
                     "name": "선익시스템",
                     "code": "171090",
-                    "changeRate": "0.00%",
+                    "changeRate": "-0.42%",
                     "tradeValue": "14억원"
                 }
             ],
@@ -676,7 +676,7 @@
                     "rank": "2",
                     "name": "삼성전자",
                     "code": "005930",
-                    "changeRate": "-1.31%",
+                    "changeRate": "-0.78%",
                     "tradeValue": "773억원"
                 },
                 {
@@ -690,14 +690,14 @@
                     "rank": "4",
                     "name": "한미반도체",
                     "code": "042700",
-                    "changeRate": "-0.16%",
+                    "changeRate": "+2.24%",
                     "tradeValue": "592억원"
                 },
                 {
                     "rank": "5",
                     "name": "기아",
                     "code": "000270",
-                    "changeRate": "+2.22%",
+                    "changeRate": "+2.53%",
                     "tradeValue": "589억원"
                 },
                 {
@@ -725,7 +725,7 @@
                     "rank": "9",
                     "name": "LG에너지솔루션",
                     "code": "373220",
-                    "changeRate": "+2.43%",
+                    "changeRate": "+2.57%",
                     "tradeValue": "429억원"
                 },
                 {
@@ -739,28 +739,28 @@
                     "rank": "11",
                     "name": "포스코인터내셔널",
                     "code": "047050",
-                    "changeRate": "+3.27%",
+                    "changeRate": "+3.53%",
                     "tradeValue": "371억원"
                 },
                 {
                     "rank": "12",
                     "name": "리노공업",
                     "code": "058470",
-                    "changeRate": "+2.99%",
+                    "changeRate": "+2.72%",
                     "tradeValue": "345억원"
                 },
                 {
                     "rank": "13",
                     "name": "삼성SDI",
                     "code": "006400",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.25%",
                     "tradeValue": "311억원"
                 },
                 {
                     "rank": "14",
                     "name": "한화솔루션",
                     "code": "009830",
-                    "changeRate": "+3.30%",
+                    "changeRate": "+2.91%",
                     "tradeValue": "300억원"
                 },
                 {
@@ -781,21 +781,21 @@
                     "rank": "17",
                     "name": "신한지주",
                     "code": "055550",
-                    "changeRate": "+0.10%",
+                    "changeRate": "+0.65%",
                     "tradeValue": "251억원"
                 },
                 {
                     "rank": "18",
                     "name": "삼성바이오로직스",
                     "code": "207940",
-                    "changeRate": "-2.41%",
+                    "changeRate": "-2.11%",
                     "tradeValue": "240억원"
                 },
                 {
                     "rank": "19",
                     "name": "SK스퀘어",
                     "code": "402340",
-                    "changeRate": "-2.47%",
+                    "changeRate": "-1.94%",
                     "tradeValue": "236억원"
                 },
                 {
@@ -809,28 +809,28 @@
                     "rank": "21",
                     "name": "레인보우로보틱스",
                     "code": "277810",
-                    "changeRate": "+1.47%",
+                    "changeRate": "+1.33%",
                     "tradeValue": "225억원"
                 },
                 {
                     "rank": "22",
                     "name": "원익IPS",
                     "code": "240810",
-                    "changeRate": "+2.33%",
+                    "changeRate": "+2.25%",
                     "tradeValue": "195억원"
                 },
                 {
                     "rank": "23",
                     "name": "S-Oil",
                     "code": "010950",
-                    "changeRate": "+2.53%",
+                    "changeRate": "+2.61%",
                     "tradeValue": "187억원"
                 },
                 {
                     "rank": "24",
                     "name": "한화에어로스페이스",
                     "code": "012450",
-                    "changeRate": "+3.33%",
+                    "changeRate": "+3.54%",
                     "tradeValue": "186억원"
                 },
                 {
@@ -851,14 +851,14 @@
                     "rank": "27",
                     "name": "HD현대중공업",
                     "code": "329180",
-                    "changeRate": "+1.52%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "154억원"
                 },
                 {
                     "rank": "28",
                     "name": "OCI홀딩스",
                     "code": "010060",
-                    "changeRate": "+12.74%",
+                    "changeRate": "+12.47%",
                     "tradeValue": "152억원"
                 },
                 {
@@ -872,7 +872,7 @@
                     "rank": "30",
                     "name": "두산퓨얼셀",
                     "code": "336260",
-                    "changeRate": "+12.40%",
+                    "changeRate": "+12.77%",
                     "tradeValue": "144억원"
                 },
                 {
@@ -886,7 +886,7 @@
                     "rank": "32",
                     "name": "현대모비스",
                     "code": "012330",
-                    "changeRate": "-2.24%",
+                    "changeRate": "-2.00%",
                     "tradeValue": "134억원"
                 },
                 {
@@ -921,7 +921,7 @@
                     "rank": "38",
                     "name": "키움증권",
                     "code": "039490",
-                    "changeRate": "0.00%",
+                    "changeRate": "-0.33%",
                     "tradeValue": "103억원"
                 },
                 {
@@ -935,14 +935,14 @@
                     "rank": "40",
                     "name": "삼성화재",
                     "code": "000810",
-                    "changeRate": "-2.21%",
+                    "changeRate": "-1.80%",
                     "tradeValue": "99억원"
                 },
                 {
                     "rank": "41",
                     "name": "현대건설",
                     "code": "000720",
-                    "changeRate": "+5.04%",
+                    "changeRate": "+4.70%",
                     "tradeValue": "98억원"
                 },
                 {
@@ -956,14 +956,14 @@
                     "rank": "43",
                     "name": "메리츠금융지주",
                     "code": "138040",
-                    "changeRate": "-1.56%",
+                    "changeRate": "-1.39%",
                     "tradeValue": "91억원"
                 },
                 {
                     "rank": "44",
                     "name": "아이티센글로벌",
                     "code": "124500",
-                    "changeRate": "+6.99%",
+                    "changeRate": "+7.14%",
                     "tradeValue": "90억원"
                 },
                 {
@@ -977,21 +977,21 @@
                     "rank": "46",
                     "name": "NH투자증권",
                     "code": "005940",
-                    "changeRate": "-2.25%",
+                    "changeRate": "-2.10%",
                     "tradeValue": "84억원"
                 },
                 {
                     "rank": "47",
                     "name": "한국카본",
                     "code": "017960",
-                    "changeRate": "+1.59%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "83억원"
                 },
                 {
                     "rank": "48",
                     "name": "KB금융",
                     "code": "105560",
-                    "changeRate": "-1.58%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "83억원"
                 },
                 {
@@ -1005,14 +1005,14 @@
                     "rank": "50",
                     "name": "로보티즈",
                     "code": "108490",
-                    "changeRate": "+2.61%",
+                    "changeRate": "+2.81%",
                     "tradeValue": "80억원"
                 },
                 {
                     "rank": "51",
                     "name": "알지노믹스",
                     "code": "476830",
-                    "changeRate": "+7.13%",
+                    "changeRate": "+7.01%",
                     "tradeValue": "80억원"
                 },
                 {
@@ -1026,35 +1026,35 @@
                     "rank": "53",
                     "name": "쎄트렉아이",
                     "code": "099320",
-                    "changeRate": "+7.76%",
+                    "changeRate": "+6.97%",
                     "tradeValue": "76억원"
                 },
                 {
                     "rank": "54",
                     "name": "오름테라퓨틱",
                     "code": "475830",
-                    "changeRate": "+9.42%",
+                    "changeRate": "+9.75%",
                     "tradeValue": "75억원"
                 },
                 {
                     "rank": "55",
                     "name": "현대제철",
                     "code": "004020",
-                    "changeRate": "+1.47%",
+                    "changeRate": "+1.60%",
                     "tradeValue": "71억원"
                 },
                 {
                     "rank": "56",
                     "name": "스피어",
                     "code": "347700",
-                    "changeRate": "+4.71%",
+                    "changeRate": "+4.51%",
                     "tradeValue": "70억원"
                 },
                 {
                     "rank": "57",
                     "name": "LS ELECTRIC",
                     "code": "010120",
-                    "changeRate": "+2.21%",
+                    "changeRate": "+2.63%",
                     "tradeValue": "69억원"
                 },
                 {
@@ -1075,7 +1075,7 @@
                     "rank": "61",
                     "name": "에이피알",
                     "code": "278470",
-                    "changeRate": "+0.78%",
+                    "changeRate": "+0.62%",
                     "tradeValue": "62억원"
                 },
                 {
@@ -1089,14 +1089,14 @@
                     "rank": "63",
                     "name": "한전KPS",
                     "code": "051600",
-                    "changeRate": "+6.22%",
+                    "changeRate": "+6.58%",
                     "tradeValue": "59억원"
                 },
                 {
                     "rank": "64",
                     "name": "에프에스티",
                     "code": "036810",
-                    "changeRate": "+20.64%",
+                    "changeRate": "+19.97%",
                     "tradeValue": "58억원"
                 },
                 {
@@ -1117,21 +1117,21 @@
                     "rank": "67",
                     "name": "씨에스윈드",
                     "code": "112610",
-                    "changeRate": "+8.89%",
+                    "changeRate": "+8.12%",
                     "tradeValue": "55억원"
                 },
                 {
                     "rank": "68",
                     "name": "기업은행",
                     "code": "024110",
-                    "changeRate": "-0.84%",
+                    "changeRate": "-0.63%",
                     "tradeValue": "54억원"
                 },
                 {
                     "rank": "69",
                     "name": "피에스케이",
                     "code": "319660",
-                    "changeRate": "+4.25%",
+                    "changeRate": "+4.42%",
                     "tradeValue": "54억원"
                 },
                 {
@@ -1166,7 +1166,7 @@
                     "rank": "74",
                     "name": "코미코",
                     "code": "183300",
-                    "changeRate": "+4.59%",
+                    "changeRate": "+4.22%",
                     "tradeValue": "52억원"
                 },
                 {
@@ -1180,7 +1180,7 @@
                     "rank": "76",
                     "name": "에코프로비엠",
                     "code": "247540",
-                    "changeRate": "-0.86%",
+                    "changeRate": "-0.91%",
                     "tradeValue": "51억원"
                 },
                 {
@@ -1201,7 +1201,7 @@
                     "rank": "79",
                     "name": "GS",
                     "code": "078930",
-                    "changeRate": "+0.76%",
+                    "changeRate": "+1.53%",
                     "tradeValue": "50억원"
                 },
                 {
@@ -1215,7 +1215,7 @@
                     "rank": "81",
                     "name": "노타",
                     "code": "486990",
-                    "changeRate": "+18.63%",
+                    "changeRate": "+17.56%",
                     "tradeValue": "49억원"
                 },
                 {
@@ -1236,7 +1236,7 @@
                     "rank": "84",
                     "name": "하나금융지주",
                     "code": "086790",
-                    "changeRate": "-1.85%",
+                    "changeRate": "-1.14%",
                     "tradeValue": "45억원"
                 },
                 {
@@ -1271,7 +1271,7 @@
                     "rank": "89",
                     "name": "비에이치아이",
                     "code": "083650",
-                    "changeRate": "-0.49%",
+                    "changeRate": "0.00%",
                     "tradeValue": "43억원"
                 },
                 {
@@ -1285,7 +1285,7 @@
                     "rank": "91",
                     "name": "LX인터내셔널",
                     "code": "001120",
-                    "changeRate": "+6.20%",
+                    "changeRate": "+6.08%",
                     "tradeValue": "41억원"
                 },
                 {
@@ -1313,7 +1313,7 @@
                     "rank": "95",
                     "name": "영원무역",
                     "code": "111770",
-                    "changeRate": "-0.56%",
+                    "changeRate": "-0.89%",
                     "tradeValue": "37억원"
                 },
                 {
@@ -1334,7 +1334,7 @@
                     "rank": "98",
                     "name": "KT",
                     "code": "030200",
-                    "changeRate": "+1.00%",
+                    "changeRate": "+1.83%",
                     "tradeValue": "37억원"
                 }
             ],
@@ -1346,21 +1346,21 @@
                     "rank": "1",
                     "name": "SK하이닉스",
                     "code": "000660",
-                    "changeRate": "-2.40%",
+                    "changeRate": "-1.98%",
                     "tradeValue": "8,332억원"
                 },
                 {
                     "rank": "2",
                     "name": "삼성전자",
                     "code": "005930",
-                    "changeRate": "-1.31%",
+                    "changeRate": "-0.78%",
                     "tradeValue": "8,053억원"
                 },
                 {
                     "rank": "3",
                     "name": "현대차",
                     "code": "005380",
-                    "changeRate": "-1.50%",
+                    "changeRate": "-1.13%",
                     "tradeValue": "2,270억원"
                 },
                 {
@@ -1381,7 +1381,7 @@
                     "rank": "7",
                     "name": "미래에셋증권",
                     "code": "006800",
-                    "changeRate": "-1.96%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "831억원"
                 },
                 {
@@ -1402,28 +1402,28 @@
                     "rank": "10",
                     "name": "에코프로",
                     "code": "086520",
-                    "changeRate": "-1.98%",
+                    "changeRate": "-1.91%",
                     "tradeValue": "528억원"
                 },
                 {
                     "rank": "11",
                     "name": "삼성전기",
                     "code": "009150",
-                    "changeRate": "-1.10%",
+                    "changeRate": "-0.98%",
                     "tradeValue": "521억원"
                 },
                 {
                     "rank": "12",
                     "name": "NAVER",
                     "code": "035420",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.22%",
                     "tradeValue": "426억원"
                 },
                 {
                     "rank": "13",
                     "name": "LG전자",
                     "code": "066570",
-                    "changeRate": "-2.96%",
+                    "changeRate": "-2.71%",
                     "tradeValue": "390억원"
                 },
                 {
@@ -1444,14 +1444,14 @@
                     "rank": "16",
                     "name": "LG화학",
                     "code": "051910",
-                    "changeRate": "-2.53%",
+                    "changeRate": "-2.21%",
                     "tradeValue": "299억원"
                 },
                 {
                     "rank": "17",
                     "name": "한국전력",
                     "code": "015760",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.31%",
                     "tradeValue": "298억원"
                 },
                 {
@@ -1465,7 +1465,7 @@
                     "rank": "19",
                     "name": "농심",
                     "code": "004370",
-                    "changeRate": "-4.69%",
+                    "changeRate": "-4.56%",
                     "tradeValue": "260억원"
                 },
                 {
@@ -1479,14 +1479,14 @@
                     "rank": "21",
                     "name": "유한양행",
                     "code": "000100",
-                    "changeRate": "+0.91%",
+                    "changeRate": "+1.11%",
                     "tradeValue": "251억원"
                 },
                 {
                     "rank": "22",
                     "name": "삼성SDI",
                     "code": "006400",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.25%",
                     "tradeValue": "239억원"
                 },
                 {
@@ -1500,35 +1500,35 @@
                     "rank": "25",
                     "name": "펩트론",
                     "code": "087010",
-                    "changeRate": "-3.80%",
+                    "changeRate": "-3.64%",
                     "tradeValue": "220억원"
                 },
                 {
                     "rank": "26",
                     "name": "현대모비스",
                     "code": "012330",
-                    "changeRate": "-2.24%",
+                    "changeRate": "-2.00%",
                     "tradeValue": "212억원"
                 },
                 {
                     "rank": "28",
                     "name": "셀트리온",
                     "code": "068270",
-                    "changeRate": "-1.67%",
+                    "changeRate": "-1.43%",
                     "tradeValue": "200억원"
                 },
                 {
                     "rank": "29",
                     "name": "대한항공",
                     "code": "003490",
-                    "changeRate": "-1.42%",
+                    "changeRate": "-1.21%",
                     "tradeValue": "193억원"
                 },
                 {
                     "rank": "30",
                     "name": "삼성바이오로직스",
                     "code": "207940",
-                    "changeRate": "-2.41%",
+                    "changeRate": "-2.11%",
                     "tradeValue": "192억원"
                 },
                 {
@@ -1542,7 +1542,7 @@
                     "rank": "32",
                     "name": "RFHIC",
                     "code": "218410",
-                    "changeRate": "-5.91%",
+                    "changeRate": "-6.69%",
                     "tradeValue": "178억원"
                 },
                 {
@@ -1563,7 +1563,7 @@
                     "rank": "35",
                     "name": "에코프로비엠",
                     "code": "247540",
-                    "changeRate": "-0.86%",
+                    "changeRate": "-0.91%",
                     "tradeValue": "169억원"
                 },
                 {
@@ -1626,21 +1626,21 @@
                     "rank": "45",
                     "name": "LG이노텍",
                     "code": "011070",
-                    "changeRate": "-2.49%",
+                    "changeRate": "-2.29%",
                     "tradeValue": "136억원"
                 },
                 {
                     "rank": "46",
                     "name": "SK스퀘어",
                     "code": "402340",
-                    "changeRate": "-2.47%",
+                    "changeRate": "-1.94%",
                     "tradeValue": "135억원"
                 },
                 {
                     "rank": "47",
                     "name": "우리금융지주",
                     "code": "316140",
-                    "changeRate": "-2.39%",
+                    "changeRate": "-2.09%",
                     "tradeValue": "130억원"
                 },
                 {
@@ -1654,14 +1654,14 @@
                     "rank": "49",
                     "name": "고려아연",
                     "code": "010130",
-                    "changeRate": "-0.06%",
+                    "changeRate": "+0.12%",
                     "tradeValue": "127억원"
                 },
                 {
                     "rank": "50",
                     "name": "성우하이텍",
                     "code": "015750",
-                    "changeRate": "+5.72%",
+                    "changeRate": "+6.10%",
                     "tradeValue": "126억원"
                 },
                 {
@@ -1689,7 +1689,7 @@
                     "rank": "54",
                     "name": "한국금융지주",
                     "code": "071050",
-                    "changeRate": "-0.87%",
+                    "changeRate": "-1.52%",
                     "tradeValue": "121억원"
                 },
                 {
@@ -1717,35 +1717,35 @@
                     "rank": "58",
                     "name": "하이브",
                     "code": "352820",
-                    "changeRate": "+0.14%",
+                    "changeRate": "+0.28%",
                     "tradeValue": "116억원"
                 },
                 {
                     "rank": "59",
                     "name": "실리콘투",
                     "code": "257720",
-                    "changeRate": "-2.12%",
+                    "changeRate": "-2.25%",
                     "tradeValue": "115억원"
                 },
                 {
                     "rank": "60",
                     "name": "삼성증권",
                     "code": "016360",
-                    "changeRate": "-1.32%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "114억원"
                 },
                 {
                     "rank": "61",
                     "name": "삼성에스디에스",
                     "code": "018260",
-                    "changeRate": "-0.67%",
+                    "changeRate": "-0.30%",
                     "tradeValue": "113억원"
                 },
                 {
                     "rank": "62",
                     "name": "현대글로비스",
                     "code": "086280",
-                    "changeRate": "-2.32%",
+                    "changeRate": "-2.11%",
                     "tradeValue": "112억원"
                 },
                 {
@@ -1766,14 +1766,14 @@
                     "rank": "65",
                     "name": "삼양식품",
                     "code": "003230",
-                    "changeRate": "-4.01%",
+                    "changeRate": "-3.57%",
                     "tradeValue": "106억원"
                 },
                 {
                     "rank": "66",
                     "name": "SK텔레콤",
                     "code": "017670",
-                    "changeRate": "-2.05%",
+                    "changeRate": "-1.66%",
                     "tradeValue": "104억원"
                 },
                 {
@@ -1794,14 +1794,14 @@
                     "rank": "69",
                     "name": "NH투자증권",
                     "code": "005940",
-                    "changeRate": "-2.25%",
+                    "changeRate": "-2.10%",
                     "tradeValue": "102억원"
                 },
                 {
                     "rank": "70",
                     "name": "펄어비스",
                     "code": "263750",
-                    "changeRate": "-1.62%",
+                    "changeRate": "-1.95%",
                     "tradeValue": "98억원"
                 },
                 {
@@ -1815,7 +1815,7 @@
                     "rank": "72",
                     "name": "이수페타시스",
                     "code": "007660",
-                    "changeRate": "-1.18%",
+                    "changeRate": "-0.72%",
                     "tradeValue": "95억원"
                 },
                 {
@@ -1829,7 +1829,7 @@
                     "rank": "74",
                     "name": "산일전기",
                     "code": "062040",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.48%",
                     "tradeValue": "89억원"
                 },
                 {
@@ -1864,7 +1864,7 @@
                     "rank": "80",
                     "name": "삼성물산",
                     "code": "028260",
-                    "changeRate": "-1.41%",
+                    "changeRate": "-1.23%",
                     "tradeValue": "80억원"
                 },
                 {
@@ -1892,7 +1892,7 @@
                     "rank": "84",
                     "name": "HLB",
                     "code": "028300",
-                    "changeRate": "+0.72%",
+                    "changeRate": "+2.26%",
                     "tradeValue": "77억원"
                 },
                 {
@@ -1920,7 +1920,7 @@
                     "rank": "88",
                     "name": "카카오페이",
                     "code": "377300",
-                    "changeRate": "-1.99%",
+                    "changeRate": "-2.15%",
                     "tradeValue": "74억원"
                 },
                 {
@@ -1934,21 +1934,21 @@
                     "rank": "90",
                     "name": "현대오토에버",
                     "code": "307950",
-                    "changeRate": "-1.81%",
+                    "changeRate": "-1.69%",
                     "tradeValue": "74억원"
                 },
                 {
                     "rank": "91",
                     "name": "삼성E&A",
                     "code": "028050",
-                    "changeRate": "-0.15%",
+                    "changeRate": "+0.15%",
                     "tradeValue": "74억원"
                 },
                 {
                     "rank": "92",
                     "name": "삼성화재",
                     "code": "000810",
-                    "changeRate": "-2.21%",
+                    "changeRate": "-1.80%",
                     "tradeValue": "74억원"
                 },
                 {
@@ -1962,14 +1962,14 @@
                     "rank": "94",
                     "name": "삼성생명",
                     "code": "032830",
-                    "changeRate": "-3.97%",
+                    "changeRate": "-3.31%",
                     "tradeValue": "73억원"
                 },
                 {
                     "rank": "95",
                     "name": "현대제철",
                     "code": "004020",
-                    "changeRate": "+1.47%",
+                    "changeRate": "+1.60%",
                     "tradeValue": "71억원"
                 },
                 {
@@ -1983,7 +1983,7 @@
                     "rank": "97",
                     "name": "디앤디파마텍",
                     "code": "347850",
-                    "changeRate": "-0.12%",
+                    "changeRate": "-0.24%",
                     "tradeValue": "71억원"
                 },
                 {
@@ -2018,21 +2018,21 @@
                     "rank": "1",
                     "name": "삼성전자",
                     "code": "005930",
-                    "changeRate": "-1.31%",
+                    "changeRate": "-0.84%",
                     "tradeValue": "9,161억원"
                 },
                 {
                     "rank": "2",
                     "name": "SK하이닉스",
                     "code": "000660",
-                    "changeRate": "-2.40%",
+                    "changeRate": "-1.98%",
                     "tradeValue": "5,065억원"
                 },
                 {
                     "rank": "3",
                     "name": "현대차",
                     "code": "005380",
-                    "changeRate": "-1.50%",
+                    "changeRate": "-1.13%",
                     "tradeValue": "2,194억원"
                 },
                 {
@@ -2053,56 +2053,56 @@
                     "rank": "6",
                     "name": "미래에셋증권",
                     "code": "006800",
-                    "changeRate": "-1.96%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "793억원"
                 },
                 {
                     "rank": "7",
                     "name": "기아",
                     "code": "000270",
-                    "changeRate": "+2.22%",
+                    "changeRate": "+2.53%",
                     "tradeValue": "637억원"
                 },
                 {
                     "rank": "8",
                     "name": "삼성SDI",
                     "code": "006400",
-                    "changeRate": "+0.12%",
+                    "changeRate": "+0.25%",
                     "tradeValue": "546억원"
                 },
                 {
                     "rank": "9",
                     "name": "삼성전기",
                     "code": "009150",
-                    "changeRate": "-1.23%",
+                    "changeRate": "-0.98%",
                     "tradeValue": "520억원"
                 },
                 {
                     "rank": "10",
                     "name": "한미반도체",
                     "code": "042700",
-                    "changeRate": "-0.32%",
+                    "changeRate": "+2.08%",
                     "tradeValue": "436억원"
                 },
                 {
                     "rank": "11",
                     "name": "삼성바이오로직스",
                     "code": "207940",
-                    "changeRate": "-2.47%",
+                    "changeRate": "-2.11%",
                     "tradeValue": "432억원"
                 },
                 {
                     "rank": "13",
                     "name": "SK스퀘어",
                     "code": "402340",
-                    "changeRate": "-2.47%",
+                    "changeRate": "-1.94%",
                     "tradeValue": "385억원"
                 },
                 {
                     "rank": "14",
                     "name": "현대모비스",
                     "code": "012330",
-                    "changeRate": "-2.12%",
+                    "changeRate": "-2.00%",
                     "tradeValue": "354억원"
                 },
                 {
@@ -2123,14 +2123,14 @@
                     "rank": "17",
                     "name": "LG에너지솔루션",
                     "code": "373220",
-                    "changeRate": "+2.43%",
+                    "changeRate": "+2.57%",
                     "tradeValue": "248억원"
                 },
                 {
                     "rank": "18",
                     "name": "신한지주",
                     "code": "055550",
-                    "changeRate": "+0.10%",
+                    "changeRate": "+0.76%",
                     "tradeValue": "244억원"
                 },
                 {
@@ -2144,49 +2144,49 @@
                     "rank": "20",
                     "name": "에코프로비엠",
                     "code": "247540",
-                    "changeRate": "-0.86%",
+                    "changeRate": "-0.91%",
                     "tradeValue": "221억원"
                 },
                 {
                     "rank": "21",
                     "name": "농심",
                     "code": "004370",
-                    "changeRate": "-4.69%",
+                    "changeRate": "-4.56%",
                     "tradeValue": "216억원"
                 },
                 {
                     "rank": "22",
                     "name": "레인보우로보틱스",
                     "code": "277810",
-                    "changeRate": "+1.47%",
+                    "changeRate": "+1.33%",
                     "tradeValue": "215억원"
                 },
                 {
                     "rank": "23",
                     "name": "LG화학",
                     "code": "051910",
-                    "changeRate": "-2.53%",
+                    "changeRate": "-2.21%",
                     "tradeValue": "208억원"
                 },
                 {
                     "rank": "24",
                     "name": "유한양행",
                     "code": "000100",
-                    "changeRate": "+0.91%",
+                    "changeRate": "+1.11%",
                     "tradeValue": "206억원"
                 },
                 {
                     "rank": "25",
                     "name": "포스코인터내셔널",
                     "code": "047050",
-                    "changeRate": "+3.27%",
+                    "changeRate": "+3.53%",
                     "tradeValue": "203억원"
                 },
                 {
                     "rank": "26",
                     "name": "대한항공",
                     "code": "003490",
-                    "changeRate": "-1.42%",
+                    "changeRate": "-1.21%",
                     "tradeValue": "199억원"
                 },
                 {
@@ -2200,14 +2200,14 @@
                     "rank": "28",
                     "name": "리노공업",
                     "code": "058470",
-                    "changeRate": "+2.99%",
+                    "changeRate": "+2.72%",
                     "tradeValue": "193억원"
                 },
                 {
                     "rank": "29",
                     "name": "NH투자증권",
                     "code": "005940",
-                    "changeRate": "-2.25%",
+                    "changeRate": "-2.10%",
                     "tradeValue": "189억원"
                 },
                 {
@@ -2235,7 +2235,7 @@
                     "rank": "33",
                     "name": "원익IPS",
                     "code": "240810",
-                    "changeRate": "+2.33%",
+                    "changeRate": "+2.25%",
                     "tradeValue": "184억원"
                 },
                 {
@@ -2249,14 +2249,14 @@
                     "rank": "35",
                     "name": "RFHIC",
                     "code": "218410",
-                    "changeRate": "-5.91%",
+                    "changeRate": "-6.58%",
                     "tradeValue": "182억원"
                 },
                 {
                     "rank": "36",
                     "name": "삼성화재",
                     "code": "000810",
-                    "changeRate": "-2.21%",
+                    "changeRate": "-1.80%",
                     "tradeValue": "174억원"
                 },
                 {
@@ -2277,7 +2277,7 @@
                     "rank": "39",
                     "name": "한국전력",
                     "code": "015760",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.31%",
                     "tradeValue": "163억원"
                 },
                 {
@@ -2291,63 +2291,63 @@
                     "rank": "41",
                     "name": "성우하이텍",
                     "code": "015750",
-                    "changeRate": "+5.72%",
+                    "changeRate": "+6.00%",
                     "tradeValue": "156억원"
                 },
                 {
                     "rank": "42",
                     "name": "고려아연",
                     "code": "010130",
-                    "changeRate": "-0.12%",
+                    "changeRate": "+0.12%",
                     "tradeValue": "145억원"
                 },
                 {
                     "rank": "43",
                     "name": "현대제철",
                     "code": "004020",
-                    "changeRate": "+1.47%",
+                    "changeRate": "+1.60%",
                     "tradeValue": "145억원"
                 },
                 {
                     "rank": "44",
                     "name": "KB금융",
                     "code": "105560",
-                    "changeRate": "-1.65%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "137억원"
                 },
                 {
                     "rank": "45",
                     "name": "메리츠금융지주",
                     "code": "138040",
-                    "changeRate": "-1.56%",
+                    "changeRate": "-1.39%",
                     "tradeValue": "128억원"
                 },
                 {
                     "rank": "46",
                     "name": "한화시스템",
                     "code": "272210",
-                    "changeRate": "+1.15%",
+                    "changeRate": "+1.35%",
                     "tradeValue": "128억원"
                 },
                 {
                     "rank": "47",
                     "name": "S-Oil",
                     "code": "010950",
-                    "changeRate": "+2.53%",
+                    "changeRate": "+2.61%",
                     "tradeValue": "126억원"
                 },
                 {
                     "rank": "48",
                     "name": "에코프로",
                     "code": "086520",
-                    "changeRate": "-1.98%",
+                    "changeRate": "-1.91%",
                     "tradeValue": "125억원"
                 },
                 {
                     "rank": "49",
                     "name": "우리금융지주",
                     "code": "316140",
-                    "changeRate": "-2.39%",
+                    "changeRate": "-2.09%",
                     "tradeValue": "125억원"
                 },
                 {
@@ -2361,14 +2361,14 @@
                     "rank": "51",
                     "name": "기업은행",
                     "code": "024110",
-                    "changeRate": "-0.84%",
+                    "changeRate": "-0.63%",
                     "tradeValue": "117억원"
                 },
                 {
                     "rank": "52",
                     "name": "이수페타시스",
                     "code": "007660",
-                    "changeRate": "-1.18%",
+                    "changeRate": "-0.72%",
                     "tradeValue": "115억원"
                 },
                 {
@@ -2389,7 +2389,7 @@
                     "rank": "55",
                     "name": "LIG넥스원",
                     "code": "079550",
-                    "changeRate": "+1.07%",
+                    "changeRate": "+0.94%",
                     "tradeValue": "108억원"
                 },
                 {
@@ -2403,28 +2403,28 @@
                     "rank": "57",
                     "name": "산일전기",
                     "code": "062040",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.48%",
                     "tradeValue": "103억원"
                 },
                 {
                     "rank": "58",
                     "name": "삼성증권",
                     "code": "016360",
-                    "changeRate": "-1.43%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "102억원"
                 },
                 {
                     "rank": "59",
                     "name": "로보티즈",
                     "code": "108490",
-                    "changeRate": "+2.40%",
+                    "changeRate": "+2.81%",
                     "tradeValue": "100억원"
                 },
                 {
                     "rank": "60",
                     "name": "SK텔레콤",
                     "code": "017670",
-                    "changeRate": "-2.18%",
+                    "changeRate": "-1.66%",
                     "tradeValue": "96억원"
                 },
                 {
@@ -2452,14 +2452,14 @@
                     "rank": "64",
                     "name": "하나금융지주",
                     "code": "086790",
-                    "changeRate": "-1.85%",
+                    "changeRate": "-1.14%",
                     "tradeValue": "91억원"
                 },
                 {
                     "rank": "65",
                     "name": "펩트론",
                     "code": "087010",
-                    "changeRate": "-3.80%",
+                    "changeRate": "-3.64%",
                     "tradeValue": "91억원"
                 },
                 {
@@ -2473,7 +2473,7 @@
                     "rank": "67",
                     "name": "엘앤에프",
                     "code": "066970",
-                    "changeRate": "-1.66%",
+                    "changeRate": "-1.40%",
                     "tradeValue": "87억원"
                 },
                 {
@@ -2494,7 +2494,7 @@
                     "rank": "70",
                     "name": "펄어비스",
                     "code": "263750",
-                    "changeRate": "-1.79%",
+                    "changeRate": "-1.95%",
                     "tradeValue": "82억원"
                 },
                 {
@@ -2550,14 +2550,14 @@
                     "rank": "78",
                     "name": "현대오토에버",
                     "code": "307950",
-                    "changeRate": "-1.81%",
+                    "changeRate": "-1.69%",
                     "tradeValue": "73억원"
                 },
                 {
                     "rank": "79",
                     "name": "비에이치아이",
                     "code": "083650",
-                    "changeRate": "-0.49%",
+                    "changeRate": "0.00%",
                     "tradeValue": "71억원"
                 },
                 {
@@ -2571,7 +2571,7 @@
                     "rank": "81",
                     "name": "현대무벡스",
                     "code": "319400",
-                    "changeRate": "-0.92%",
+                    "changeRate": "-0.61%",
                     "tradeValue": "68억원"
                 },
                 {
@@ -2592,7 +2592,7 @@
                     "rank": "84",
                     "name": "한국금융지주",
                     "code": "071050",
-                    "changeRate": "-0.87%",
+                    "changeRate": "-1.52%",
                     "tradeValue": "62억원"
                 },
                 {
@@ -2606,7 +2606,7 @@
                     "rank": "86",
                     "name": "크래프톤",
                     "code": "259960",
-                    "changeRate": "-1.09%",
+                    "changeRate": "-0.87%",
                     "tradeValue": "59억원"
                 },
                 {
@@ -2641,21 +2641,21 @@
                     "rank": "91",
                     "name": "SK바이오팜",
                     "code": "326030",
-                    "changeRate": "-0.70%",
+                    "changeRate": "-0.60%",
                     "tradeValue": "58억원"
                 },
                 {
                     "rank": "92",
                     "name": "LG",
                     "code": "003550",
-                    "changeRate": "-2.03%",
+                    "changeRate": "-1.17%",
                     "tradeValue": "58억원"
                 },
                 {
                     "rank": "93",
                     "name": "DB손해보험",
                     "code": "005830",
-                    "changeRate": "-3.22%",
+                    "changeRate": "-2.83%",
                     "tradeValue": "57억원"
                 },
                 {
@@ -2669,14 +2669,14 @@
                     "rank": "95",
                     "name": "HD현대",
                     "code": "267250",
-                    "changeRate": "-1.07%",
+                    "changeRate": "-0.89%",
                     "tradeValue": "53억원"
                 },
                 {
                     "rank": "96",
                     "name": "한국카본",
                     "code": "017960",
-                    "changeRate": "+1.59%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "52억원"
                 }
             ],
@@ -2688,7 +2688,7 @@
                     "rank": "1",
                     "name": "SK하이닉스",
                     "code": "000660",
-                    "changeRate": "-2.40%",
+                    "changeRate": "-1.98%",
                     "tradeValue": "3,605억원"
                 },
                 {
@@ -2702,7 +2702,7 @@
                     "rank": "4",
                     "name": "SK이노베이션",
                     "code": "096770",
-                    "changeRate": "+1.67%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "763억원"
                 },
                 {
@@ -2723,7 +2723,7 @@
                     "rank": "7",
                     "name": "에코프로",
                     "code": "086520",
-                    "changeRate": "-1.98%",
+                    "changeRate": "-1.91%",
                     "tradeValue": "390억원"
                 },
                 {
@@ -2737,7 +2737,7 @@
                     "rank": "9",
                     "name": "LG전자",
                     "code": "066570",
-                    "changeRate": "-2.96%",
+                    "changeRate": "-2.71%",
                     "tradeValue": "372억원"
                 },
                 {
@@ -2751,7 +2751,7 @@
                     "rank": "12",
                     "name": "HD한국조선해양",
                     "code": "009540",
-                    "changeRate": "+1.07%",
+                    "changeRate": "+1.19%",
                     "tradeValue": "285억원"
                 },
                 {
@@ -2779,7 +2779,7 @@
                     "rank": "16",
                     "name": "셀트리온",
                     "code": "068270",
-                    "changeRate": "-1.67%",
+                    "changeRate": "-1.43%",
                     "tradeValue": "267억원"
                 },
                 {
@@ -2842,7 +2842,7 @@
                     "rank": "26",
                     "name": "삼성생명",
                     "code": "032830",
-                    "changeRate": "-3.97%",
+                    "changeRate": "-3.31%",
                     "tradeValue": "153억원"
                 },
                 {
@@ -2863,14 +2863,14 @@
                     "rank": "30",
                     "name": "한국전력",
                     "code": "015760",
-                    "changeRate": "-0.62%",
+                    "changeRate": "-0.31%",
                     "tradeValue": "142억원"
                 },
                 {
                     "rank": "31",
                     "name": "펩트론",
                     "code": "087010",
-                    "changeRate": "-3.80%",
+                    "changeRate": "-3.64%",
                     "tradeValue": "136억원"
                 },
                 {
@@ -2884,7 +2884,7 @@
                     "rank": "33",
                     "name": "삼성에스디에스",
                     "code": "018260",
-                    "changeRate": "-0.73%",
+                    "changeRate": "-0.36%",
                     "tradeValue": "121억원"
                 },
                 {
@@ -2905,7 +2905,7 @@
                     "rank": "36",
                     "name": "LG화학",
                     "code": "051910",
-                    "changeRate": "-2.53%",
+                    "changeRate": "-2.21%",
                     "tradeValue": "109억원"
                 },
                 {
@@ -2933,7 +2933,7 @@
                     "rank": "40",
                     "name": "하이브",
                     "code": "352820",
-                    "changeRate": "+0.14%",
+                    "changeRate": "+0.28%",
                     "tradeValue": "102억원"
                 },
                 {
@@ -2947,7 +2947,7 @@
                     "rank": "42",
                     "name": "HLB",
                     "code": "028300",
-                    "changeRate": "+0.72%",
+                    "changeRate": "+2.26%",
                     "tradeValue": "94억원"
                 },
                 {
@@ -2968,14 +2968,14 @@
                     "rank": "45",
                     "name": "현대글로비스",
                     "code": "086280",
-                    "changeRate": "-2.32%",
+                    "changeRate": "-2.11%",
                     "tradeValue": "89억원"
                 },
                 {
                     "rank": "46",
                     "name": "HD현대일렉트릭",
                     "code": "267260",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.63%",
                     "tradeValue": "89억원"
                 },
                 {
@@ -2996,7 +2996,7 @@
                     "rank": "50",
                     "name": "포스코퓨처엠",
                     "code": "003670",
-                    "changeRate": "0.00%",
+                    "changeRate": "+0.23%",
                     "tradeValue": "84억원"
                 },
                 {
@@ -3010,7 +3010,7 @@
                     "rank": "52",
                     "name": "KCC",
                     "code": "002380",
-                    "changeRate": "-4.10%",
+                    "changeRate": "-4.28%",
                     "tradeValue": "81억원"
                 },
                 {
@@ -3024,7 +3024,7 @@
                     "rank": "54",
                     "name": "현대차",
                     "code": "005380",
-                    "changeRate": "-1.50%",
+                    "changeRate": "-1.13%",
                     "tradeValue": "79억원"
                 },
                 {
@@ -3038,7 +3038,7 @@
                     "rank": "56",
                     "name": "테스",
                     "code": "095610",
-                    "changeRate": "-2.55%",
+                    "changeRate": "-2.40%",
                     "tradeValue": "72억원"
                 },
                 {
@@ -3059,35 +3059,35 @@
                     "rank": "59",
                     "name": "한국금융지주",
                     "code": "071050",
-                    "changeRate": "-0.87%",
+                    "changeRate": "-1.52%",
                     "tradeValue": "70억원"
                 },
                 {
                     "rank": "60",
                     "name": "KT&G",
                     "code": "033780",
-                    "changeRate": "-0.06%",
+                    "changeRate": "+0.38%",
                     "tradeValue": "69억원"
                 },
                 {
                     "rank": "61",
                     "name": "삼양식품",
                     "code": "003230",
-                    "changeRate": "-4.01%",
+                    "changeRate": "-3.57%",
                     "tradeValue": "69억원"
                 },
                 {
                     "rank": "62",
                     "name": "한화오션",
                     "code": "042660",
-                    "changeRate": "+1.94%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "65억원"
                 },
                 {
                     "rank": "63",
                     "name": "보로노이",
                     "code": "310210",
-                    "changeRate": "-0.30%",
+                    "changeRate": "-0.15%",
                     "tradeValue": "60억원"
                 },
                 {
@@ -3115,7 +3115,7 @@
                     "rank": "67",
                     "name": "금호석유화학",
                     "code": "011780",
-                    "changeRate": "-4.15%",
+                    "changeRate": "-3.99%",
                     "tradeValue": "56억원"
                 },
                 {
@@ -3136,7 +3136,7 @@
                     "rank": "70",
                     "name": "삼성물산",
                     "code": "028260",
-                    "changeRate": "-1.41%",
+                    "changeRate": "-1.23%",
                     "tradeValue": "55억원"
                 },
                 {
@@ -3150,21 +3150,21 @@
                     "rank": "72",
                     "name": "카카오뱅크",
                     "code": "323410",
-                    "changeRate": "+1.23%",
+                    "changeRate": "+1.44%",
                     "tradeValue": "55억원"
                 },
                 {
                     "rank": "73",
                     "name": "디앤디파마텍",
                     "code": "347850",
-                    "changeRate": "-0.24%",
+                    "changeRate": "-0.12%",
                     "tradeValue": "55억원"
                 },
                 {
                     "rank": "74",
                     "name": "미래에셋증권",
                     "code": "006800",
-                    "changeRate": "-1.96%",
+                    "changeRate": "-1.12%",
                     "tradeValue": "53억원"
                 },
                 {
@@ -3178,7 +3178,7 @@
                     "rank": "77",
                     "name": "엔씨소프트",
                     "code": "036570",
-                    "changeRate": "+0.95%",
+                    "changeRate": "+1.19%",
                     "tradeValue": "50억원"
                 },
                 {
@@ -3192,14 +3192,14 @@
                     "rank": "79",
                     "name": "카카오페이",
                     "code": "377300",
-                    "changeRate": "-1.99%",
+                    "changeRate": "-2.15%",
                     "tradeValue": "48억원"
                 },
                 {
                     "rank": "80",
                     "name": "농심",
                     "code": "004370",
-                    "changeRate": "-4.69%",
+                    "changeRate": "-4.56%",
                     "tradeValue": "48억원"
                 },
                 {
@@ -3220,21 +3220,21 @@
                     "rank": "83",
                     "name": "유한양행",
                     "code": "000100",
-                    "changeRate": "+0.91%",
+                    "changeRate": "+1.11%",
                     "tradeValue": "46억원"
                 },
                 {
                     "rank": "84",
                     "name": "올릭스",
                     "code": "226950",
-                    "changeRate": "+0.88%",
+                    "changeRate": "+0.77%",
                     "tradeValue": "45억원"
                 },
                 {
                     "rank": "85",
                     "name": "리가켐바이오",
                     "code": "141080",
-                    "changeRate": "+2.89%",
+                    "changeRate": "+3.00%",
                     "tradeValue": "45억원"
                 },
                 {
@@ -3248,7 +3248,7 @@
                     "rank": "87",
                     "name": "메지온",
                     "code": "140410",
-                    "changeRate": "+1.66%",
+                    "changeRate": "+1.57%",
                     "tradeValue": "42억원"
                 },
                 {
@@ -3269,7 +3269,7 @@
                     "rank": "91",
                     "name": "LS",
                     "code": "006260",
-                    "changeRate": "+0.39%",
+                    "changeRate": "+0.59%",
                     "tradeValue": "39억원"
                 },
                 {
@@ -3283,14 +3283,14 @@
                     "rank": "93",
                     "name": "GS건설",
                     "code": "006360",
-                    "changeRate": "-0.46%",
+                    "changeRate": "-0.23%",
                     "tradeValue": "38억원"
                 },
                 {
                     "rank": "94",
                     "name": "삼성E&A",
                     "code": "028050",
-                    "changeRate": "-0.15%",
+                    "changeRate": "+0.15%",
                     "tradeValue": "35억원"
                 },
                 {
@@ -3344,21 +3344,21 @@
                     "rank": "1",
                     "name": "삼성중공업",
                     "code": "010140",
-                    "changeRate": "+6.94%",
+                    "changeRate": "+7.11%",
                     "tradeValue": "2,171억원"
                 },
                 {
                     "rank": "2",
                     "name": "두산에너빌리티",
                     "code": "034020",
-                    "changeRate": "+2.27%",
+                    "changeRate": "+2.17%",
                     "tradeValue": "1,233억원"
                 },
                 {
                     "rank": "3",
                     "name": "한화에어로스페이스",
                     "code": "012450",
-                    "changeRate": "+3.33%",
+                    "changeRate": "+3.54%",
                     "tradeValue": "1,123억원"
                 },
                 {
@@ -3372,7 +3372,7 @@
                     "rank": "5",
                     "name": "한화시스템",
                     "code": "272210",
-                    "changeRate": "+1.15%",
+                    "changeRate": "+1.35%",
                     "tradeValue": "457억원"
                 },
                 {
@@ -3386,28 +3386,28 @@
                     "rank": "8",
                     "name": "LIG넥스원",
                     "code": "079550",
-                    "changeRate": "+1.07%",
+                    "changeRate": "+0.94%",
                     "tradeValue": "284억원"
                 },
                 {
                     "rank": "9",
                     "name": "한화오션",
                     "code": "042660",
-                    "changeRate": "+1.94%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "278억원"
                 },
                 {
                     "rank": "10",
                     "name": "한화솔루션",
                     "code": "009830",
-                    "changeRate": "+3.30%",
+                    "changeRate": "+2.72%",
                     "tradeValue": "265억원"
                 },
                 {
                     "rank": "11",
                     "name": "HD현대중공업",
                     "code": "329180",
-                    "changeRate": "+1.52%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "261억원"
                 },
                 {
@@ -3421,14 +3421,14 @@
                     "rank": "13",
                     "name": "현대건설",
                     "code": "000720",
-                    "changeRate": "+5.04%",
+                    "changeRate": "+4.63%",
                     "tradeValue": "202억원"
                 },
                 {
                     "rank": "14",
                     "name": "두산퓨얼셀",
                     "code": "336260",
-                    "changeRate": "+12.40%",
+                    "changeRate": "+12.77%",
                     "tradeValue": "192억원"
                 },
                 {
@@ -3456,28 +3456,28 @@
                     "rank": "18",
                     "name": "포스코인터내셔널",
                     "code": "047050",
-                    "changeRate": "+3.27%",
+                    "changeRate": "+3.53%",
                     "tradeValue": "164억원"
                 },
                 {
                     "rank": "19",
                     "name": "OCI홀딩스",
                     "code": "010060",
-                    "changeRate": "+12.81%",
+                    "changeRate": "+12.47%",
                     "tradeValue": "154억원"
                 },
                 {
                     "rank": "20",
                     "name": "리노공업",
                     "code": "058470",
-                    "changeRate": "+2.99%",
+                    "changeRate": "+2.72%",
                     "tradeValue": "153억원"
                 },
                 {
                     "rank": "21",
                     "name": "한미반도체",
                     "code": "042700",
-                    "changeRate": "-0.32%",
+                    "changeRate": "+2.08%",
                     "tradeValue": "149억원"
                 },
                 {
@@ -3512,7 +3512,7 @@
                     "rank": "27",
                     "name": "오름테라퓨틱",
                     "code": "475830",
-                    "changeRate": "+9.42%",
+                    "changeRate": "+9.75%",
                     "tradeValue": "111억원"
                 },
                 {
@@ -3533,7 +3533,7 @@
                     "rank": "30",
                     "name": "지투지바이오",
                     "code": "456160",
-                    "changeRate": "+6.60%",
+                    "changeRate": "+6.98%",
                     "tradeValue": "103억원"
                 },
                 {
@@ -3547,14 +3547,14 @@
                     "rank": "32",
                     "name": "LG에너지솔루션",
                     "code": "373220",
-                    "changeRate": "+2.43%",
+                    "changeRate": "+2.57%",
                     "tradeValue": "100억원"
                 },
                 {
                     "rank": "33",
                     "name": "에프에스티",
                     "code": "036810",
-                    "changeRate": "+20.51%",
+                    "changeRate": "+19.97%",
                     "tradeValue": "97억원"
                 },
                 {
@@ -3568,7 +3568,7 @@
                     "rank": "35",
                     "name": "리가켐바이오",
                     "code": "141080",
-                    "changeRate": "+2.89%",
+                    "changeRate": "+3.00%",
                     "tradeValue": "95억원"
                 },
                 {
@@ -3582,28 +3582,28 @@
                     "rank": "37",
                     "name": "스피어",
                     "code": "347700",
-                    "changeRate": "+4.71%",
+                    "changeRate": "+4.51%",
                     "tradeValue": "92억원"
                 },
                 {
                     "rank": "38",
                     "name": "LS ELECTRIC",
                     "code": "010120",
-                    "changeRate": "+2.21%",
+                    "changeRate": "+2.63%",
                     "tradeValue": "88억원"
                 },
                 {
                     "rank": "39",
                     "name": "LG씨엔에스",
                     "code": "064400",
-                    "changeRate": "+3.49%",
+                    "changeRate": "+4.25%",
                     "tradeValue": "88억원"
                 },
                 {
                     "rank": "40",
                     "name": "노타",
                     "code": "486990",
-                    "changeRate": "+18.63%",
+                    "changeRate": "+17.42%",
                     "tradeValue": "85억원"
                 },
                 {
@@ -3617,21 +3617,21 @@
                     "rank": "42",
                     "name": "LS에코에너지",
                     "code": "229640",
-                    "changeRate": "+12.52%",
+                    "changeRate": "+12.41%",
                     "tradeValue": "81억원"
                 },
                 {
                     "rank": "43",
                     "name": "로킷헬스케어",
                     "code": "376900",
-                    "changeRate": "+5.15%",
+                    "changeRate": "+5.67%",
                     "tradeValue": "80억원"
                 },
                 {
                     "rank": "44",
                     "name": "S-Oil",
                     "code": "010950",
-                    "changeRate": "+2.53%",
+                    "changeRate": "+2.61%",
                     "tradeValue": "62억원"
                 },
                 {
@@ -3652,7 +3652,7 @@
                     "rank": "48",
                     "name": "SK이노베이션",
                     "code": "096770",
-                    "changeRate": "+1.67%",
+                    "changeRate": "+2.09%",
                     "tradeValue": "56억원"
                 },
                 {
@@ -3666,7 +3666,7 @@
                     "rank": "50",
                     "name": "OCI",
                     "code": "456040",
-                    "changeRate": "+5.99%",
+                    "changeRate": "+5.63%",
                     "tradeValue": "54억원"
                 },
                 {
@@ -3708,21 +3708,21 @@
                     "rank": "56",
                     "name": "아이티센글로벌",
                     "code": "124500",
-                    "changeRate": "+6.99%",
+                    "changeRate": "+7.14%",
                     "tradeValue": "42억원"
                 },
                 {
                     "rank": "57",
                     "name": "씨메스",
                     "code": "475400",
-                    "changeRate": "-0.70%",
+                    "changeRate": "-0.35%",
                     "tradeValue": "42억원"
                 },
                 {
                     "rank": "58",
                     "name": "태광",
                     "code": "023160",
-                    "changeRate": "+13.78%",
+                    "changeRate": "+13.60%",
                     "tradeValue": "40억원"
                 },
                 {
@@ -3736,7 +3736,7 @@
                     "rank": "60",
                     "name": "쎄트렉아이",
                     "code": "099320",
-                    "changeRate": "+7.76%",
+                    "changeRate": "+6.97%",
                     "tradeValue": "39억원"
                 },
                 {
@@ -3764,14 +3764,14 @@
                     "rank": "64",
                     "name": "한중엔시에스",
                     "code": "107640",
-                    "changeRate": "+6.43%",
+                    "changeRate": "+6.60%",
                     "tradeValue": "36억원"
                 },
                 {
                     "rank": "65",
                     "name": "한전KPS",
                     "code": "051600",
-                    "changeRate": "+6.22%",
+                    "changeRate": "+6.58%",
                     "tradeValue": "35억원"
                 },
                 {
@@ -3785,14 +3785,14 @@
                     "rank": "67",
                     "name": "ISC",
                     "code": "095340",
-                    "changeRate": "+2.29%",
+                    "changeRate": "+1.94%",
                     "tradeValue": "34억원"
                 },
                 {
                     "rank": "68",
                     "name": "KT",
                     "code": "030200",
-                    "changeRate": "+1.16%",
+                    "changeRate": "+1.83%",
                     "tradeValue": "34억원"
                 },
                 {
@@ -3841,14 +3841,14 @@
                     "rank": "75",
                     "name": "한국카본",
                     "code": "017960",
-                    "changeRate": "+1.59%",
+                    "changeRate": "+1.69%",
                     "tradeValue": "30억원"
                 },
                 {
                     "rank": "76",
                     "name": "씨에스윈드",
                     "code": "112610",
-                    "changeRate": "+8.89%",
+                    "changeRate": "+8.12%",
                     "tradeValue": "30억원"
                 },
                 {
@@ -3876,7 +3876,7 @@
                     "rank": "81",
                     "name": "에이피알",
                     "code": "278470",
-                    "changeRate": "+0.78%",
+                    "changeRate": "+0.62%",
                     "tradeValue": "26억원"
                 },
                 {
@@ -3897,7 +3897,7 @@
                     "rank": "84",
                     "name": "LX인터내셔널",
                     "code": "001120",
-                    "changeRate": "+6.20%",
+                    "changeRate": "+6.08%",
                     "tradeValue": "24억원"
                 },
                 {
@@ -3911,21 +3911,21 @@
                     "rank": "86",
                     "name": "티씨케이",
                     "code": "064760",
-                    "changeRate": "+1.13%",
+                    "changeRate": "+1.36%",
                     "tradeValue": "23억원"
                 },
                 {
                     "rank": "89",
                     "name": "코미코",
                     "code": "183300",
-                    "changeRate": "+4.59%",
+                    "changeRate": "+4.22%",
                     "tradeValue": "22억원"
                 },
                 {
                     "rank": "90",
                     "name": "아이에스동서",
                     "code": "010780",
-                    "changeRate": "+7.45%",
+                    "changeRate": "+7.61%",
                     "tradeValue": "21억원"
                 },
                 {
@@ -3995,7 +3995,7 @@
                     "rank": "100",
                     "name": "HD한국조선해양",
                     "code": "009540",
-                    "changeRate": "+1.07%",
+                    "changeRate": "+1.19%",
                     "tradeValue": "18억원"
                 }
             ],
