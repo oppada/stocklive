@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-bg: #0f172a;
-  --color-card-bg: #1e293b;
-  --color-neon-red: #ef4444;
-  --color-neon-blue: #3b82f6;
+  --color-primary-bg: #f8fafc;
+  --color-card-bg: #ffffff;
+  --color-accent-indigo: #4f46e5;
+  --color-up-red: #f43f5e;     /* 한국형 상승 (Rose 500) */
+  --color-down-blue: #2563eb;  /* 한국형 하락 (Blue 600) */
 }
 
 @layer base {
   body {
-    @apply bg-primary-bg text-slate-100 antialiased;
+    @apply bg-primary-bg text-slate-800 antialiased;
     margin: 0;
     padding: 0;
   }

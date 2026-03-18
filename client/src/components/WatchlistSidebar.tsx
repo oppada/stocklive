@@ -10,9 +10,9 @@ interface WatchlistSidebarProps {
 const WatchlistSidebar = ({ favoritedStocks, stockPrices, onFavoriteToggle }: WatchlistSidebarProps) => {
   return (
     <div className="w-full flex flex-col h-full bg-transparent">
-      <div className="p-4 border-b border-slate-200/40 shrink-0 flex justify-between items-center bg-slate-100/10">
+      <div className="p-4 border-b border-slate-300/40 shrink-0 flex justify-between items-center bg-slate-100/10">
         <h2 className="text-[13px] font-black text-slate-600 uppercase tracking-tight">Watchlist</h2>
-        <span className="text-[10px] text-blue-500 font-black bg-blue-50/50 px-2 py-0.5 rounded-full border border-blue-100/50 shadow-sm">
+        <span className="text-[10px] text-indigo-600 font-black bg-indigo-50/50 px-2 py-0.5 rounded-full border border-indigo-100/50 shadow-sm">
           {favoritedStocks.length}
         </span>
       </div>
@@ -21,7 +21,7 @@ const WatchlistSidebar = ({ favoritedStocks, stockPrices, onFavoriteToggle }: Wa
         <div className="flex flex-col gap-0.5 w-full">
           {favoritedStocks.length === 0 ? (
             <div className="py-20 text-center flex flex-col items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100/50 flex items-center justify-center text-slate-200 border border-slate-200/50 shadow-inner">❤</div>
+              <div className="w-10 h-10 rounded-full bg-slate-100/50 flex items-center justify-center text-slate-200 border border-slate-300/50 shadow-inner">❤</div>
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Empty</p>
             </div>
           ) : (
@@ -35,7 +35,7 @@ const WatchlistSidebar = ({ favoritedStocks, stockPrices, onFavoriteToggle }: Wa
 
               const isUp = changeRate > 0;
               const isDown = changeRate < 0;
-              const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-indigo-600' : 'text-slate-400');
+              const colorClass = isUp ? 'text-rose-500' : (isDown ? 'text-blue-600' : 'text-slate-400');
               const sign = isUp ? '+' : '';
 
               return (

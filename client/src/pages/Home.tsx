@@ -139,9 +139,10 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
     }
   }, [activeTab, investorTab]);
 
+  // 색상 최적화: 부드러운 톤으로 변경
   const getTabColor = (tab: string) => {
-    if (activeTab !== tab) return 'text-slate-400 hover:text-slate-900 transition-colors';
-    return 'text-slate-900 relative after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-blue-600 after:rounded-full';
+    if (activeTab !== tab) return 'text-slate-500 hover:text-slate-700 transition-colors';
+    return 'text-slate-800 relative after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-indigo-600 after:rounded-full';
   };
 
   const gridLayout = "grid grid-cols-[20px_25px_1fr_65px_55px] md:grid-cols-[35px_40px_1fr_110px_90px_90px_110px] items-center gap-1 md:gap-3";
@@ -163,12 +164,12 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
     const currentTime = investorUpdateTimes[timeKey];
 
     return (
-      <div className="flex flex-col h-full bg-white/95">
-        <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-slate-50">
-          <span className="font-black text-slate-900 text-[14px] uppercase tracking-tight">{title}</span>
-          {currentTime && <span className="text-[10px] text-slate-400 font-bold bg-white px-2 py-0.5 rounded-full border border-slate-100 shadow-sm">{currentTime}</span>}
+      <div className="flex flex-col h-full bg-slate-50/60">
+        <div className="p-4 flex items-center justify-between border-b border-slate-300 bg-slate-100/40">
+          <span className="font-black text-slate-800 text-[14px] uppercase tracking-tight">{title}</span>
+          {currentTime && <span className="text-[10px] text-slate-600 font-bold bg-white px-2 py-0.5 rounded-full border border-slate-300 shadow-sm">{currentTime}</span>}
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-300">
           {(stocks || []).map((stock: any, idx: number) => {
             const rate = parseFloat(String(stock.changeRate)) || 0;
             const isUp = rate > 0;
@@ -178,15 +179,15 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
               : (parseInt(rawValue) > 0 ? `${(parseInt(rawValue) / 100000000).toFixed(0)}억` : '---');
 
             return (
-              <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-4 h-11 hover:bg-slate-50 transition-all group">
-                <div className="text-[11px] font-bold text-slate-300 font-mono">{idx + 1}</div>
-                <Link to={`/stock/${stock.code}`} className="text-[13px] font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+              <div key={`${title}-${stock.code}-${idx}`} className="grid grid-cols-[25px_1fr_55px_65px] items-center px-4 h-11 hover:bg-slate-100/50 transition-all group cursor-pointer" onClick={() => navigate(`/stock/${stock.code}`)}>
+                <div className="text-[11px] font-bold text-slate-400 font-mono">{idx + 1}</div>
+                <div className="text-[13px] font-bold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
                   {stock.name}
-                </Link>
+                </div>
                 <div className={`text-right text-[12px] font-black font-mono ${isUp ? 'text-rose-500' : 'text-blue-600'}`}>
                   {isUp ? '+' : ''}{rate.toFixed(1)}%
                 </div>
-                <div className="text-right text-[11px] font-bold text-slate-500 font-mono opacity-80">
+                <div className="text-right text-[11px] font-bold text-slate-600 font-mono opacity-80">
                   {displayValue}
                 </div>
               </div>
@@ -218,17 +219,17 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
         <div className="flex flex-1 overflow-hidden gap-4">
           {/* Theme List - Left Sidebar Mode (Restored) */}
           {activeTab === '테마' && (
-            <aside className="hidden md:flex flex-col w-64 bg-white/95 backdrop-blur-md rounded-[24px] border border-slate-200 overflow-hidden shrink-0 shadow-md">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <span className="font-bold text-slate-900 text-[14px]">테마별 종목</span>
-                <LayoutGrid size={16} className="text-slate-400" />
+            <aside className="hidden md:flex flex-col w-64 bg-slate-50 backdrop-blur-md rounded-[24px] border border-slate-300 overflow-hidden shrink-0 shadow-md">
+              <div className="p-4 border-b border-slate-300 flex items-center justify-between bg-slate-100/50">
+                <span className="font-bold text-slate-800 text-[14px]">테마별 종목</span>
+                <LayoutGrid size={16} className="text-slate-500" />
               </div>
               <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-0.5">
                 {(allThemes || []).map((t: any) => (
                   <button 
                     key={t.name} 
                     onClick={() => setSelectedThemeId(t.name)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-[13px] font-bold ${selectedThemeId === t.name ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-[13px] font-bold ${selectedThemeId === t.name ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'}`}
                   >
                     <span className="truncate">{t.name}</span>
                     <span className={`font-mono text-[11px] ${parseFloat(t.avgChangeRate || 0) > 0 ? (selectedThemeId === t.name ? 'text-rose-200' : 'text-rose-500') : (selectedThemeId === t.name ? 'text-blue-200' : 'text-blue-600')}`}>
@@ -241,19 +242,19 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
           )}
 
           {/* Main List Card */}
-          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-[20px] md:rounded-[32px] shadow-md border border-slate-200 overflow-hidden mb-2 md:mb-0">
+          <div className="flex-1 flex flex-col min-h-0 bg-slate-50 rounded-[20px] md:rounded-[32px] shadow-md border border-slate-300 overflow-hidden mb-2 md:mb-0">
             {/* Investor Buy/Sell Toggle (Left Aligned & Red/Blue Colors) */}
             {activeTab === '투자자별' && (
-              <div className="p-4 border-b border-slate-100 flex items-center justify-start gap-2 bg-slate-50/30">
+              <div className="p-4 border-b border-slate-300 flex items-center justify-start gap-2 bg-slate-100/30">
                 <button 
                   onClick={() => setInvestorTab('buy')}
-                  className={`px-6 py-1.5 rounded-full text-[13px] font-bold transition-all ${investorTab === 'buy' ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
+                  className={`px-6 py-1.5 rounded-full text-[13px] font-bold transition-all ${investorTab === 'buy' ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20' : 'bg-white text-slate-600 border border-slate-300 hover:border-slate-400'}`}
                 >
                   순매수
                 </button>
                 <button 
                   onClick={() => setInvestorTab('sell')}
-                  className={`px-6 py-1.5 rounded-full text-[13px] font-bold transition-all ${investorTab === 'sell' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}`}
+                  className={`px-6 py-1.5 rounded-full text-[13px] font-bold transition-all ${investorTab === 'sell' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'bg-white text-slate-600 border border-slate-300 hover:border-slate-400'}`}
                 >
                   순매도
                 </button>
@@ -262,19 +263,19 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
 
             {/* Mobile Theme Selector */}
             {activeTab === '테마' && (
-              <div className="md:hidden p-3 border-b border-slate-100 bg-slate-50/30">
+              <div className="md:hidden p-3 border-b border-slate-300 bg-slate-100/30">
                 <button 
                   onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 flex justify-between items-center shadow-sm"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2 flex justify-between items-center shadow-sm"
                 >
-                  <span className="font-bold text-blue-600 text-[14px]">{selectedThemeId}</span>
+                  <span className="font-bold text-indigo-600 text-[14px]">{selectedThemeId}</span>
                   <ChevronRight size={16} className={`transform transition-transform ${isThemeMenuOpen ? 'rotate-90' : ''}`} />
                 </button>
                 {isThemeMenuOpen && (
-                  <div className="absolute left-4 right-4 mt-1 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-[300px] overflow-y-auto p-1">
+                  <div className="absolute left-4 right-4 mt-1 bg-white border border-slate-300 rounded-2xl shadow-2xl z-50 max-h-[300px] overflow-y-auto p-1">
                     {(allThemes || []).map((t: any) => (
                       <button key={t.name} onClick={() => { setSelectedThemeId(t.name); setIsThemeMenuOpen(false); }}
-                        className="w-full px-4 py-3 rounded-lg text-left text-[13px] font-bold active:bg-blue-50 border-b border-slate-50 last:border-0"
+                        className="w-full px-4 py-3 rounded-lg text-left text-[13px] font-bold active:bg-indigo-50 border-b border-slate-200 last:border-0"
                       >
                         {t.name}
                       </button>
@@ -286,9 +287,9 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
 
             <div className="flex-1 overflow-y-auto no-scrollbar">
               {activeTab === '투자자별' ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-200 h-full bg-slate-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-300 h-full bg-slate-200">
                   {isLoadingInvestor && foreignStocks.length === 0 ? (
-                    <div className="col-span-3 py-40 text-center text-slate-300 font-bold italic bg-white h-full">데이터 동기화 중...</div>
+                    <div className="col-span-3 py-40 text-center text-slate-400 font-bold italic bg-white h-full">데이터 동기화 중...</div>
                   ) : (
                     <>
                       {renderInvestorColumn('외국인', foreignStocks)}
@@ -300,7 +301,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
               ) : (
                 <div className="w-full">
                   {/* Table Header */}
-                  <div className={`${gridLayout} px-6 md:px-10 py-3 border-b border-slate-50 text-[11px] font-bold text-slate-500 uppercase tracking-tight`}>
+                  <div className={`${gridLayout} px-6 md:px-10 py-3 border-b border-slate-300 text-[11px] font-bold text-slate-600 uppercase tracking-tight`}>
                       <div className="text-center">#</div>
                       <div className="flex justify-center"><Heart size={14} fill="currentColor" /></div>
                       <div>종목명</div>
@@ -310,40 +311,40 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                       <div className="text-right hidden md:block">거래량</div>
                   </div>
                   
-                  <div className="divide-y divide-slate-50">
+                  <div className="divide-y divide-slate-300">
                     {activeTab === '관심' && !user ? (
                       <div className="py-40 text-center flex flex-col items-center gap-4">
-                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200"><Heart size={32} /></div>
-                         <button onClick={onLoginClick} className="px-6 py-2 bg-blue-600 rounded-full text-[14px] font-bold text-white shadow-lg">로그인하고 관심종목 보기</button>
+                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300"><Heart size={32} /></div>
+                         <button onClick={onLoginClick} className="px-6 py-2 bg-indigo-600 rounded-full text-[14px] font-bold text-white shadow-lg">로그인하고 관심종목 보기</button>
                       </div>
                     ) : ((isLoadingStocks && !['테마', '관심'].includes(activeTab)) || (isLoadingThemeStocks && activeTab === '테마')) && displayStocks.length === 0 ? (
-                      <div className="py-40 text-center text-slate-300 font-bold animate-pulse italic">종목 정보를 불러오는 중...</div>
+                      <div className="py-40 text-center text-slate-400 font-bold animate-pulse italic">종목 정보를 불러오는 중...</div>
                     ) : (
                       (displayStocks || []).map((stock: any, idx: number) => {                        const rate = parseFloat(String(stock.changeRate)) || 0;
                         const isUp = rate > 0;
                         const isDown = rate < 0;
                         
                         return (
-                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} px-6 md:px-10 py-2 hover:bg-slate-50/50 transition-all cursor-pointer group`} onClick={() => navigate(`/stock/${stock.code}`)}>
+                          <div key={`${activeTab}-${stock.code}-${idx}`} className={`${gridLayout} px-6 md:px-10 py-2 hover:bg-slate-100/50 transition-all cursor-pointer group`} onClick={() => navigate(`/stock/${stock.code}`)}>
                              <div className="text-[13px] font-bold text-slate-500 font-mono text-center">{idx + 1}</div>
                              <div className="flex justify-center" onClick={(e) => { e.stopPropagation(); onFavoriteToggle(stock.code); }}>
-                                <Heart size={16} className={`transition-all ${favoritedStocks.includes(stock.code) ? 'text-rose-500 fill-rose-500' : 'text-slate-400 hover:text-rose-300'}`} />
+                                <Heart size={16} className={`transition-all ${favoritedStocks.includes(stock.code) ? 'text-red-500 fill-red-500' : 'text-slate-400 hover:text-red-500'}`} />
                              </div>
                              <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-[15px] md:text-[16px] text-slate-900 group-hover:text-blue-600 transition-colors truncate">{stock.name}</span>
+                                <span className="font-bold text-[15px] md:text-[16px] text-slate-800 group-hover:text-indigo-600 transition-colors truncate">{stock.name}</span>
                              </div>
-                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-900 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
-                             <div className={`text-right text-[14px] md:text-[15px] font-bold font-mono ${isUp ? 'text-rose-500' : (isDown ? 'text-blue-600' : 'text-slate-400')}`}>
+                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-800 font-mono">{Number(stock.price || 0).toLocaleString()}</div>
+                             <div className={`text-right text-[14px] md:text-[15px] font-bold font-mono ${isUp ? 'text-rose-500' : (isDown ? 'text-blue-600' : 'text-slate-500')}`}>
                                {isUp ? '+' : ''}{rate.toFixed(1)}%
                              </div>
-                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-600 font-mono hidden md:block">
+                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-700 font-mono hidden md:block">
                                {(() => {
                                  const val = parseInt(stock.tradeValue || '0');
                                  if (val >= 1000000000000) return `${(val / 1000000000000).toFixed(1)}조`;
                                  return `${(val / 100000000).toFixed(0)}억`;
                                })()}
                              </div>
-                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-500 font-mono hidden md:block">
+                             <div className="text-right text-[14px] md:text-[15px] font-bold text-slate-600 font-mono hidden md:block">
                                {stock.volume >= 10000 ? `${(stock.volume / 10000).toFixed(0)}만` : Number(stock.volume).toLocaleString()}
                              </div>                          </div>
                         );

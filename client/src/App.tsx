@@ -166,16 +166,18 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#edf0f3] text-slate-900 font-sans selection:bg-blue-100">
+    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#f8fafc] text-slate-800 font-sans selection:bg-indigo-100">
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
       
       {/* Header - Muted Light & Blur */}
-      <header className="h-14 border-b border-slate-200/60 flex items-center justify-between px-4 md:px-6 bg-slate-50/90 backdrop-blur-md shrink-0 z-50 shadow-sm">
+      <header className="h-14 border-b border-slate-300/60 flex items-center justify-between px-4 md:px-6 bg-slate-50/90 backdrop-blur-md shrink-0 z-50 shadow-sm">
         <div className="flex items-center gap-10">
           <div className="flex flex-col cursor-pointer group" onClick={() => navigate('/')}>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none italic">STOCK<span className="text-blue-600">LIVE</span></h1>
+            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tighter leading-none italic">
+              STOCK<span className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 bg-clip-text text-transparent">MATE</span>
+            </h1>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-[14px] font-bold text-slate-400">
+          <nav className="hidden md:flex items-center gap-6 text-[14px] font-bold text-slate-500">
             {[
               { name: '홈', path: '/' },
               { name: '추천', path: '/recommendation' },
@@ -185,27 +187,27 @@ const App = () => {
               <Link 
                 key={item.name} 
                 to={item.path} 
-                className={`relative py-1 transition-all hover:text-slate-900 ${location.pathname === item.path ? 'text-slate-900' : ''}`}
+                className={`relative py-1 transition-all hover:text-slate-800 ${location.pathname === item.path ? 'text-slate-800' : ''}`}
               >
                 {item.name}
-                {location.pathname === item.path && <div className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-slate-900 rounded-full" />}
+                {location.pathname === item.path && <div className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-slate-800 rounded-full" />}
               </Link>
             ))}
           </nav>
         </div>
         
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/discovery')} className="p-2 text-slate-400 hover:text-slate-900 transition-all">
+          <button onClick={() => navigate('/discovery')} className="p-2 text-slate-500 hover:text-slate-800 transition-all">
             <Search className="w-5 h-5" />
           </button>
           
-          <button className="p-2 text-slate-400 hover:text-slate-900 transition-all">
+          <button className="p-2 text-slate-500 hover:text-slate-800 transition-all">
             <Bell className="w-5 h-5" />
           </button>
           
           <div 
             onClick={() => user ? navigate('/mypage') : setShowLoginModal(true)} 
-            className={`hidden md:flex items-center justify-center cursor-pointer w-9 h-9 rounded-full transition-all active:scale-95 ${user ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+            className={`hidden md:flex items-center justify-center cursor-pointer w-9 h-9 rounded-full transition-all active:scale-95 ${user ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}`}
           >
             <User className="w-5 h-5" />
           </div>
@@ -222,7 +224,7 @@ const App = () => {
                 .map(([name, data]: [string, any]) => {
                   const isUp = (data?.change || 0) > 0;
                   const isDown = (data?.change || 0) < 0;
-                  const colorClass = isUp ? 'text-rose-400' : (isDown ? 'text-sky-400' : 'text-slate-400');
+                  const colorClass = isUp ? 'text-rose-400' : (isDown ? 'text-blue-400' : 'text-slate-400');
                   const sign = isUp ? '+' : '';
                   return (
                     <span key={name} className="flex items-center gap-3">
@@ -239,30 +241,30 @@ const App = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-3 md:p-4 gap-4 bg-[#edf0f3]">
+      <div className="flex flex-1 overflow-hidden p-3 md:p-4 gap-4 bg-[#f8fafc]">
         {/* Left Sidebar (Chat) - Floating Card */}
-        <aside className={`flex-col bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-200/40 overflow-hidden ${isChatRoute ? 'hidden' : 'hidden md:flex w-[320px]'}`}>
-          <div className="p-5 border-b border-slate-100 flex justify-between items-center">
-            <h3 className="font-bold text-[15px] text-slate-900 flex items-center gap-2">
-              <MessageCircle size={18} className="text-blue-600" /> 실시간 종목 톡
+        <aside className={`flex-col bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-300/40 overflow-hidden ${isChatRoute ? 'hidden' : 'hidden md:flex w-[320px]'}`}>
+          <div className="p-5 border-b border-slate-300 flex justify-between items-center">
+            <h3 className="font-bold text-[15px] text-slate-800 flex items-center gap-2">
+              <MessageCircle size={18} className="text-indigo-600" /> 실시간 종목 톡
             </h3>
-            <div className="bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-              <span className="text-[10px] font-black text-blue-600 uppercase">Live</span>
+            <div className="bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+              <span className="text-[10px] font-black text-indigo-600 uppercase">Live</span>
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-0 no-scrollbar bg-white">
             {messages.map((m, i) => (
               <div key={i} className="text-[14px] leading-snug group py-[1px]">
-                <span className="font-bold text-slate-400 mr-1.5">{m.user}</span> 
+                <span className="font-bold text-slate-500 mr-1.5">{m.user}</span> 
                 <span className="text-slate-800">{m.text}</span>
               </div>
             ))}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-100">
-            <div className="flex items-center gap-2 bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+          <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-300">
+            <div className="flex items-center gap-2 bg-white rounded-2xl p-1 shadow-sm border border-slate-300">
               <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full px-4 py-2 text-sm outline-none bg-transparent" placeholder="메시지 입력" />
-              <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all shrink-0"><Zap size={16} fill="currentColor" /></button>
+              <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-10 h-10 flex items-center justify-center bg-indigo-600 rounded-xl text-white hover:bg-indigo-700 transition-all shrink-0"><Zap size={16} fill="currentColor" /></button>
             </div>
           </form>
         </aside>
@@ -278,14 +280,14 @@ const App = () => {
             <Route path="/mypage" element={<MyPage user={user} handleLogout={handleLogout} onLoginClick={() => setShowLoginModal(true)} />} />
             <Route path="/chat" element={
               <div className="flex flex-col h-full pb-16 md:pb-0">
-                <div className="flex flex-col h-full bg-white rounded-[24px] overflow-hidden border border-slate-200/40 shadow-sm">
+                <div className="flex flex-col h-full bg-white rounded-[24px] overflow-hidden border border-slate-300/40 shadow-sm">
                   {/* Chat Header - Slim for Mobile Content Density */}
-                  <div className="p-2.5 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white/50">
+                  <div className="p-2.5 border-b border-slate-300 flex justify-between items-center shrink-0 bg-white/50">
                     <h3 className="font-bold text-[14px] text-slate-800 flex items-center gap-1.5 ml-1">
-                      <MessageCircle size={16} className="text-blue-600" /> 실시간 종목 톡
+                      <MessageCircle size={16} className="text-indigo-600" /> 실시간 종목 톡
                     </h3>
-                    <div className="bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100 mr-1 scale-90">
-                      <span className="text-[9px] font-black text-blue-600 uppercase">Live</span>
+                    <div className="bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100 mr-1 scale-90">
+                      <span className="text-[9px] font-black text-indigo-600 uppercase">Live</span>
                     </div>
                   </div>
 
@@ -293,7 +295,7 @@ const App = () => {
                   <div className="flex-1 overflow-y-auto p-4 space-y-0 no-scrollbar bg-white">
                     {messages.map((m, i) => (
                       <div key={i} className="text-[14px] leading-snug group py-0">
-                        <span className="font-bold text-slate-400 mr-1.5">{m.user}</span> 
+                        <span className="font-bold text-slate-500 mr-1.5">{m.user}</span> 
                         <span className="text-slate-800">{m.text}</span>
                       </div>
                     ))}
@@ -301,10 +303,10 @@ const App = () => {
                   </div>
 
                   {/* Chat Input */}
-                  <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-100 shrink-0">
-                    <div className="flex items-center gap-2 bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+                  <form onSubmit={handleSendMessage} className="p-4 bg-slate-50 border-t border-slate-300 shrink-0">
+                    <div className="flex items-center gap-2 bg-white rounded-2xl p-1 shadow-sm border border-slate-300">
                       <input type="text" value={inputText} onChange={e => setInputText(e.target.value)} className="w-full px-4 py-2 text-sm outline-none bg-transparent" placeholder="메시지 입력" />
-                      <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-10 h-10 flex items-center justify-center bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition-all shrink-0"><Zap size={16} fill="currentColor" /></button>
+                      <button type="submit" onClick={(e) => { if(!user) { e.preventDefault(); setShowLoginModal(true); } }} className="w-10 h-10 flex items-center justify-center bg-indigo-600 rounded-xl text-white hover:bg-indigo-700 transition-all shrink-0"><Zap size={16} fill="currentColor" /></button>
                     </div>
                   </form>
                 </div>
@@ -314,7 +316,7 @@ const App = () => {
         </main>
 
         {/* Right Sidebar (Watchlist) - Floating Card */}
-        <aside className="hidden md:flex w-[280px] bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-200/40 overflow-hidden">
+        <aside className="hidden md:flex w-[280px] bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-300/40 overflow-hidden">
           <WatchlistSidebar favoritedStocks={[...favoritedStocks].reverse()} stockPrices={stockPrices} onFavoriteToggle={handleFavoriteClick} />
         </aside>
       </div>
@@ -332,10 +334,10 @@ const App = () => {
             onClick={() => {
               if (item.authRequired && !user) { setShowLoginModal(true); } else { navigate(item.path); }
             }}
-            className={`flex flex-col items-center gap-1 cursor-pointer w-full py-2 transition-all ${location.pathname === item.path ? 'text-blue-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center gap-1 cursor-pointer w-full py-2 transition-all ${location.pathname === item.path ? 'text-indigo-600' : 'text-slate-600'}`}
           >
             {item.icon}
-            <span className="text-[10px] font-bold">{item.name}</span>
+            <span className="text-[11px] font-black">{item.name}</span>
           </div>
         ))}
       </footer>
