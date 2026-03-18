@@ -81,7 +81,7 @@ const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) =>
 
   if (loading && !data) {
     return (
-      <div className="flex flex-col h-screen bg-[#f0f3f7] items-center justify-center">
+      <div className="flex flex-col h-screen bg-[#edf0f3] items-center justify-center">
         <RefreshCw className="animate-spin text-blue-600 w-8 h-8 mb-4" />
         <p className="text-slate-500 font-bold">데이터를 불러오고 있습니다...</p>
       </div>
@@ -90,7 +90,7 @@ const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) =>
 
   if (!data) {
     return (
-      <div className="flex flex-col h-screen bg-[#f0f3f7] items-center justify-center p-6 text-center">
+      <div className="flex flex-col h-screen bg-[#edf0f3] items-center justify-center p-6 text-center">
         <p className="text-slate-500 font-bold mb-6 text-lg text-pretty">종목 정보를 찾을 수 없습니다.</p>
         <button onClick={() => navigate(-1)} className="px-10 py-4 bg-blue-600 rounded-2xl font-black text-white shadow-lg shadow-blue-600/20 active:scale-95 transition-all uppercase tracking-widest text-sm">뒤로가기</button>
       </div>
@@ -103,9 +103,9 @@ const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) =>
   const sign = isUp ? '+' : '';
 
   return (
-    <div className="flex flex-col h-screen bg-[#f0f3f7] text-slate-900 overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#edf0f3] text-slate-900 overflow-hidden">
       {/* 상단 헤더 */}
-      <header className="flex items-center p-4 border-b border-slate-200 bg-white sticky top-0 z-10 shadow-sm">
+      <header className="flex items-center p-4 border-b border-slate-200/60 bg-slate-50/90 backdrop-blur-md sticky top-0 z-10 shadow-sm">
         <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-50 rounded-full transition-colors mr-2">
           <ChevronLeft size={24} className="text-slate-600" />
         </button>
@@ -130,15 +130,15 @@ const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) =>
       </header>
 
       {/* 탭 메뉴 */}
-      <nav className="flex px-2 border-b border-slate-200 bg-white overflow-x-auto no-scrollbar whitespace-nowrap sticky top-[73px] z-10">
+      <nav className="flex px-2 border-b border-slate-200/60 bg-slate-50/90 overflow-x-auto no-scrollbar whitespace-nowrap sticky top-[73px] z-10 backdrop-blur-md">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`py-4 px-4 text-xs sm:text-sm font-black transition-all relative flex flex-col items-center justify-center border-b-4 ${
               activeTab === tab 
-              ? 'text-blue-600 border-blue-600 bg-blue-50/30' 
-              : 'text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-50/50'
+              ? 'text-blue-600 border-blue-600 bg-blue-50/40' 
+              : 'text-slate-400 border-transparent hover:text-slate-600 hover:bg-slate-100/50'
             }`}
           >
             {tab}
@@ -147,7 +147,7 @@ const StockDetail = ({ favoritedStocks, onFavoriteToggle }: StockDetailProps) =>
       </nav>
 
       {/* 탭별 콘텐츠 영역 */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-44 md:pb-12 bg-[#f0f3f7]">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-44 md:pb-12 bg-[#edf0f3]">
         <div className="max-w-5xl mx-auto space-y-6">
             {activeTab === '차트·호가' && <ChartSection data={data} symbol={symbol!} />}
             {activeTab === '시세' && <PriceSection data={data} symbol={symbol!} />}

@@ -68,7 +68,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
       if (activeTab === '테마' && selectedThemeId) {
         setIsLoadingThemeStocks(true);
         try {
-          const response = await fetch(`/api/themes/${encodeURIComponent(selectedThemeId)}/stocks`);
+          const response = await fetch(`/api/themes/stocks?name=${encodeURIComponent(selectedThemeId)}`);
           const data = await response.json();
           if (Array.isArray(data)) setSelectedThemeStocks(data);
         } catch (error) {
@@ -163,8 +163,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
     const currentTime = investorUpdateTimes[timeKey];
 
     return (
-      <div className="flex flex-col h-full bg-white">
-        <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-slate-50/30">
+      <div className="flex flex-col h-full bg-white/95">
+        <div className="p-4 flex items-center justify-between border-b border-slate-100 bg-slate-50">
           <span className="font-black text-slate-900 text-[14px] uppercase tracking-tight">{title}</span>
           {currentTime && <span className="text-[10px] text-slate-400 font-bold bg-white px-2 py-0.5 rounded-full border border-slate-100 shadow-sm">{currentTime}</span>}
         </div>
@@ -218,8 +218,8 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
         <div className="flex flex-1 overflow-hidden gap-4">
           {/* Theme List - Left Sidebar Mode (Restored) */}
           {activeTab === '테마' && (
-            <aside className="hidden md:flex flex-col w-64 bg-white rounded-[24px] border border-slate-200/60 overflow-hidden shrink-0 shadow-sm">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/20">
+            <aside className="hidden md:flex flex-col w-64 bg-white/95 backdrop-blur-md rounded-[24px] border border-slate-200 overflow-hidden shrink-0 shadow-md">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <span className="font-bold text-slate-900 text-[14px]">테마별 종목</span>
                 <LayoutGrid size={16} className="text-slate-400" />
               </div>
@@ -228,10 +228,10 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
                   <button 
                     key={t.name} 
                     onClick={() => setSelectedThemeId(t.name)}
-                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-[13px] font-bold ${selectedThemeId === t.name ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all text-[13px] font-bold ${selectedThemeId === t.name ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
                   >
                     <span className="truncate">{t.name}</span>
-                    <span className={`font-mono text-[11px] ${parseFloat(t.avgChangeRate || 0) > 0 ? 'text-rose-500' : 'text-blue-600'}`}>
+                    <span className={`font-mono text-[11px] ${parseFloat(t.avgChangeRate || 0) > 0 ? (selectedThemeId === t.name ? 'text-rose-200' : 'text-rose-500') : (selectedThemeId === t.name ? 'text-blue-200' : 'text-blue-600')}`}>
                       {parseFloat(t.avgChangeRate || 0).toFixed(1)}%
                     </span>
                   </button>
@@ -241,7 +241,7 @@ const Home = ({ favoritedStocks, onFavoriteToggle, stockPrices, user, onLoginCli
           )}
 
           {/* Main List Card */}
-          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-[20px] md:rounded-[32px] shadow-sm border border-slate-200/60 overflow-hidden mb-2 md:mb-0">
+          <div className="flex-1 flex flex-col min-h-0 bg-white rounded-[20px] md:rounded-[32px] shadow-md border border-slate-200 overflow-hidden mb-2 md:mb-0">
             {/* Investor Buy/Sell Toggle (Left Aligned & Red/Blue Colors) */}
             {activeTab === '투자자별' && (
               <div className="p-4 border-b border-slate-100 flex items-center justify-start gap-2 bg-slate-50/30">

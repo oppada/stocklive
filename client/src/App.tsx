@@ -166,11 +166,11 @@ const App = () => {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#f2f4f6] text-slate-900 font-sans selection:bg-blue-100">
+    <div className="flex flex-col h-[100dvh] w-full overflow-hidden bg-[#edf0f3] text-slate-900 font-sans selection:bg-blue-100">
       {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
       
-      {/* Header - Minimal & White */}
-      <header className="h-14 border-b border-slate-200/50 flex items-center justify-between px-4 md:px-6 bg-white shrink-0 z-50 shadow-sm">
+      {/* Header - Muted Light & Blur */}
+      <header className="h-14 border-b border-slate-200/60 flex items-center justify-between px-4 md:px-6 bg-slate-50/90 backdrop-blur-md shrink-0 z-50 shadow-sm">
         <div className="flex items-center gap-10">
           <div className="flex flex-col cursor-pointer group" onClick={() => navigate('/')}>
             <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter leading-none italic">STOCK<span className="text-blue-600">LIVE</span></h1>
@@ -239,7 +239,7 @@ const App = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-3 md:p-4 gap-4 bg-[#f2f4f6]">
+      <div className="flex flex-1 overflow-hidden p-3 md:p-4 gap-4 bg-[#edf0f3]">
         {/* Left Sidebar (Chat) - Floating Card */}
         <aside className={`flex-col bg-white rounded-[24px] shadow-sm shrink-0 border border-slate-200/40 overflow-hidden ${isChatRoute ? 'hidden' : 'hidden md:flex w-[320px]'}`}>
           <div className="p-5 border-b border-slate-100 flex justify-between items-center">

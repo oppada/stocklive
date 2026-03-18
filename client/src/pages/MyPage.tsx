@@ -59,7 +59,7 @@ const MyPage: React.FC<MyPageProps> = ({ user, handleLogout, onLoginClick }) => 
   }
 
   return (
-    <div className="flex-1 h-full bg-[#f4f7fa] overflow-y-auto no-scrollbar pb-24 p-0">
+    <div className="flex-1 h-full bg-[#edf0f3] overflow-y-auto no-scrollbar pb-24 p-0">
       {/* Container - 추천/뉴스 페이지와 동일한 px-4 적용 */}
       <div className="max-w-4xl mx-auto px-4 md:px-10">
         

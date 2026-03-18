@@ -35,7 +35,7 @@ const Discovery = () => {
   }, [searchTerm]);
 
   return (
-    <div className="flex-1 h-full bg-[#f4f7fa] overflow-y-auto scroll-smooth no-scrollbar p-0">
+    <div className="flex-1 h-full bg-[#edf0f3] overflow-y-auto scroll-smooth no-scrollbar p-0">
       <div className="max-w-4xl mx-auto px-6 md:px-10 pb-48">
         {/* Search Header */}
         <div className="sticky top-0 z-50 bg-[#f4f7fa]/80 backdrop-blur-md pt-8 md:pt-12 pb-4 px-1">

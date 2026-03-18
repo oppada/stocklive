@@ -12,7 +12,7 @@ const Recommendation = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex-1 h-full bg-[#f4f7fa] overflow-y-auto scroll-smooth no-scrollbar p-0">
+    <div className="flex-1 h-full bg-[#edf0f3] overflow-y-auto scroll-smooth no-scrollbar p-0">
       <div className="max-w-4xl mx-auto md:px-10 pb-32">
         {/* Header Section - Mobile Compact */}
         <div className="flex flex-col mt-4 md:mt-12 mb-6 md:mb-10 px-4 md:px-0">
